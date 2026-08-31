@@ -1,0 +1,263 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  alias        String?
+  password     String
+  profilePhoto String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  movieItems  MovieItem[]
+  collections MovieCollection[]
+  genres      Genre[]
+  keywords    Keyword[]
+  platforms   Platform[]
+  people      Person[]
+
+  @@map("users")
+}
+
+model MovieItem {
+  id                 String    @id @default(cuid())
+  userId             String
+  type               String
+  originalTitle      String
+  spanishTitle       String?
+  year               Int?
+  synopsis           String?
+  durationMinutes    Int?
+  seasons            Int?
+  totalEpisodes      Int?
+  watched            Boolean   @default(false)
+  favorite           Boolean   @default(false)
+  personalRating     Float?
+  imdbRating         Float?
+  tmdbId             Int?
+  imdbId             String?
+  imdbUrl            String?
+  filmaffinityUrl    String?
+  trailerUrl         String?
+  tmdbCollectionId   Int?
+  tmdbCollectionName String?
+  tmdbImportedAt     DateTime?
+  tmdbLastSyncedAt   DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  images      MovieImage[]
+  countries   MovieCountry[]
+  credits     MovieCredit[]
+  genres      MovieGenre[]
+  keywords    MovieKeyword[]
+  platforms   MoviePlatform[]
+  collections MovieCollectionItem[]
+
+  @@unique([userId, type, tmdbId])
+  @@unique([userId, imdbId])
+  @@index([userId, type])
+  @@index([userId, favorite])
+  @@index([userId, watched])
+  @@index([userId, year])
+  @@index([userId, originalTitle, year])
+  @@index([userId, spanishTitle, year])
+  @@index([userId, tmdbCollectionId])
+  @@map("movie_items")
+}
+
+model MovieImage {
+  id           String  @id @default(cuid())
+  movieId      String
+  url          String
+  localPath    String?
+  tmdbFilePath String?
+  order        Int
+  isPrimary    Boolean @default(false)
+  altText      String?
+
+  movie MovieItem @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@unique([movieId, order])
+  @@index([movieId, isPrimary])
+  @@map("movie_images")
+}
+
+model MovieCountry {
+  id             String  @id @default(cuid())
+  movieId        String
+  name           String
+  normalizedName String
+  isoCode        String?
+  order          Int     @default(0)
+
+  movie MovieItem @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@unique([movieId, normalizedName])
+  @@index([normalizedName])
+  @@map("movie_countries")
+}
+
+model Person {
+  id             String   @id @default(cuid())
+  userId         String
+  name           String
+  normalizedName String
+  tmdbPersonId   Int?
+  profilePath    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  credits MovieCredit[]
+
+  @@unique([userId, tmdbPersonId])
+  @@index([userId, normalizedName])
+  @@map("people")
+}
+
+model MovieCredit {
+  movieId       String
+  personId      String
+  creditType    String
+  order         Int     @default(0)
+  characterName String?
+  tmdbCreditId  String?
+
+  movie  MovieItem @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  person Person    @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@id([movieId, personId, creditType])
+  @@index([movieId, creditType, order])
+  @@map("movie_credits")
+}
+
+model Genre {
+  id             String   @id @default(cuid())
+  userId         String
+  name           String
+  normalizedName String
+  tmdbGenreId    Int?
+  tmdbMediaType  String?
+  createdAt      DateTime @default(now())
+
+  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movies MovieGenre[]
+
+  @@unique([userId, normalizedName])
+  @@index([userId, tmdbGenreId, tmdbMediaType])
+  @@map("genres")
+}
+
+model MovieGenre {
+  movieId String
+  genreId String
+  order   Int    @default(0)
+
+  movie MovieItem @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  genre Genre     @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([movieId, genreId])
+  @@index([genreId])
+  @@map("movie_genres")
+}
+
+model Keyword {
+  id             String   @id @default(cuid())
+  userId         String
+  name           String
+  normalizedName String
+  tmdbKeywordId  Int?
+  createdAt      DateTime @default(now())
+
+  user   User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movies MovieKeyword[]
+
+  @@unique([userId, normalizedName])
+  @@unique([userId, tmdbKeywordId])
+  @@map("keywords")
+}
+
+model MovieKeyword {
+  movieId   String
+  keywordId String
+  order     Int    @default(0)
+
+  movie   MovieItem @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  keyword Keyword   @relation(fields: [keywordId], references: [id], onDelete: Cascade)
+
+  @@id([movieId, keywordId])
+  @@index([keywordId])
+  @@map("movie_keywords")
+}
+
+model Platform {
+  id             String   @id @default(cuid())
+  userId         String
+  name           String
+  normalizedName String
+  tmdbProviderId Int?
+  logoPath       String?
+  createdAt      DateTime @default(now())
+
+  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movies MoviePlatform[]
+
+  @@unique([userId, normalizedName])
+  @@unique([userId, tmdbProviderId])
+  @@map("platforms")
+}
+
+model MoviePlatform {
+  movieId    String
+  platformId String
+  isPrimary  Boolean @default(false)
+  order      Int     @default(0)
+
+  movie    MovieItem @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  platform Platform  @relation(fields: [platformId], references: [id], onDelete: Cascade)
+
+  @@id([movieId, platformId])
+  @@index([platformId])
+  @@index([movieId, isPrimary])
+  @@map("movie_platforms")
+}
+
+model MovieCollection {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  coverImage  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items MovieCollectionItem[]
+
+  @@unique([userId, name])
+  @@map("movie_collections")
+}
+
+model MovieCollectionItem {
+  collectionId String
+  movieId      String
+  addedAt      DateTime @default(now())
+  order        Int      @default(0)
+
+  collection MovieCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  movie      MovieItem       @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@id([collectionId, movieId])
+  @@index([movieId])
+  @@map("movie_collection_items")
+}

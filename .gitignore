@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+*.log
+artifacts/
+
+backend/node_modules/
+backend/dist/
+backend/.env
+backend/prisma/dev.db
+backend/prisma/dev.db-journal
+backend/uploads/
