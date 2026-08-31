@@ -2,9 +2,10 @@
 
 ## CloudPanel, solo la primera vez
 
-Crear un sitio para `moviebox.beweb.com.ar` con el usuario `tastebox`, emitir el
-certificado Let's Encrypt y pegar el contenido de `cloudpanel-vhost.conf` en el
-vhost. El backend escucha exclusivamente para este sitio en el puerto `3003`.
+Crear un sitio Node.js para `moviebox.beweb.com.ar`, elegir Node 22, configurar
+el puerto de aplicacion `3003` y emitir el certificado Let's Encrypt. El backend
+sirve la API, las cargas y el frontend, por lo que el proxy Node.js generado por
+CloudPanel es suficiente. `cloudpanel-vhost.conf` queda como referencia opcional.
 
 La carpeta del sitio es:
 

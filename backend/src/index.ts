@@ -46,9 +46,17 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
-app.use((_req, res) => {
-  res.status(404).json({ error: 'Ruta no encontrada' });
+app.use('/api', (_req, res) => {
+  res.status(404).json({ error: 'Ruta de API no encontrada' });
 });
+
+if (env.nodeEnv === 'production') {
+  const frontendDist = path.resolve(process.cwd(), '../dist');
+  app.use(express.static(frontendDist));
+  app.get('*', (_req, res) => res.sendFile(path.join(frontendDist, 'index.html')));
+} else {
+  app.use((_req, res) => res.status(404).json({ error: 'Ruta no encontrada' }));
+}
 
 app.listen(env.port, '0.0.0.0', () => {
   console.log(`MovieBox API listening on http://localhost:${env.port}`);
