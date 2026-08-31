@@ -6,6 +6,19 @@ APP_NAME="moviebox"
 BRANCH="main"
 HEALTH_PORT="${DEPLOY_HEALTH_PORT:-3003}"
 
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+  # CloudPanel abre sesiones no interactivas con el Node del sistema.
+  . "$NVM_DIR/nvm.sh"
+  nvm use 22 >/dev/null
+fi
+
+NODE_MAJOR="$(node --version | sed 's/^v//' | cut -d. -f1)"
+if [ "$NODE_MAJOR" -lt 20 ]; then
+  echo "MovieBox requiere Node 20 o superior; version actual: $(node --version)" >&2
+  exit 1
+fi
+
 echo "Actualizando MovieBox desde GitHub..."
 git fetch origin
 git reset --hard "origin/$BRANCH"
