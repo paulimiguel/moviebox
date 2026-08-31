@@ -13,6 +13,13 @@ if [ -s "$NVM_DIR/nvm.sh" ]; then
   nvm use 22 >/dev/null
 fi
 
+if [ "$(node --version | sed 's/^v//' | cut -d. -f1)" -lt 20 ]; then
+  NODE22_DIR="$(find "$NVM_DIR/versions/node" -maxdepth 1 -type d -name 'v22.*' 2>/dev/null | sort -V | tail -n 1)"
+  if [ -n "$NODE22_DIR" ] && [ -x "$NODE22_DIR/bin/node" ]; then
+    export PATH="$NODE22_DIR/bin:$PATH"
+  fi
+fi
+
 NODE_MAJOR="$(node --version | sed 's/^v//' | cut -d. -f1)"
 if [ "$NODE_MAJOR" -lt 20 ]; then
   echo "MovieBox requiere Node 20 o superior; version actual: $(node --version)" >&2
