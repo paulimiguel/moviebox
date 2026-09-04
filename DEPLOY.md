@@ -3,7 +3,7 @@
 ## CloudPanel, solo la primera vez
 
 Crear un sitio Node.js para `moviebox.beweb.com.ar`, elegir Node 22, configurar
-el puerto de aplicacion `3003` y emitir el certificado Let's Encrypt. El backend
+el puerto de aplicacion `3001` y emitir el certificado Let's Encrypt. El backend
 sirve la API, las cargas y el frontend, por lo que el proxy Node.js generado por
 CloudPanel es suficiente. `cloudpanel-vhost.conf` queda como referencia opcional.
 
@@ -19,7 +19,7 @@ El archivo `backend/.env` del servidor no se versiona:
 
 ```env
 DATABASE_URL="file:/home/beweb-moviebox/htdocs/moviebox.beweb.com.ar/backend/prisma/prod.db"
-PORT=3003
+PORT=3001
 JWT_SECRET="una-cadena-larga-y-aleatoria"
 FRONTEND_URL="https://moviebox.beweb.com.ar"
 TMDB_API_TOKEN=""

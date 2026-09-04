@@ -4,7 +4,7 @@ set -euo pipefail
 
 APP_NAME="moviebox"
 BRANCH="main"
-HEALTH_PORT="${DEPLOY_HEALTH_PORT:-3003}"
+HEALTH_PORT="${DEPLOY_HEALTH_PORT:-3001}"
 
 export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
 if [ -s "$NVM_DIR/nvm.sh" ]; then
