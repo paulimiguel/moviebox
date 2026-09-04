@@ -1,10 +1,10 @@
 param(
   [string]$HostName = "vps1.beweb.com.ar",
-  [string]$UserName = "tastebox",
+  [string]$UserName = "beweb-moviebox",
   [int]$Port = 22,
-  [string]$SiteDir = "/home/tastebox/htdocs/moviebox.beweb.com.ar",
+  [string]$SiteDir = "/home/beweb-moviebox/htdocs/moviebox.beweb.com.ar",
   [string]$Branch = "main",
-  [string]$KeyPath = "$env:USERPROFILE\.ssh\tastebox_deploy_ed25519",
+  [string]$KeyPath = "$env:USERPROFILE\.ssh\moviebox_deploy_ed25519",
   [switch]$SkipPush
 )
 

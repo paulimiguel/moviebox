@@ -10,7 +10,7 @@ CloudPanel es suficiente. `cloudpanel-vhost.conf` queda como referencia opcional
 La carpeta del sitio es:
 
 ```text
-/home/tastebox/htdocs/moviebox.beweb.com.ar
+/home/beweb-moviebox/htdocs/moviebox.beweb.com.ar
 ```
 
 ## Variables privadas del backend
@@ -18,7 +18,7 @@ La carpeta del sitio es:
 El archivo `backend/.env` del servidor no se versiona:
 
 ```env
-DATABASE_URL="file:/home/tastebox/htdocs/moviebox.beweb.com.ar/backend/prisma/prod.db"
+DATABASE_URL="file:/home/beweb-moviebox/htdocs/moviebox.beweb.com.ar/backend/prisma/prod.db"
 PORT=3003
 JWT_SECRET="una-cadena-larga-y-aleatoria"
 FRONTEND_URL="https://moviebox.beweb.com.ar"
