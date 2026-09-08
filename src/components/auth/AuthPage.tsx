@@ -1,10 +1,51 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/services/api";
 
+const LOGIN_POSTERS = [
+  { src: "/login-posters/jurassic-park.jpg", title: "Jurassic Park" },
+  { src: "/login-posters/the-godfather.jpg", title: "The Godfather" },
+  { src: "/login-posters/the-matrix.jpg", title: "The Matrix" },
+  { src: "/login-posters/ghost.jpg", title: "Ghost" },
+  { src: "/login-posters/forrest-gump.jpg", title: "Forrest Gump" },
+  { src: "/login-posters/pulp-fiction.jpg", title: "Pulp Fiction" },
+  { src: "/login-posters/friends.jpg", title: "Friends" },
+  { src: "/login-posters/breaking-bad.jpg", title: "Breaking Bad" },
+  { src: "/login-posters/lost.jpg", title: "Lost" },
+  { src: "/login-posters/this-is-us.jpg", title: "This Is Us" },
+  { src: "/login-posters/pretty-woman.jpg", title: "Pretty Woman" },
+  {
+    src: "/login-posters/back-to-the-future.jpg",
+    title: "Back to the Future",
+  },
+  { src: "/login-posters/et.jpg", title: "E.T." },
+  { src: "/login-posters/titanic.jpg", title: "Titanic" },
+  { src: "/login-posters/dirty-dancing.jpg", title: "Dirty Dancing" },
+  { src: "/login-posters/home-alone.jpg", title: "Home Alone" },
+  {
+    src: "/login-posters/the-shawshank-redemption.jpg",
+    title: "The Shawshank Redemption",
+  },
+  { src: "/login-posters/notting-hill.jpg", title: "Notting Hill" },
+  { src: "/login-posters/the-notebook.jpg", title: "The Notebook" },
+  { src: "/login-posters/the-holiday.jpg", title: "The Holiday" },
+] as const;
+
+const LOGIN_EDGE_POSTERS = [
+  { src: "/login-posters/the-sixth-sense.jpg", title: "The Sixth Sense" },
+  { src: "/login-posters/the-truman-show.jpg", title: "The Truman Show" },
+  {
+    src: "/login-posters/the-devil-wears-prada.jpg",
+    title: "The Devil Wears Prada",
+  },
+  { src: "/login-posters/the-green-mile.jpg", title: "The Green Mile" },
+  { src: "/login-posters/youve-got-mail.jpg", title: "You've Got Mail" },
+] as const;
+
 export const AuthPage = () => {
   const { login, register } = useAuth();
+  const posterPanelRef = useRef<HTMLElement>(null);
   const [mode, setMode] = useState<"login" | "register">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -20,6 +61,13 @@ export const AuthPage = () => {
     setError("No se pudo iniciar sesion con Google. Intenta nuevamente.");
     url.searchParams.delete("google_error");
     window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+  }, []);
+
+  useEffect(() => {
+    const panel = posterPanelRef.current;
+    if (!panel) return;
+
+    panel.scrollTop = (panel.scrollHeight - panel.clientHeight) / 2;
   }, []);
 
   const submit = async (event: FormEvent) => {
@@ -45,7 +93,7 @@ export const AuthPage = () => {
           <img
             src="/moviebox-logo.png"
             alt="MovieBox"
-            className="mb-10 h-auto w-full max-w-[290px]"
+            className="mx-auto mb-10 h-auto w-full max-w-[290px]"
           />
           <div
             className="mb-7 flex border-b border-slate-200"
@@ -58,6 +106,11 @@ export const AuthPage = () => {
                 onClick={() => {
                   setMode(item);
                   setError("");
+                  if (item === "register") {
+                    setEmail("");
+                    setPassword("");
+                    setShowPassword(false);
+                  }
                 }}
                 className={`relative flex-1 px-3 py-3 text-sm font-semibold ${mode === item ? "text-ink" : "text-slate-400"}`}
               >
@@ -154,39 +207,68 @@ export const AuthPage = () => {
             disabled={submitting}
             onClick={() => window.location.assign(api.auth.getGoogleLoginUrl(window.location.href))}
           >
-            <span
-              className="flex h-5 w-5 items-center justify-center text-base font-bold text-[#4285f4]"
+            <img
+              src="/google-logo.svg"
+              alt=""
+              className="h-5 w-5"
               aria-hidden="true"
-            >
-              G
-            </span>
-            CONTINUAR CON GOOGLE
+            />
+            ENTRAR CON GOOGLE
           </button>
         </div>
       </section>
 
       <section
-        className="relative hidden min-h-screen overflow-hidden bg-[#e5f2f1] lg:block"
+        ref={posterPanelRef}
+        className="relative hidden max-h-screen min-h-screen overflow-y-auto overscroll-contain bg-black lg:block"
         aria-hidden="true"
       >
-        <div className="absolute inset-x-0 bottom-0 top-[14%] grid grid-cols-4 gap-5 px-[9%]">
-          {[0, 1, 2, 3, 4, 5, 6, 7].map((item) => (
-            <div
-              key={item}
-              className={`aspect-[2/3] self-end rounded-md border border-white/80 shadow-card ${
-                [
-                  "bg-coral",
-                  "bg-[#f2cf66]",
-                  "bg-aqua",
-                  "bg-ink",
-                  "bg-white",
-                  "bg-[#8d9bb0]",
-                  "bg-[#e8a7a0]",
-                  "bg-[#a9c7a5]",
-                ][item]
-              } ${item % 2 === 0 ? "translate-y-16" : ""}`}
-            />
-          ))}
+        <div className="grid min-h-full grid-cols-5 gap-3 overflow-hidden px-3 py-6">
+          {[0, 1, 2, 3, 4].map((column) => {
+            const edgePoster = LOGIN_EDGE_POSTERS[column];
+
+            return (
+              <div
+                key={column}
+                className={`relative flex min-w-0 self-start flex-col gap-3 ${column % 2 === 0 ? "" : "mt-[75%]"}`}
+              >
+                {column % 2 !== 0 && (
+                  <div className="absolute inset-x-0 bottom-[calc(100%+0.75rem)] aspect-[2/3] overflow-hidden bg-white shadow-card">
+                    <img
+                      src={edgePoster.src}
+                      alt={edgePoster.title}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                )}
+                {LOGIN_POSTERS.filter(
+                  (_, posterIndex) => posterIndex % 5 === column,
+                ).map((poster) => (
+                  <div
+                    key={poster.src}
+                    className="aspect-[2/3] flex-none overflow-hidden bg-white shadow-card"
+                  >
+                    <img
+                      src={poster.src}
+                      alt={poster.title}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                ))}
+                {column % 2 === 0 && (
+                  <div
+                    className="absolute inset-x-0 top-[calc(100%+0.75rem)] aspect-[2/3] overflow-hidden bg-white shadow-card"
+                  >
+                    <img
+                      src={edgePoster.src}
+                      alt={edgePoster.title}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </section>
     </main>

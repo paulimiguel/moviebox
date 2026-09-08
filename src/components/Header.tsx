@@ -56,7 +56,7 @@ export const Header = ({ onNew, onImport }: { onNew?: () => void; onImport?: () 
                   className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50"
                 >
                   <FilePlus2 className="h-4 w-4" />
-                  Nueva movie
+                  Nueva
                 </button>
                 <button
                   type="button"
@@ -64,7 +64,7 @@ export const Header = ({ onNew, onImport }: { onNew?: () => void; onImport?: () 
                   className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50"
                 >
                   <Download className="h-4 w-4" />
-                  Importar movie
+                  Importar
                 </button>
               </div>
             )}

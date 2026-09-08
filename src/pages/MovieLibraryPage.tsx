@@ -104,7 +104,7 @@ export const MovieLibraryPage = () => {
   };
   const gridClass = viewMode === 'small'
     ? 'grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 lg:grid-cols-5 2xl:grid-cols-6'
-    : 'grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 2xl:grid-cols-5';
+    : 'grid grid-cols-1 gap-4 min-[520px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 sm:gap-5 2xl:grid-cols-5';
 
   return (
     <main className="min-h-screen bg-canvas">
