@@ -30,7 +30,7 @@ export const Header = ({ onNew, onImport }: { onNew?: () => void; onImport?: () 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex h-[72px] max-w-[1500px] items-center gap-5 px-4 sm:px-6">
-        <Link to="/"><img src="/moviebox-logo.png" alt="MovieBox" className="h-10 w-auto max-w-[190px] object-contain sm:h-11" /></Link>
+        <Link to="/"><img src="/moviebox-logo-red.png" alt="MovieBox" className="h-10 w-auto max-w-[190px] object-contain sm:h-11" /></Link>
         <nav className="hidden h-full items-end sm:flex">
           <NavLink to="/" className={({ isActive }) => `flex h-full items-center border-b-2 px-3 text-sm font-semibold ${isActive ? 'border-coral text-ink' : 'border-transparent text-slate-500'}`}>BIBLIOTECA</NavLink>
           <NavLink to="/colecciones" className={({ isActive }) => `flex h-full items-center border-b-2 px-3 text-sm font-semibold ${isActive ? 'border-coral text-ink' : 'border-transparent text-slate-500'}`}>COLECCIONES</NavLink>

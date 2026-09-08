@@ -91,7 +91,7 @@ export const AuthPage = () => {
       <section className="flex min-h-screen items-center justify-center bg-white px-5 py-10 sm:px-10">
         <div className="w-full max-w-sm">
           <img
-            src="/moviebox-logo.png"
+            src="/moviebox-logo-red.png"
             alt="MovieBox"
             className="mx-auto mb-10 h-auto w-full max-w-[290px]"
           />
