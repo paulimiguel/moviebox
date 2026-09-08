@@ -1,15 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
-import { ChevronDown, FolderOpen, LogOut, Plus } from 'lucide-react';
+import { ChevronDown, Download, FilePlus2, FolderOpen, LogOut, Plus } from 'lucide-react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
-export const Header = ({ onAdd }: { onAdd?: () => void }) => {
+export const Header = ({ onNew, onImport }: { onNew?: () => void; onImport?: () => void }) => {
   const { user, logout } = useAuth();
+  const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const addMenuRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const close = (event: MouseEvent) => {
+      if (!addMenuRef.current?.contains(event.target as Node)) setAddMenuOpen(false);
       if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
     };
     document.addEventListener('mousedown', close);
@@ -22,6 +25,7 @@ export const Header = ({ onAdd }: { onAdd?: () => void }) => {
     .map((part) => part[0])
     .join('')
     .toLocaleUpperCase();
+  const hasAddMenu = Boolean(onNew && onImport);
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
@@ -31,8 +35,42 @@ export const Header = ({ onAdd }: { onAdd?: () => void }) => {
           <NavLink to="/" className={({ isActive }) => `flex h-full items-center border-b-2 px-3 text-sm font-semibold ${isActive ? 'border-coral text-ink' : 'border-transparent text-slate-500'}`}>BIBLIOTECA</NavLink>
           <NavLink to="/colecciones" className={({ isActive }) => `flex h-full items-center border-b-2 px-3 text-sm font-semibold ${isActive ? 'border-coral text-ink' : 'border-transparent text-slate-500'}`}>COLECCIONES</NavLink>
         </nav>
-        {onAdd && <button type="button" onClick={onAdd} className="primary-button ml-auto sm:ml-2" aria-label="Agregar"><Plus className="h-4 w-4" /><span className="hidden sm:inline">Agregar</span></button>}
-        <div ref={menuRef} className={`relative ${onAdd ? '' : 'ml-auto'}`}>
+        {hasAddMenu && (
+          <div ref={addMenuRef} className="relative ml-auto sm:ml-2">
+            <button
+              type="button"
+              onClick={() => setAddMenuOpen((current) => !current)}
+              className="primary-button"
+              aria-label="Agregar"
+              aria-expanded={addMenuOpen}
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Agregar</span>
+              <ChevronDown className="h-4 w-4" />
+            </button>
+            {addMenuOpen && (
+              <div className="absolute right-0 top-12 w-52 rounded-md border border-slate-200 bg-white p-1.5 shadow-card">
+                <button
+                  type="button"
+                  onClick={() => { setAddMenuOpen(false); onNew?.(); }}
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50"
+                >
+                  <FilePlus2 className="h-4 w-4" />
+                  Nueva movie
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setAddMenuOpen(false); onImport?.(); }}
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50"
+                >
+                  <Download className="h-4 w-4" />
+                  Importar movie
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+        <div ref={menuRef} className={`relative ${hasAddMenu ? '' : 'ml-auto'}`}>
           <button
             type="button"
             onClick={() => setMenuOpen((current) => !current)}

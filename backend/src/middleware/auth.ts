@@ -18,7 +18,7 @@ export const authenticateToken = (
   const authorization = req.header("authorization");
   const token = authorization?.startsWith("Bearer ")
     ? authorization.slice("Bearer ".length)
-    : null;
+    : req.cookies?.authToken;
 
   if (!token) {
     return res.status(401).json({ error: "Sesion requerida" });

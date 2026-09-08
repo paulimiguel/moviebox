@@ -16,6 +16,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("google_login") === "success") {
+      api.auth
+        .completeGoogleLogin()
+        .then(setUser)
+        .catch(() => {
+          authToken.clear();
+          url.searchParams.set("google_error", "session");
+        })
+        .finally(() => {
+          url.searchParams.delete("google_login");
+          window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+          setIsLoading(false);
+        });
+      return;
+    }
+
     if (!authToken.exists()) {
       setIsLoading(false);
       return;

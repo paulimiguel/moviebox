@@ -23,6 +23,16 @@ PORT=3001
 JWT_SECRET="una-cadena-larga-y-aleatoria"
 FRONTEND_URL="https://moviebox.beweb.com.ar"
 TMDB_API_TOKEN=""
+GOOGLE_CLIENT_ID="id-del-cliente-oauth"
+GOOGLE_CLIENT_SECRET="secreto-del-cliente-oauth"
+GOOGLE_REDIRECT_URI="https://moviebox.beweb.com.ar/api/auth/google/callback"
+```
+
+En Google Cloud Console, registrar exactamente estas URI de redireccionamiento:
+
+```text
+https://moviebox.beweb.com.ar/api/auth/google/callback
+http://localhost:3003/api/auth/google/callback
 ```
 
 ## Actualizaciones

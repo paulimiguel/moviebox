@@ -20,9 +20,9 @@ const inputSchema = z.object({
   tmdbCollectionId: z.number().int().positive().nullable().optional(), tmdbCollectionName: z.string().trim().max(250).nullable().optional(),
   images: z.array(z.object({ url: z.string().trim().min(1).max(2000), localPath: z.string().nullable().optional(), tmdbFilePath: z.string().nullable().optional(), order: z.number().int().min(0), isPrimary: z.boolean().optional(), altText: z.string().max(250).nullable().optional() })).max(5).optional(),
   countries: z.array(named.extend({ isoCode: z.string().max(3).nullable().optional() })).max(20).optional(),
-  credits: z.array(named.extend({ creditType: z.enum(['director', 'cast']), characterName: z.string().max(150).nullable().optional(), tmdbPersonId: z.number().int().positive().nullable().optional(), tmdbCreditId: z.string().nullable().optional(), profilePath: z.string().nullable().optional() })).max(25).refine((items) => items.filter((item) => item.creditType === 'cast').length <= 5, 'El reparto principal admite hasta 5 personas').optional(),
+  credits: z.array(named.extend({ creditType: z.enum(['director', 'cast']), characterName: z.string().max(150).nullable().optional(), tmdbPersonId: z.number().int().positive().nullable().optional(), tmdbCreditId: z.string().nullable().optional(), profilePath: z.string().nullable().optional() })).max(25).refine((items) => items.filter((item) => item.creditType === 'cast').length <= 6, 'El reparto principal admite hasta 6 personas').optional(),
   genres: z.array(named).max(30).optional(), keywords: z.array(named).max(50).optional(),
-  platforms: z.array(named.extend({ isPrimary: z.boolean().optional() })).max(30).optional(), collectionIds: z.array(z.string()).max(100).optional(),
+  platforms: z.array(named.extend({ isPrimary: z.boolean().optional(), tmdbProviderId: z.number().int().positive().nullable().optional(), logoPath: z.string().max(500).nullable().optional() })).max(30).optional(), collectionIds: z.array(z.string()).max(100).optional(),
 });
 type MovieInput = z.infer<typeof inputSchema>;
 const uploadDir = path.resolve(process.cwd(), 'uploads');
@@ -69,8 +69,21 @@ const saveRelations = async (tx: any, movieId: string, userId: string, input: Mo
     await tx.movieKeyword.create({ data: { movieId, keywordId: keyword.id, order: index } });
   }
   for (const [index, item] of (input.platforms || []).entries()) {
-    const normalizedName = normalizeName(item.name); const platform = await tx.platform.upsert({ where: { userId_normalizedName: { userId, normalizedName } }, update: { name: item.name }, create: { userId, name: item.name, normalizedName } });
-    await tx.moviePlatform.create({ data: { movieId, platformId: platform.id, order: index, isPrimary: index === 0 } });
+    const normalizedName = normalizeName(item.name);
+    let platform = await tx.platform.findFirst({
+      where: {
+        userId,
+        OR: [
+          { normalizedName },
+          ...(item.tmdbProviderId ? [{ tmdbProviderId: item.tmdbProviderId }] : []),
+        ],
+      },
+    });
+    const platformData = { name: item.name, normalizedName, tmdbProviderId: item.tmdbProviderId, logoPath: item.logoPath };
+    platform = platform
+      ? await tx.platform.update({ where: { id: platform.id }, data: platformData })
+      : await tx.platform.create({ data: { userId, ...platformData } });
+    await tx.moviePlatform.create({ data: { movieId, platformId: platform.id, order: index, isPrimary: item.isPrimary ?? index === 0 } });
   }
   if (input.collectionIds?.length) {
     const owned = await tx.movieCollection.findMany({ where: { userId, id: { in: input.collectionIds } }, select: { id: true } });

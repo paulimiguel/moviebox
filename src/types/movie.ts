@@ -321,3 +321,22 @@ export interface TmdbSyncResult {
   preservedFields: PersonalMovieField[];
   syncedAt: string;
 }
+
+export interface ImdbSearchCandidate {
+  imdbId: string;
+  type: MovieType;
+  title: string;
+  originalTitle: string;
+  year: number | null;
+  posterUrl: string | null;
+}
+
+export type ImdbImportedMovieData = Omit<
+  CreateMovieInput,
+  "favorite" | "watched" | "personalRating" | "collectionIds" | "filmaffinityUrl"
+>;
+
+export interface ImdbImportRequest {
+  imdbId: string;
+  type: MovieType;
+}

@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/services/api";
 
 export const AuthPage = () => {
   const { login, register } = useAuth();
@@ -11,6 +12,15 @@ export const AuthPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has("google_error")) return;
+
+    setError("No se pudo iniciar sesion con Google. Intenta nuevamente.");
+    url.searchParams.delete("google_error");
+    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+  }, []);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -131,6 +141,27 @@ export const AuthPage = () => {
               {mode === "login" ? "INGRESAR" : "CREAR CUENTA"}
             </button>
           </form>
+
+          <div className="my-5 flex items-center gap-3" aria-hidden="true">
+            <span className="h-px flex-1 bg-slate-200" />
+            <span className="text-xs text-slate-400">o</span>
+            <span className="h-px flex-1 bg-slate-200" />
+          </div>
+
+          <button
+            type="button"
+            className="inline-flex h-11 w-full items-center justify-center gap-3 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={submitting}
+            onClick={() => window.location.assign(api.auth.getGoogleLoginUrl(window.location.href))}
+          >
+            <span
+              className="flex h-5 w-5 items-center justify-center text-base font-bold text-[#4285f4]"
+              aria-hidden="true"
+            >
+              G
+            </span>
+            CONTINUAR CON GOOGLE
+          </button>
         </div>
       </section>
 

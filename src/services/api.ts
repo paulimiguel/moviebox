@@ -1,4 +1,4 @@
-import type { CreateMovieCollectionInput, CreateMovieInput, MovieCollection, MovieItem, MoviePersonalUpdate } from '@/types/movie';
+import type { CreateMovieCollectionInput, CreateMovieInput, ImdbImportedMovieData, ImdbImportRequest, ImdbSearchCandidate, MovieCollection, MovieItem, MoviePersonalUpdate } from '@/types/movie';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:3003/api');
 const TOKEN_KEY = 'moviebox_auth_token';
@@ -49,7 +49,23 @@ export const authToken = {
 };
 
 export const api = {
+  imdb: {
+    search: (query: string) => request<ImdbSearchCandidate[]>(`/imdb/search?query=${encodeURIComponent(query)}`),
+    import: (input: ImdbImportRequest) => request<ImdbImportedMovieData>('/imdb/import', { method: 'POST', body: JSON.stringify(input) }),
+  },
   auth: {
+    getGoogleLoginUrl: (returnTo: string) =>
+      `${API_BASE_URL}/auth/google?returnTo=${encodeURIComponent(returnTo)}`,
+    completeGoogleLogin: async () => {
+      const response = await fetch(`${API_BASE_URL}/auth/google/session`, {
+        credentials: 'include',
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.token || !payload.user) {
+        throw new Error(payload.error || 'No se pudo iniciar sesion con Google');
+      }
+      return saveAuth(payload as AuthResponse);
+    },
     login: async (email: string, password: string) =>
       saveAuth(await request<AuthResponse>('/auth/login', {
         method: 'POST',

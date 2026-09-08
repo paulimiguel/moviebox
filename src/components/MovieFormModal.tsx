@@ -221,7 +221,7 @@ export const MovieFormModal = ({
       setError("El titulo original es obligatorio");
       return;
     }
-    const castNames = split(cast).slice(0, 5);
+    const castNames = split(cast).slice(0, 6);
     mutation.mutate({
       type,
       originalTitle: originalTitle.trim(),
@@ -235,35 +235,44 @@ export const MovieFormModal = ({
       watched: movie?.watched || false,
       personalRating: numberOrNull(personalRating),
       imdbRating: numberOrNull(imdbRating),
+      tmdbId: movie?.tmdbId || null,
+      imdbId: movie?.imdbId || null,
       imdbUrl: imdbUrl.trim() || null,
       filmaffinityUrl: filmaffinityUrl.trim() || null,
       trailerUrl: trailerUrl.trim() || null,
-      countries: split(countries).map((name, order) => ({ name, order })),
+      tmdbCollectionId: movie?.tmdbCollectionId || null,
+      tmdbCollectionName: movie?.tmdbCollectionName || null,
+      countries: split(countries).map((name, order) => {
+        const current = movie?.countries.find((item) => item.name === name);
+        return { name, order, isoCode: current?.isoCode || null };
+      }),
       credits: [
-        ...split(directors).map((name, order) => ({
-          name,
-          order,
-          creditType: "director" as const,
-        })),
-        ...castNames.map((name, order) => ({
-          name,
-          order,
-          creditType: "cast" as const,
-        })),
+        ...split(directors).map((name, order) => {
+          const current = movie?.credits.find((item) => item.creditType === "director" && item.name === name);
+          return { name, order, creditType: "director" as const, tmdbPersonId: current?.tmdbPersonId, tmdbCreditId: current?.tmdbCreditId, profilePath: current?.profilePath };
+        }),
+        ...castNames.map((name, order) => {
+          const current = movie?.credits.find((item) => item.creditType === "cast" && item.name === name);
+          return { name, order, creditType: "cast" as const, characterName: current?.characterName, tmdbPersonId: current?.tmdbPersonId, tmdbCreditId: current?.tmdbCreditId, profilePath: current?.profilePath };
+        }),
       ],
-      genres: genres.map((name, order) => ({ name, order })),
-      keywords: keywords.map((name, order) => ({ name, order })),
-      platforms: platforms.map((name, order) => ({
-        name,
-        order,
-        isPrimary: order === 0,
-      })),
+      genres: genres.map((name, order) => {
+        const current = movie?.genres.find((item) => item.name === name);
+        return { name, order, tmdbGenreId: current?.tmdbGenreId, tmdbMediaType: current?.tmdbMediaType };
+      }),
+      keywords: keywords.map((name, order) => {
+        const current = movie?.keywords.find((item) => item.name === name);
+        return { name, order, tmdbKeywordId: current?.tmdbKeywordId };
+      }),
+      platforms: platforms.map((name, order) => {
+        const current = movie?.platforms.find((item) => item.name === name);
+        return { name, order, isPrimary: order === 0, tmdbProviderId: current?.tmdbProviderId, logoPath: current?.logoPath };
+      }),
       collectionIds,
-      images: imageList.map((url, order) => ({
-        url,
-        order,
-        isPrimary: order === 0,
-      })),
+      images: imageList.map((url, order) => {
+        const current = movie?.images.find((item) => item.url === url);
+        return { url, order, isPrimary: order === 0, localPath: current?.localPath, tmdbFilePath: current?.tmdbFilePath, altText: current?.altText };
+      }),
     });
   };
 
@@ -396,7 +405,7 @@ export const MovieFormModal = ({
               />
             </label>
             <label className="sm:col-span-2">
-              <span className="field-label">Reparto principal, hasta 5</span>
+              <span className="field-label">Reparto principal, hasta 6</span>
               <input
                 className="control w-full"
                 value={cast}

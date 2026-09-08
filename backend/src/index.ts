@@ -1,10 +1,12 @@
 import './config/env';
 
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import express from 'express';
 import helmet from 'helmet';
 import { env } from './config/env';
 import authRoutes from './routes/auth';
+import imdbRoutes from './routes/imdb';
 import movieRoutes from './routes/movies';
 import collectionRoutes from './routes/collections';
 import metadataRoutes from './routes/metadata';
@@ -27,10 +29,12 @@ app.use(cors({
   },
   credentials: true,
 }));
+app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 
 app.use('/api/auth', authRoutes);
+app.use('/api/imdb', imdbRoutes);
 app.use('/api/movies', movieRoutes);
 app.use('/api/collections', collectionRoutes);
 app.use('/api/metadata', metadataRoutes);
