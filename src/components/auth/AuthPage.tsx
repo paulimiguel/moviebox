@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { api } from "@/services/api";
 
 const LOGIN_POSTERS = [
@@ -45,6 +46,7 @@ const LOGIN_EDGE_POSTERS = [
 
 export const AuthPage = () => {
   const { login, register } = useAuth();
+  const { theme } = useTheme();
   const posterPanelRef = useRef<HTMLElement>(null);
   const [mode, setMode] = useState<"login" | "register">("login");
   const [name, setName] = useState("");
@@ -91,7 +93,7 @@ export const AuthPage = () => {
       <section className="flex min-h-screen items-center justify-center bg-canvas px-5 py-10 sm:px-10">
         <div className="w-full max-w-sm">
           <img
-            src="/moviebox-logo-red.png"
+            src={theme === "dark" ? "/moviebox-logo-white.png" : "/moviebox-logo-red.png"}
             alt="MovieBox"
             className="mx-auto mb-10 h-auto w-full max-w-[290px]"
           />

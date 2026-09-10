@@ -205,7 +205,7 @@ export const AddMoviesPage = () => {
   return (
     <main className="min-h-screen bg-canvas">
       <Header />
-      <section className="sticky top-[72px] z-30 border-b border-slate-200 bg-white shadow-sm">
+      <section className="library-toolbar sticky top-[72px] z-30 border-b border-slate-200 bg-white shadow-sm">
         <div className="mx-auto grid max-w-[1500px] gap-3 px-4 py-3 sm:px-6 xl:grid-cols-[300px_minmax(280px,1fr)_auto] xl:items-center">
           <div className="min-w-0">
             <h1 className="font-bebas truncate text-xl font-normal uppercase text-ink sm:text-2xl">Agregar títulos</h1>
@@ -221,7 +221,7 @@ export const AddMoviesPage = () => {
             <button type="button" onClick={() => { setSuggestionSearch(''); if (appliedSuggestionSearch) setAppliedSuggestionSearch(''); else void suggestions.refetch(); }} className="icon-button h-9 w-9" title="Actualizar sugerencias" aria-label="Actualizar sugerencias"><RefreshCw className={`h-4 w-4 ${suggestions.isFetching ? 'animate-spin' : ''}`} /></button>
             <div className="relative shrink-0" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setBulkMenuOpen(false); }}>
               <button type="button" onClick={() => setBulkMenuOpen((current) => !current)} className="secondary-button h-9 gap-1.5 px-3 text-xs uppercase" aria-expanded={bulkMenuOpen}>Buscar títulos<ChevronDown className={`h-4 w-4 transition-transform ${bulkMenuOpen ? 'rotate-180' : ''}`} /></button>
-              {bulkMenuOpen && <div className="absolute right-0 top-10 z-50 w-56 rounded-md border border-slate-200 bg-white p-1.5 shadow-card">
+              {bulkMenuOpen && <div className="library-toolbar-dropdown absolute right-0 top-10 z-50 w-56 rounded-md border border-slate-200 bg-white p-1.5 shadow-card">
                 <button type="button" onClick={() => { setBulkMenuOpen(false); setBulkDialogOpen(true); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><Search className="h-4 w-4" />Buscar por título</button>
                 <button type="button" onClick={() => txtInputRef.current?.click()} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><FileText className="h-4 w-4" />Importar TXT</button>
                 <button type="button" onClick={() => spreadsheetInputRef.current?.click()} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><FileSpreadsheet className="h-4 w-4" />Importar XLS</button>
@@ -240,7 +240,7 @@ export const AddMoviesPage = () => {
             {visibleSuggestions.map((candidate) => {
               const added = movieAlreadyAdded(candidate);
               const adding = importSuggestion.isPending && importSuggestion.variables?.tmdbId === candidate.tmdbId;
-              return <article key={`${candidate.type}-${candidate.tmdbId}`} className="flex min-w-0 flex-col overflow-hidden rounded-md bg-white shadow-card">
+              return <article key={`${candidate.type}-${candidate.tmdbId}`} className="movie-card flex min-w-0 flex-col overflow-hidden rounded-md bg-white shadow-card">
                 <div className="relative aspect-[2/3] bg-mist">
                   {candidate.posterUrl ? <img src={candidate.posterUrl} alt={candidate.title} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-aqua/70">{candidate.type === 'movie' ? <Film className="h-12 w-12" /> : <Tv className="h-12 w-12" />}</div>}
                   <span className={`absolute left-2 top-2 rounded px-2 py-1 text-[9px] font-semibold uppercase text-white shadow-sm ${candidate.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>{candidate.type === 'movie' ? 'Película' : 'Serie'}</span>

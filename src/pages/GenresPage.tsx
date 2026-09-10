@@ -115,7 +115,7 @@ export const GenresPage = () => {
   return (
     <main className="min-h-screen bg-canvas">
       <Header />
-      <section className="border-b border-slate-200 bg-white shadow-sm">
+      <section className="library-toolbar border-b border-slate-200 bg-white shadow-sm">
         <div className="mx-auto max-w-[1500px] px-4 py-4 sm:px-6">
           <h1 className="font-bebas text-2xl font-normal uppercase text-ink">Géneros</h1>
           <p className="mt-0.5 text-xs text-slate-500">{genres.data?.length || 0} géneros</p>
@@ -128,7 +128,7 @@ export const GenresPage = () => {
             : genres.data?.length ? <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
               {genres.data.map((genre) => {
                 const imageUrl = resolveGenreImageUrl(genre);
-                return <article key={genre.id} role="button" tabIndex={0} onClick={() => showGenreMovies(genre.id)} onKeyDown={(event) => { if ((event.key === 'Enter' || event.key === ' ') && event.target === event.currentTarget) { event.preventDefault(); showGenreMovies(genre.id); } }} className={`relative flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-md bg-white shadow-card transition-transform hover:-translate-y-0.5 ${openMenuId === genre.id ? 'z-20 overflow-visible' : ''}`}>
+                return <article key={genre.id} role="button" tabIndex={0} onClick={() => showGenreMovies(genre.id)} onKeyDown={(event) => { if ((event.key === 'Enter' || event.key === ' ') && event.target === event.currentTarget) { event.preventDefault(); showGenreMovies(genre.id); } }} className={`movie-card relative flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-md bg-white shadow-card transition-transform hover:-translate-y-0.5 ${openMenuId === genre.id ? 'z-20 overflow-visible' : ''}`}>
                   <div className="relative aspect-square overflow-hidden rounded-t-md bg-slate-100">
                     {imageUrl ? <img src={imageUrl} alt={genre.name} className="h-full w-full object-cover" loading="lazy" /> : <div className="grid h-full place-items-center"><Tags className="h-16 w-16 text-aqua" /></div>}
                     <div className="absolute right-2 top-2" onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpenMenuId(null); }}>

@@ -91,7 +91,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
         <button type="button" onClick={() => onPersonal?.(movie, 'watchlist')} className={`grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : 'h-8 w-8'} ${overlay ? 'border border-white/30 bg-white/70 shadow-sm backdrop-blur-sm hover:bg-white/90' : 'border border-slate-200 bg-white hover:bg-slate-50'} ${movie.watchlist ? 'text-aqua' : 'text-slate-500'}`} title={movie.watchlist ? 'Quitar de Watchlist' : 'Agregar a Watchlist'} aria-label={movie.watchlist ? 'Quitar de Watchlist' : 'Agregar a Watchlist'}><Bookmark className={`${compact ? 'h-3 w-3' : 'h-4 w-4'} ${movie.watchlist ? 'fill-current' : ''}`} /></button>
         <button type="button" onClick={() => setMenuOpen((current) => !current)} className={`grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : 'h-8 w-8'} ${overlay ? 'border border-white/30 bg-white/70 text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white/90' : 'border border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`} title="Más acciones" aria-label="Más acciones" aria-expanded={menuOpen}><MoreVertical className={compact ? 'h-3 w-3' : 'h-4 w-4'} /></button>
       </div>
-      {menuOpen && <div className={`absolute right-0 z-[70] w-52 rounded-md border border-slate-200 bg-white p-1.5 text-xs shadow-card ${compact ? 'top-6' : 'top-9'}`}>
+      {menuOpen && <div className={`movie-card-dropdown absolute right-0 z-[70] w-52 rounded-md border border-slate-200 bg-white p-1.5 text-xs shadow-card ${compact ? 'top-6' : 'top-9'}`}>
         {movie.trailerUrl ? <a href={movie.trailerUrl} target="_blank" rel="noreferrer" onClick={closeMenu} className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-slate-600 hover:bg-slate-50"><Youtube className="h-4 w-4" />Ver trailer</a> : <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-3 py-1.5 text-slate-300"><Youtube className="h-4 w-4" />Ver trailer</span>}
         {movie.imdbUrl ? <a href={movie.imdbUrl} target="_blank" rel="noreferrer" onClick={closeMenu} className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-slate-600 hover:bg-slate-50"><ExternalLink className="h-4 w-4" />Ver en IMDb</a> : <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-3 py-1.5 text-slate-300"><ExternalLink className="h-4 w-4" />Ver en IMDb</span>}
         {tmdbUrl ? <a href={tmdbUrl} target="_blank" rel="noreferrer" onClick={closeMenu} className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-slate-600 hover:bg-slate-50"><ExternalLink className="h-4 w-4" />Ver en TMDB</a> : <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-3 py-1.5 text-slate-300"><ExternalLink className="h-4 w-4" />Ver en TMDB</span>}
@@ -109,7 +109,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
 
   if (mode === 'list') {
     return (
-      <article role="button" tabIndex={0} onClick={activate} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(); }} className={`relative grid min-h-[140px] cursor-pointer grid-cols-[92px_minmax(0,1fr)] items-stretch gap-x-4 gap-y-3 border-b border-slate-200 bg-white p-3 transition-colors hover:bg-slate-50 lg:grid-cols-[100px_minmax(240px,1fr)_minmax(230px,auto)] lg:items-center ${menuOpen ? 'z-40' : ''} ${selected ? 'bg-red-50' : ''}`}>
+      <article role="button" tabIndex={0} onClick={activate} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(); }} className={`movie-card relative grid min-h-[140px] cursor-pointer grid-cols-[92px_minmax(0,1fr)] items-stretch gap-x-4 gap-y-3 border-b border-slate-200 bg-white p-3 transition-colors hover:bg-slate-50 lg:grid-cols-[100px_minmax(240px,1fr)_minmax(230px,auto)] lg:items-center ${menuOpen ? 'z-40' : ''} ${selected ? 'bg-red-50' : ''}`}>
         <div className="relative row-span-2 min-h-[140px] overflow-hidden bg-slate-100 lg:row-span-1 lg:h-full">
           {selectionMark(true)}
           {poster('h-full w-full object-cover')}
@@ -138,7 +138,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
 
   if (mode === 'details') {
     return (
-      <article role="button" tabIndex={0} onClick={activate} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(); }} className={`relative grid cursor-pointer gap-5 border-b border-slate-200 bg-white p-4 transition-colors hover:bg-slate-50 sm:grid-cols-[200px_minmax(0,1fr)] lg:grid-cols-[220px_minmax(190px,0.65fr)_minmax(300px,1.35fr)] ${menuOpen ? 'z-40' : ''} ${selected ? 'bg-red-50' : ''}`}>
+      <article role="button" tabIndex={0} onClick={activate} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(); }} className={`movie-card relative grid cursor-pointer gap-5 border-b border-slate-200 bg-white p-4 transition-colors hover:bg-slate-50 sm:grid-cols-[200px_minmax(0,1fr)] lg:grid-cols-[220px_minmax(190px,0.65fr)_minmax(300px,1.35fr)] ${menuOpen ? 'z-40' : ''} ${selected ? 'bg-red-50' : ''}`}>
         <div className="group/poster relative mx-auto aspect-[2/3] w-full max-w-[220px] overflow-hidden bg-slate-100">{selectionMark()}{poster('h-full w-full object-cover transition-transform duration-300 ease-out group-hover/poster:scale-105')}</div>
 
         <div className="flex min-w-0 flex-col self-stretch">
@@ -189,7 +189,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
   if (mode === 'medium' || mode === 'mediumIcons') {
     const mediumIcons = mode === 'mediumIcons';
     return (
-      <article role="button" tabIndex={0} onClick={activate} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(); }} className={`group relative flex h-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-md bg-white shadow-card transition-transform hover:-translate-y-0.5 ${menuOpen ? 'z-40 overflow-visible' : ''} ${selected ? 'ring-2 ring-coral ring-offset-2' : ''}`}>
+      <article role="button" tabIndex={0} onClick={activate} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(); }} className={`movie-card group relative flex h-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-md bg-white shadow-card transition-transform hover:-translate-y-0.5 ${menuOpen ? 'z-40 overflow-visible' : ''} ${selected ? 'ring-2 ring-coral ring-offset-2' : ''}`}>
         <div className="relative aspect-[2/3]">
           {selectionMark()}
           <div className="h-full overflow-hidden rounded-t-md bg-slate-100">{poster('h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]')}</div>
@@ -220,7 +220,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
   }
 
   return (
-    <article role="button" tabIndex={0} onClick={activate} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(); }} className={`group relative min-w-0 cursor-pointer rounded-md border bg-white shadow-card transition-transform hover:-translate-y-0.5 ${menuOpen ? 'z-40' : ''} ${selected ? 'border-coral ring-2 ring-coral/20' : 'border-slate-200'}`}>
+    <article role="button" tabIndex={0} onClick={activate} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(); }} className={`movie-card group relative min-w-0 cursor-pointer rounded-md border bg-white shadow-card transition-transform hover:-translate-y-0.5 ${menuOpen ? 'z-40' : ''} ${selected ? 'border-coral ring-2 ring-coral/20' : 'border-slate-200'}`}>
       {selectionMark()}
       <div className="relative aspect-[2/3]">
         <div className="h-full overflow-hidden rounded-t-md bg-slate-100">{poster('h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]')}</div>

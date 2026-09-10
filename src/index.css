@@ -31,7 +31,7 @@
 }
 
 :root[data-theme="dark"] {
-  --color-canvas: 0 0 0;
+  --color-canvas: 18 20 23;
   --color-ink: 248 250 252;
   --color-mist: 24 34 43;
   --color-slate-50: 22 27 34;
@@ -62,15 +62,54 @@ body {
 }
 
 :root[data-theme="dark"] [class~="bg-ink/55"] {
-  background-color: rgb(0 0 0 / 0.78);
+  background-color: rgb(18 20 23 / 0.82);
 }
 
 :root[data-theme="dark"] [class~="bg-canvas"] {
-  background-color: #000;
+  background-color: rgb(18 20 23);
 }
 
 :root[data-theme="dark"] [class~="bg-canvas/95"] {
-  background-color: rgb(0 0 0 / 0.95);
+  background-color: rgb(18 20 23 / 0.95);
+}
+
+:root[data-theme="dark"] .main-navigation > a,
+:root[data-theme="dark"] .main-navigation > div > button {
+  color: #fff;
+}
+
+:root[data-theme="dark"] .header-dropdown {
+  --color-ink: 248 250 252;
+  --color-mist: 29 36 45;
+  --color-slate-50: 29 32 36;
+  --color-slate-100: 38 42 47;
+  --color-slate-200: 71 76 83;
+  --color-slate-300: 100 116 139;
+  --color-slate-400: 203 213 225;
+  --color-slate-500: 226 232 240;
+  --color-slate-600: 241 245 249;
+  --color-slate-700: 248 250 252;
+  border-width: 0;
+  background-color: rgb(18 20 23);
+  color: #fff;
+}
+
+:root[data-theme="dark"] .header-dropdown a,
+:root[data-theme="dark"] .header-dropdown button,
+:root[data-theme="dark"] .header-dropdown p {
+  color: #fff;
+}
+
+:root[data-theme="dark"] .header-dropdown a:hover,
+:root[data-theme="dark"] .header-dropdown button:hover {
+  background-color: rgb(38 42 47);
+  color: #fff;
+}
+
+:root[data-theme="dark"] .header-dropdown [class~="border-t"],
+:root[data-theme="dark"] .header-dropdown [class~="border-b"],
+:root[data-theme="dark"] .header-dropdown [class~="border-y"] {
+  border-color: rgb(45 49 55);
 }
 
 :root[data-theme="dark"] [class~="bg-white"],
@@ -89,6 +128,203 @@ body {
   --color-slate-500: 100 116 139;
   --color-slate-600: 71 85 105;
   --color-slate-700: 51 65 85;
+}
+
+:root[data-theme="dark"] .library-toolbar,
+:root[data-theme="dark"] .library-toolbar [class~="bg-white"] {
+  --color-ink: 248 250 252;
+  --color-mist: 24 34 43;
+  --color-slate-50: 22 27 34;
+  --color-slate-100: 29 36 45;
+  --color-slate-200: 71 85 105;
+  --color-slate-300: 100 116 139;
+  --color-slate-400: 203 213 225;
+  --color-slate-500: 226 232 240;
+  --color-slate-600: 241 245 249;
+  --color-slate-700: 248 250 252;
+  background-color: rgb(18 20 23);
+  color: #fff;
+}
+
+:root[data-theme="dark"] .library-toolbar input::placeholder {
+  color: #fff;
+  opacity: 0.75;
+}
+
+:root[data-theme="dark"] .library-toolbar h1,
+:root[data-theme="dark"] .library-toolbar p,
+:root[data-theme="dark"] .library-toolbar label {
+  color: #fff;
+}
+
+:root[data-theme="dark"] .library-toolbar .control {
+  border-color: rgb(71 85 105);
+  background-color: rgb(18 20 23);
+  color: #fff;
+}
+
+:root[data-theme="dark"] .library-toolbar label > svg {
+  color: #fff;
+}
+
+:root[data-theme="dark"] .library-toolbar input[type="radio"] {
+  appearance: none;
+  border: 1.5px solid #fff;
+  border-radius: 9999px;
+  background: transparent;
+}
+
+:root[data-theme="dark"] .library-toolbar input[type="radio"]:checked {
+  background: radial-gradient(circle, #ef5544 0 42%, transparent 45%);
+}
+
+:root[data-theme="dark"] .library-toolbar .library-toolbar-menu-button {
+  border-color: transparent;
+  background-color: #ef5544;
+  color: #fff;
+}
+
+:root[data-theme="dark"] .library-toolbar .library-toolbar-menu-button:hover {
+  border-color: transparent;
+  background-color: #dc493a;
+  color: #fff;
+}
+
+:root[data-theme="dark"] .library-toolbar-dropdown button,
+:root[data-theme="dark"] .library-toolbar-dropdown input,
+:root[data-theme="dark"] .library-toolbar-dropdown input::placeholder {
+  color: #fff;
+}
+
+:root[data-theme="dark"] .library-toolbar-dropdown {
+  border-width: 0;
+}
+
+:root[data-theme="dark"] .library-toolbar-dropdown [class~="bg-mist"] {
+  background-color: rgb(45 49 55);
+  color: #fff;
+}
+
+:root[data-theme="dark"] .movie-card,
+:root[data-theme="dark"] .movie-card:hover {
+  border-color: rgb(71 76 83);
+  background-color: rgb(42 45 49);
+  color: #fff;
+}
+
+:root[data-theme="dark"] .movie-card h2,
+:root[data-theme="dark"] .movie-card h3,
+:root[data-theme="dark"] .movie-card p,
+:root[data-theme="dark"] .movie-card .field-label,
+:root[data-theme="dark"] .movie-card span[class~="text-slate-500"],
+:root[data-theme="dark"] .movie-card span[class~="text-slate-600"],
+:root[data-theme="dark"] .movie-card div[class~="text-slate-500"],
+:root[data-theme="dark"] .movie-card a[class~="text-slate-500"],
+:root[data-theme="dark"] .movie-card a[class~="text-slate-600"] {
+  color: #fff;
+}
+
+:root[data-theme="dark"] .movie-card [class~="bg-ink"] {
+  background-color: rgb(46 52 57);
+  color: #fff;
+}
+
+:root[data-theme="dark"] .movie-card [class~="bg-slate-100"],
+:root[data-theme="dark"] .movie-card [class~="bg-mist"] {
+  background-color: rgb(52 56 62);
+}
+
+:root[data-theme="dark"] .movie-card[class~="bg-red-50"] {
+  background-color: rgb(72 36 36);
+}
+
+:root[data-theme="dark"] .movie-card-dropdown {
+  border-color: rgb(71 76 83);
+  background-color: rgb(18 20 23);
+}
+
+:root[data-theme="dark"] .movie-card-dropdown a,
+:root[data-theme="dark"] .movie-card-dropdown button,
+:root[data-theme="dark"] .movie-card-dropdown span {
+  color: #fff;
+}
+
+:root[data-theme="dark"] .movie-card[class~="min-h-[140px]"],
+:root[data-theme="dark"] .movie-card[class~="gap-5"] {
+  border-color: rgb(55 59 65);
+}
+
+:root[data-theme="dark"] .movie-card[class~="gap-5"] [class~="border-t"],
+:root[data-theme="dark"] .movie-card[class~="gap-5"] [class~="lg:border-l"] {
+  border-color: rgb(55 59 65);
+}
+
+:root[data-theme="dark"] .movie-card[class~="min-h-[140px]"] button[class~="bg-white"],
+:root[data-theme="dark"] .movie-card[class~="gap-5"] button[class~="bg-white"],
+:root[data-theme="dark"] .movie-card[class~="border"] button[class~="bg-white"] {
+  border-color: rgb(255 255 255 / 0.2);
+  background-color: rgb(255 255 255 / 0.16);
+}
+
+:root[data-theme="dark"] .movie-card[class~="min-h-[140px]"] button[class~="bg-white"]:hover,
+:root[data-theme="dark"] .movie-card[class~="gap-5"] button[class~="bg-white"]:hover,
+:root[data-theme="dark"] .movie-card[class~="border"] button[class~="bg-white"]:hover {
+  background-color: rgb(255 255 255 / 0.24);
+}
+
+:root[data-theme="dark"] .movie-detail-modal,
+:root[data-theme="dark"] .movie-detail-modal header {
+  border-color: rgb(55 59 65);
+  background-color: rgb(18 20 23);
+  color: #fff;
+}
+
+:root[data-theme="dark"] .movie-detail-modal h1,
+:root[data-theme="dark"] .movie-detail-modal h2,
+:root[data-theme="dark"] .movie-detail-modal h3,
+:root[data-theme="dark"] .movie-detail-modal dt,
+:root[data-theme="dark"] .movie-detail-modal dd,
+:root[data-theme="dark"] .movie-detail-modal p,
+:root[data-theme="dark"] .movie-detail-modal .field-label,
+:root[data-theme="dark"] .movie-detail-modal span[class~="text-ink"],
+:root[data-theme="dark"] .movie-detail-modal span[class~="text-slate-400"],
+:root[data-theme="dark"] .movie-detail-modal span[class~="text-slate-500"],
+:root[data-theme="dark"] .movie-detail-modal a[class~="text-slate-600"] {
+  color: #fff;
+}
+
+:root[data-theme="dark"] .movie-detail-modal .secondary-button,
+:root[data-theme="dark"] .movie-detail-modal .icon-button,
+:root[data-theme="dark"] .movie-detail-modal .control,
+:root[data-theme="dark"] .movie-detail-modal [class~="bg-white"] {
+  border-color: rgb(71 76 83);
+  background-color: rgb(52 56 62);
+  color: #fff;
+}
+
+:root[data-theme="dark"] .movie-detail-modal button {
+  color: #fff;
+}
+
+:root[data-theme="dark"] .movie-detail-modal [class~="bg-mist"] {
+  background-color: rgb(65 70 77);
+}
+
+:root[data-theme="dark"] .movie-detail-modal .secondary-button:hover,
+:root[data-theme="dark"] .movie-detail-modal .icon-button:hover,
+:root[data-theme="dark"] .movie-detail-modal .control:hover,
+:root[data-theme="dark"] .movie-detail-modal [class~="bg-white"] button:hover {
+  background-color: rgb(65 70 77);
+  color: #fff;
+}
+
+:root[data-theme="dark"] .movie-detail-modal [class~="border-t"] {
+  border-color: rgb(55 59 65);
+}
+
+:root[data-theme="dark"] .moviebox-header,
+:root[data-theme="dark"] .library-toolbar {
+  border-bottom-width: 0;
 }
 
 button,

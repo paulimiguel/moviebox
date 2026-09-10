@@ -43,7 +43,7 @@ interface ToolbarProps {
   onClearFilters: () => void;
 }
 
-const menuButton = 'inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold uppercase text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50 xl:w-[150px]';
+const menuButton = 'library-toolbar-menu-button inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold uppercase text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50 xl:w-[150px]';
 
 export const MovieLibraryToolbar = (props: ToolbarProps) => {
   const [openMenu, setOpenMenu] = useState<'view' | 'sort' | 'genre' | 'platform' | null>(null);
@@ -135,7 +135,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
   };
 
   return (
-    <section ref={toolbarRef} className="sticky top-[72px] z-30 border-b border-slate-200 bg-white shadow-sm">
+    <section ref={toolbarRef} className="library-toolbar sticky top-[72px] z-30 border-b border-slate-200 bg-white shadow-sm">
       <div className="mx-auto grid max-w-[1500px] gap-3 px-4 py-3 sm:px-6 xl:grid-cols-[300px_minmax(280px,1fr)_auto] xl:items-start">
         <div className="min-w-0 self-center">
           <h1 className="font-bebas truncate text-xl font-normal text-ink sm:text-2xl">Títulos de {props.ownerName}</h1>
@@ -169,11 +169,11 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
         <div className="grid grid-cols-3 gap-2 xl:grid-cols-3">
           <div className="relative">
             <button type="button" onClick={() => setOpenMenu(openMenu === 'view' ? null : 'view')} className={menuButton} aria-expanded={openMenu === 'view'}>{activeViewIcon}Ver<ChevronDown className="h-4 w-4 shrink-0" /></button>
-            {openMenu === 'view' && <div className="absolute right-0 top-[80px] z-40 w-52 rounded-md border border-slate-200 bg-white p-1.5 shadow-card xl:top-10">{viewOptions.map((option) => <button key={option.value} type="button" onClick={() => { props.onViewModeChange(option.value); setOpenMenu(null); }} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${props.viewMode === option.value ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`}>{option.icon}<span className="flex-1">{option.label}</span>{props.viewMode === option.value && <Check className="h-4 w-4 text-coral" />}</button>)}</div>}
+            {openMenu === 'view' && <div className="library-toolbar-dropdown absolute right-0 top-[80px] z-40 w-52 rounded-md border border-slate-200 bg-white p-1.5 shadow-card xl:top-10">{viewOptions.map((option) => <button key={option.value} type="button" onClick={() => { props.onViewModeChange(option.value); setOpenMenu(null); }} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${props.viewMode === option.value ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`}>{option.icon}<span className="flex-1">{option.label}</span>{props.viewMode === option.value && <Check className="h-4 w-4 text-coral" />}</button>)}</div>}
           </div>
           <div className="relative">
             <button type="button" onClick={() => setOpenMenu(openMenu === 'sort' ? null : 'sort')} className={menuButton} aria-expanded={openMenu === 'sort'}><ArrowUpDown className="h-5 w-5 shrink-0" />Ordenar<ChevronDown className="h-4 w-4 shrink-0" /></button>
-            {openMenu === 'sort' && <div className="absolute right-0 top-[80px] z-40 w-52 rounded-md border border-slate-200 bg-white p-1.5 shadow-card xl:top-10">{sortOptions.map((option) => { const active = props.sortKey === option.value; return <button key={option.value} type="button" onClick={() => { props.onSortChange(option.value); setOpenMenu(null); }} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${active ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`}><Check className={`h-4 w-4 ${active ? 'text-coral' : 'text-transparent'}`} /><span className="flex-1">{option.label}</span>{active ? (props.sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />) : <ArrowUpDown className="h-4 w-4 opacity-30" />}</button>; })}</div>}
+            {openMenu === 'sort' && <div className="library-toolbar-dropdown absolute right-0 top-[80px] z-40 w-52 rounded-md border border-slate-200 bg-white p-1.5 shadow-card xl:top-10">{sortOptions.map((option) => { const active = props.sortKey === option.value; return <button key={option.value} type="button" onClick={() => { props.onSortChange(option.value); setOpenMenu(null); }} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${active ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`}><Check className={`h-4 w-4 ${active ? 'text-coral' : 'text-transparent'}`} /><span className="flex-1">{option.label}</span>{active ? (props.sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />) : <ArrowUpDown className="h-4 w-4 opacity-30" />}</button>; })}</div>}
           </div>
           <button type="button" onClick={() => { setOpenMenu(null); props.onFiltersToggle(); }} className={`${menuButton} ${props.filtersOpen ? 'border-coral bg-red-50 text-coral' : ''}`}><Filter className="h-5 w-5 shrink-0" />Filtrar<ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${props.filtersOpen ? 'rotate-180' : ''}`} /></button>
         </div>
@@ -190,7 +190,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
                 <ChevronsUpDown className="h-4 w-4 shrink-0 text-slate-400" />
               </button>
               {openMenu === 'genre' && (
-                <div className="absolute left-0 top-full z-50 mt-1 w-full min-w-[280px] overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
+                <div className="library-toolbar-dropdown absolute left-0 top-full z-50 mt-1 w-full min-w-[280px] overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
                   <label className="relative block border-b border-slate-200">
                     <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input autoFocus type="search" value={genreSearch} onChange={(event) => setGenreSearch(event.target.value)} className="h-11 w-full pl-9 pr-3 text-sm outline-none" placeholder="Buscar género..." />
@@ -213,7 +213,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
                 <ChevronsUpDown className="h-4 w-4 shrink-0 text-slate-400" />
               </button>
               {openMenu === 'platform' && (
-                <div className="absolute left-0 top-full z-50 mt-1 w-full min-w-[220px] overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
+                <div className="library-toolbar-dropdown absolute left-0 top-full z-50 mt-1 w-full min-w-[220px] overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
                   <label className="relative block border-b border-slate-200">
                     <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input autoFocus type="search" value={platformSearch} onChange={(event) => setPlatformSearch(event.target.value)} className="h-11 w-full pl-9 pr-3 text-sm outline-none" placeholder="Buscar plataforma..." />

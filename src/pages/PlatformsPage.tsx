@@ -108,7 +108,7 @@ export const PlatformsPage = () => {
   return (
     <main className="min-h-screen bg-canvas">
       <Header />
-      <section className="border-b border-slate-200 bg-white shadow-sm">
+      <section className="library-toolbar border-b border-slate-200 bg-white shadow-sm">
         <div className="mx-auto max-w-[1500px] px-4 py-4 sm:px-6">
           <h1 className="font-bebas text-2xl font-normal uppercase text-ink">Plataformas</h1>
           <p className="mt-0.5 text-xs text-slate-500">{platforms.data?.length || 0} plataformas</p>
@@ -125,7 +125,7 @@ export const PlatformsPage = () => {
             {platforms.data.map((platform) => {
               const imageUrl = resolvePlatformLogoUrl(platform);
               return (
-                <article key={platform.id} role="button" tabIndex={0} onClick={() => showPlatformMovies(platform.id)} onKeyDown={(event) => { if ((event.key === 'Enter' || event.key === ' ') && event.target === event.currentTarget) { event.preventDefault(); showPlatformMovies(platform.id); } }} className={`relative flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-md bg-white shadow-card transition-transform hover:-translate-y-0.5 ${openMenuId === platform.id ? 'z-20 overflow-visible' : ''}`}>
+                <article key={platform.id} role="button" tabIndex={0} onClick={() => showPlatformMovies(platform.id)} onKeyDown={(event) => { if ((event.key === 'Enter' || event.key === ' ') && event.target === event.currentTarget) { event.preventDefault(); showPlatformMovies(platform.id); } }} className={`movie-card relative flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-md bg-white shadow-card transition-transform hover:-translate-y-0.5 ${openMenuId === platform.id ? 'z-20 overflow-visible' : ''}`}>
                   <div className="relative aspect-square overflow-hidden rounded-t-md bg-slate-100">
                     {imageUrl ? <img src={imageUrl} alt={platform.name} className="h-full w-full object-contain p-3" loading="lazy" /> : <div className="grid h-full place-items-center"><MonitorPlay className="h-16 w-16 text-aqua" /></div>}
                     <div className="absolute right-2 top-2" onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpenMenuId(null); }}>
