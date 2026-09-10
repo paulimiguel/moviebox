@@ -13,6 +13,8 @@ export const CollectionsPage = () => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
+  const [collectionToDelete, setCollectionToDelete] =
+    useState<MovieCollection | null>(null);
   const collections = useQuery({
     queryKey: ["collections"],
     queryFn: api.collections.getAll,
@@ -36,8 +38,10 @@ export const CollectionsPage = () => {
   });
   const remove = useMutation({
     mutationFn: api.collections.remove,
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["collections"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["collections"] });
+      setCollectionToDelete(null);
+    },
   });
   const openEdit = (collection: MovieCollection) => {
     setEditing(collection);
@@ -145,14 +149,7 @@ export const CollectionsPage = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        if (
-                          window.confirm(
-                            `Eliminar la coleccion ${collection.name}? Los titulos no se eliminaran.`,
-                          )
-                        )
-                          remove.mutate(collection.id);
-                      }}
+                      onClick={() => setCollectionToDelete(collection)}
                       className="icon-button border-0 text-red-600 shadow-none"
                       title="Eliminar"
                     >
@@ -188,6 +185,48 @@ export const CollectionsPage = () => {
           </div>
         )}
       </div>
+      {collectionToDelete && (
+        <div
+          className="fixed inset-0 z-[70] grid place-items-center bg-ink/55 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-collection-title"
+        >
+          <div className="w-full max-w-md rounded-md bg-white p-5 shadow-xl">
+            <h2
+              id="delete-collection-title"
+              className="font-bebas text-2xl uppercase text-ink"
+            >
+              Eliminar colección
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              ¿Eliminar la colección {collectionToDelete.name}? Las películas
+              no se eliminarán.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setCollectionToDelete(null)}
+                className="secondary-button"
+                disabled={remove.isPending}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => remove.mutate(collectionToDelete.id)}
+                className="primary-button bg-red-600 hover:bg-red-700"
+                disabled={remove.isPending}
+              >
+                {remove.isPending && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                )}
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 };

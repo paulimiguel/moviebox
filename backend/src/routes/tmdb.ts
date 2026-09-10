@@ -4,7 +4,7 @@ import { authenticateToken } from '../middleware/auth';
 const router = Router();
 const token = process.env.TMDB_API_TOKEN;
 router.use(authenticateToken);
-router.get('/status', (_req, res) => res.json({ configured: Boolean(token), protectedFields: ['favorite', 'watched', 'personalRating', 'collectionIds'] }));
+router.get('/status', (_req, res) => res.json({ configured: Boolean(token), protectedFields: ['favorite', 'watched', 'watchlist', 'personalRating', 'collectionIds'] }));
 router.get('/search', async (req, res) => {
   if (!token) return res.status(503).json({ error: 'TMDB todavia no esta configurado' });
   const query = String(req.query.query || '').trim(); if (!query) return res.json([]);

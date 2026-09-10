@@ -93,7 +93,7 @@ export const api = {
     remove: (id: string) => request<void>(`/collections/${id}`, { method: 'DELETE' }),
   },
   metadata: {
-    getAll: () => request<{ genres: { id: string; name: string }[]; keywords: { id: string; name: string }[]; platforms: { id: string; name: string }[] }>('/metadata'),
+    getAll: () => request<{ genres: { id: string; name: string }[]; keywords: { id: string; name: string }[]; platforms: { id: string; name: string }[]; countries: { id: string; name: string }[]; directors: { id: string; name: string }[] }>('/metadata'),
     create: (kind: 'genres' | 'keywords' | 'platforms', name: string) => request<{ id: string; name: string }>(`/metadata/${kind}`, { method: 'POST', body: JSON.stringify({ name }) }),
   },
   uploads: {

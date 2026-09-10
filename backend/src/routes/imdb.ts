@@ -6,6 +6,7 @@ import { authenticateToken } from '../middleware/auth';
 const router = Router();
 const CINEMETA_URL = 'https://v3-cinemeta.strem.io';
 const TMDB_URL = 'https://api.themoviedb.org/3';
+const JUSTWATCH_URL = 'https://www.justwatch.com';
 const LOCALIZED_TMDB_GENRES: Record<string, string> = {
   'action & adventure': 'Acción y aventura',
   kids: 'Infantil',
@@ -50,6 +51,14 @@ interface TmdbWatchProvidersResponse {
   }>;
 }
 
+interface TmdbTranslationsResponse {
+  translations?: Array<{
+    iso_639_1?: string;
+    iso_3166_1?: string;
+    data?: { overview?: string };
+  }>;
+}
+
 interface LocalizedTmdbDetails {
   id: number;
   title: string | null;
@@ -65,11 +74,21 @@ const importSchema = z.object({
 });
 
 const cinemetaRequest = async <T>(path: string): Promise<T> => {
-  const response = await fetch(`${CINEMETA_URL}${path}`, {
-    signal: AbortSignal.timeout(15_000),
-  });
-  if (!response.ok) throw new Error(`CINEMETA_${response.status}`);
-  return response.json() as Promise<T>;
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const response = await fetch(`${CINEMETA_URL}${path}`, {
+        headers: { Accept: 'application/json' },
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (!response.ok) throw new Error(`CINEMETA_${response.status}`);
+      return response.json() as Promise<T>;
+    } catch (error) {
+      lastError = error;
+      if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 300 * (attempt + 1)));
+    }
+  }
+  throw lastError;
 };
 
 const tmdbRequest = async <T>(path: string): Promise<T> => {
@@ -98,6 +117,82 @@ const parseRuntime = (value: unknown) => {
   return match ? Number(match[0]) : null;
 };
 
+const normalizeTitle = (value: string) => value
+  .trim()
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .replace(/[^a-zA-Z0-9]+/g, ' ')
+  .trim()
+  .toLocaleLowerCase('es');
+
+const decodeHtml = (value: string) => value
+  .replace(/&quot;/g, '"')
+  .replace(/&#(?:x27|39);/gi, "'")
+  .replace(/&amp;/g, '&');
+
+export const getJustWatchUrl = async (
+  originalTitle: string,
+  localizedTitle: string | null,
+  year: number | null,
+  type: 'movie' | 'series',
+) => {
+  const searchUrl = new URL('/ar/buscar', JUSTWATCH_URL);
+  searchUrl.searchParams.set('q', originalTitle);
+
+  try {
+    const response = await fetch(searchUrl, {
+      headers: { Accept: 'text/html' },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) return searchUrl.toString();
+
+    const html = await response.text();
+    const expectedPath = type === 'movie' ? '/ar/pelicula/' : '/ar/serie/';
+    const titles = [originalTitle, localizedTitle].filter((value): value is string => Boolean(value)).map(normalizeTitle);
+    const matches = Array.from(html.matchAll(/<a\s+href="(https:\/\/www\.justwatch\.com\/ar\/(?:pelicula|serie)\/[^"?#]+)"[^>]*>[\s\S]{0,2500}?<img[^>]*\salt="([^"]*)"/gi));
+    const candidates = Array.from(new Map(
+      matches
+        .map((match) => ({ url: decodeHtml(match[1]), title: normalizeTitle(decodeHtml(match[2])) }))
+        .filter((candidate) => new URL(candidate.url).pathname.startsWith(expectedPath))
+        .map((candidate) => [candidate.url, candidate]),
+    ).values()).slice(0, 8);
+
+    const directMatches = candidates.filter((candidate) => titles.includes(candidate.title));
+    if (directMatches.length === 1 || (!year && directMatches.length > 0)) return directMatches[0].url;
+
+    if (year) {
+      const prioritizedCandidates = [...directMatches, ...candidates.filter((candidate) => !directMatches.includes(candidate))];
+      const inspected = await Promise.all(prioritizedCandidates.slice(0, 5).map(async (candidate) => {
+        try {
+          const detailResponse = await fetch(candidate.url, {
+            headers: { Accept: 'text/html' },
+            signal: AbortSignal.timeout(8_000),
+          });
+          if (!detailResponse.ok) return null;
+          const detailHtml = await detailResponse.text();
+          const jsonLd = detailHtml.match(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/i)?.[1];
+          if (!jsonLd) return null;
+          const data = JSON.parse(jsonLd) as { '@graph'?: Array<{ '@type'?: string; name?: string; dateCreated?: string }> };
+          const expectedType = type === 'movie' ? 'Movie' : 'TVSeries';
+          const item = data['@graph']?.find((entry) => entry['@type'] === expectedType);
+          if (!item) return null;
+          const itemYear = parseYear(item.dateCreated);
+          const itemTitle = normalizeTitle(item.name || '');
+          return { ...candidate, score: (itemYear === year ? 4 : 0) + (titles.includes(itemTitle) ? 6 : 0) };
+        } catch {
+          return null;
+        }
+      }));
+      const best = inspected.filter((candidate): candidate is NonNullable<typeof candidate> => Boolean(candidate)).sort((left, right) => right.score - left.score)[0];
+      if (best?.score >= 4) return best.url;
+    }
+
+    return searchUrl.toString();
+  } catch {
+    return searchUrl.toString();
+  }
+};
+
 const getLocalizedTmdbDetails = async (
   imdbId: string,
   type: 'movie' | 'series',
@@ -115,9 +210,10 @@ const getLocalizedTmdbDetails = async (
   if (!tmdbId) return null;
 
   const resource = type === 'movie' ? 'movie' : 'tv';
-  const [argentina, spain, providers] = await Promise.all([
+  const [argentina, spain, translations, providers] = await Promise.all([
     tmdbRequest<TmdbDetails>(`/${resource}/${tmdbId}?language=es-AR&append_to_response=credits`),
     tmdbRequest<TmdbDetails>(`/${resource}/${tmdbId}?language=es-ES&append_to_response=credits`),
+    tmdbRequest<TmdbTranslationsResponse>(`/${resource}/${tmdbId}/translations`),
     tmdbRequest<TmdbWatchProvidersResponse>(`/${resource}/${tmdbId}/watch/providers`),
   ]);
   const argentinaGenres = argentina.genres?.filter((genre) => genre.name.trim()) || [];
@@ -131,11 +227,17 @@ const getLocalizedTmdbDetails = async (
   const uniqueProviders = Array.from(
     new Map(availableProviders.map((provider) => [provider.provider_id, provider])).values(),
   ).sort((left, right) => (left.display_priority || 0) - (right.display_priority || 0));
+  const translatedSpanishSynopsis = (translations.translations || [])
+    .filter((translation) => translation.iso_639_1 === 'es' && translation.data?.overview?.trim())
+    .sort((left, right) => {
+      const priority = (country?: string) => country === 'AR' ? 0 : country === 'ES' ? 1 : country === 'MX' ? 2 : 3;
+      return priority(left.iso_3166_1) - priority(right.iso_3166_1);
+    })[0]?.data?.overview?.trim() || null;
 
   return {
     id: tmdbId,
     title: (argentina.title || argentina.name || spain.title || spain.name || '').trim() || null,
-    synopsis: (argentina.overview || spain.overview || '').trim() || null,
+    synopsis: (argentina.overview || spain.overview || translatedSpanishSynopsis || '').trim() || null,
     genres: (argentinaGenres.length ? argentinaGenres : spainGenres).map((genre) => (
       LOCALIZED_TMDB_GENRES[genre.name.toLocaleLowerCase('en')] || genre.name
     )),
@@ -154,10 +256,16 @@ router.get('/search', async (req, res) => {
 
   try {
     const encodedQuery = encodeURIComponent(query);
-    const [movies, series] = await Promise.all([
+    const searches = await Promise.allSettled([
       cinemetaRequest<{ metas?: any[] }>(`/catalog/movie/top/search=${encodedQuery}.json`),
       cinemetaRequest<{ metas?: any[] }>(`/catalog/series/top/search=${encodedQuery}.json`),
     ]);
+    const [movieSearch, seriesSearch] = searches;
+    if (movieSearch.status === 'rejected' && seriesSearch.status === 'rejected') {
+      throw new AggregateError(searches.map((search) => search.status === 'rejected' ? search.reason : null), 'Cinemeta search failed');
+    }
+    const movies = movieSearch.status === 'fulfilled' ? movieSearch.value : {};
+    const series = seriesSearch.status === 'fulfilled' ? seriesSearch.value : {};
     const normalizedQuery = query.toLocaleLowerCase();
     const results = [
       ...(movies.metas || []).map((item, index) => ({ ...item, type: 'movie' as const, sourceIndex: index })),
@@ -215,20 +323,32 @@ router.post('/import', async (req, res) => {
     const tmdbId = Number(details.moviedb_id);
     const knownTmdbId = Number.isInteger(tmdbId) && tmdbId > 0 ? tmdbId : null;
     const localized = await getLocalizedTmdbDetails(imdbId, type, knownTmdbId);
+    const year = parseYear(details.year || details.releaseInfo);
+    const justwatchUrl = await getJustWatchUrl(details.name, localized?.title || null, year, type);
+
+    const importedTmdbId = localized?.id || knownTmdbId;
+    const importedCast = Array.from(new Map(
+      [...(localized?.cast || []), ...(details.cast || [])]
+        .map((name: unknown) => String(name || '').trim())
+        .filter(Boolean)
+        .map((name: string) => [normalizeTitle(name), name]),
+    ).values()).slice(0, 6);
 
     return res.json({
       type,
       originalTitle: details.name,
       spanishTitle: localized?.title || null,
-      year: parseYear(details.year || details.releaseInfo),
-      synopsis: localized?.synopsis || details.description || null,
+      year,
+      synopsis: localized?.synopsis || null,
       durationMinutes: parseRuntime(details.runtime),
       seasons,
       totalEpisodes: episodes.length || null,
       imdbRating: Number.isFinite(rating) ? rating : null,
-      tmdbId: localized?.id || knownTmdbId,
+      tmdbId: importedTmdbId,
+      tmdbUrl: importedTmdbId ? `https://www.themoviedb.org/${type === 'movie' ? 'movie' : 'tv'}/${importedTmdbId}` : null,
       imdbId,
       imdbUrl: `https://www.imdb.com/title/${imdbId}/`,
+      justwatchUrl,
       trailerUrl: trailer ? `https://www.youtube.com/watch?v=${trailer.source}` : null,
       images: images.slice(0, 5).map((url, order) => ({
         url,
@@ -247,8 +367,7 @@ router.post('/import', async (req, res) => {
           creditType: 'director',
           order,
         })),
-        ...(localized?.cast.length ? localized.cast : details.cast || [])
-          .slice(0, 6)
+        ...importedCast
           .map((name: string, order: number) => ({
           name,
           creditType: 'cast',

@@ -5,6 +5,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { MovieDetailPage } from '@/pages/MovieDetailPage';
 import { CollectionsPage } from '@/pages/CollectionsPage';
 import { CollectionDetailPage } from '@/pages/CollectionDetailPage';
+import { AddMoviesPage } from '@/pages/AddMoviesPage';
 
 const AppContent = () => {
   const { user, isLoading } = useAuth();
@@ -23,6 +24,7 @@ const AppContent = () => {
       <Route path="/titulo/:id" element={<MovieDetailPage />} />
       <Route path="/colecciones" element={<CollectionsPage />} />
       <Route path="/colecciones/:id" element={<CollectionDetailPage />} />
+      <Route path="/agregar" element={<AddMoviesPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   ) : <AuthPage />;

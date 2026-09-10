@@ -3,6 +3,10 @@ dist/
 .env
 *.log
 artifacts/
+/imagenes/
+/public/filmaffinity-logo-white.png
+/public/filmaffinity.png
+/public/justwatch-logo.jpg
 
 backend/node_modules/
 backend/dist/

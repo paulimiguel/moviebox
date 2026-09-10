@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, ImagePlus, Loader2, Plus, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, ImagePlus, Loader2, Plus, Search, Trash2, X } from "lucide-react";
 import { api, resolveMovieImageUrl } from "@/services/api";
 import type { CreateMovieInput, MovieItem, MovieType } from "@/types/movie";
 
@@ -30,6 +30,18 @@ const MetadataPicker = ({
 }) => {
   const [draft, setDraft] = useState("");
   const queryClient = useQueryClient();
+  const visibleOptions = useMemo(() => {
+    const byName = new Map(
+      options.map((option) => [option.name.toLocaleLowerCase("es"), option]),
+    );
+    selected.forEach((name) => {
+      const key = name.toLocaleLowerCase("es");
+      if (!byName.has(key)) byName.set(key, { id: `selected-${key}`, name });
+    });
+    return Array.from(byName.values()).sort((left, right) =>
+      left.name.localeCompare(right.name, "es"),
+    );
+  }, [options, selected]);
   const create = useMutation({
     mutationFn: (name: string) => api.metadata.create(kind, name),
     onSuccess: (item) => {
@@ -56,15 +68,16 @@ const MetadataPicker = ({
   return (
     <fieldset>
       <legend className="field-label">{label}</legend>
-      <div className="max-h-32 overflow-auto rounded-md border border-slate-200 bg-white p-2">
-        {options.length ? (
-          options.map((option) => (
+      <div className="h-32 overflow-auto rounded-md border border-slate-200 bg-white p-2">
+        {visibleOptions.length ? (
+          visibleOptions.map((option) => (
             <label
               key={option.id}
               className="flex cursor-pointer items-center gap-2 py-1 text-sm"
             >
               <input
                 type="checkbox"
+                className="accent-aqua"
                 checked={selected.includes(option.name)}
                 onChange={() => toggle(option.name)}
               />
@@ -96,6 +109,88 @@ const MetadataPicker = ({
         >
           <Plus className="h-4 w-4" />
         </button>
+      </div>
+    </fieldset>
+  );
+};
+
+const MultiSelectDropdown = ({
+  label,
+  options,
+  selected,
+  onChange,
+}: {
+  label: string;
+  options: { id: string; name: string }[];
+  selected: string[];
+  onChange: (names: string[]) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const visibleOptions = useMemo(() => {
+    const byName = new Map(
+      options.map((option) => [option.name.toLocaleLowerCase("es"), option]),
+    );
+    selected.forEach((name) => {
+      const key = name.toLocaleLowerCase("es");
+      if (!byName.has(key)) byName.set(key, { id: `selected-${key}`, name });
+    });
+    const query = search.trim().toLocaleLowerCase("es");
+    return Array.from(byName.values())
+      .filter((option) => !query || option.name.toLocaleLowerCase("es").includes(query))
+      .sort((left, right) => left.name.localeCompare(right.name, "es"));
+  }, [options, search, selected]);
+  const toggle = (name: string) => onChange(
+    selected.includes(name)
+      ? selected.filter((item) => item !== name)
+      : [...selected, name],
+  );
+
+  return (
+    <fieldset>
+      <legend className="field-label">{label}</legend>
+      <div
+        className="relative"
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+            setOpen(false);
+            setSearch("");
+          }
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setOpen((current) => !current)}
+          className="control flex w-full items-center gap-2 text-left"
+          aria-expanded={open}
+        >
+          <span className={`min-w-0 flex-1 truncate ${selected.length ? 'text-ink' : 'text-slate-400'}`}>
+            {selected.length ? selected.join(", ") : `Seleccionar ${label.toLocaleLowerCase("es")}`}
+          </span>
+          <ChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+        </button>
+        {open && (
+          <div className="absolute left-0 right-0 top-[calc(100%+4px)] z-[80] overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
+            <label className="flex items-center gap-2 border-b border-slate-100 px-3 py-2">
+              <Search className="h-4 w-4 shrink-0 text-slate-400" />
+              <input
+                autoFocus
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                className="min-w-0 flex-1 bg-transparent text-sm outline-none"
+                placeholder="Buscar"
+              />
+            </label>
+            <div className="max-h-44 overflow-auto p-2">
+              {visibleOptions.length ? visibleOptions.map((option) => (
+                <label key={option.id} className="flex cursor-pointer items-center gap-2 rounded px-1 py-1.5 text-sm hover:bg-slate-50">
+                  <input type="checkbox" className="accent-aqua" checked={selected.includes(option.name)} onChange={() => toggle(option.name)} />
+                  <span>{option.name}</span>
+                </label>
+              )) : <p className="px-1 py-2 text-xs text-slate-400">No hay opciones.</p>}
+            </div>
+          </div>
+        )}
       </div>
     </fieldset>
   );
@@ -140,13 +235,12 @@ export const MovieFormModal = ({
     movie?.imdbRating?.toString() || "",
   );
   const [countries, setCountries] = useState(
-    movie?.countries.map((item) => item.name).join(", ") || "",
+    movie?.countries.map((item) => item.name) || [],
   );
   const [directors, setDirectors] = useState(
     movie?.credits
       .filter((item) => item.creditType === "director")
-      .map((item) => item.name)
-      .join(", ") || "",
+      .map((item) => item.name) || [],
   );
   const [cast, setCast] = useState(
     movie?.credits
@@ -171,11 +265,11 @@ export const MovieFormModal = ({
     movie?.images.map((item) => item.url).join("\n") || "",
   );
   const [imdbUrl, setImdbUrl] = useState(movie?.imdbUrl || "");
-  const [filmaffinityUrl, setFilmaffinityUrl] = useState(
-    movie?.filmaffinityUrl || "",
-  );
+  const [tmdbUrl, setTmdbUrl] = useState(movie?.tmdbUrl || "");
+  const [justwatchUrl, setJustwatchUrl] = useState(movie?.justwatchUrl || "");
   const [trailerUrl, setTrailerUrl] = useState(movie?.trailerUrl || "");
   const [error, setError] = useState("");
+  const [isDraggingImages, setIsDraggingImages] = useState(false);
 
   const imageList = useMemo(
     () =>
@@ -186,19 +280,59 @@ export const MovieFormModal = ({
         .slice(0, 5),
     [imageUrls],
   );
-  const imageUpload = useMutation({
-    mutationFn: api.uploads.images,
-    onSuccess: ({ images }) => {
-      const current = imageUrls
+  const appendImageUrls = (urls: string[]) => {
+    setImageUrls((currentValue) => {
+      const current = currentValue
         .split(/\r?\n/)
         .map((url) => url.trim())
         .filter(Boolean);
-      setImageUrls(
-        [...current, ...images.map((image) => image.url)].slice(0, 5).join("\n"),
-      );
+      return Array.from(new Set([...current, ...urls])).slice(0, 5).join("\n");
+    });
+  };
+  const imageUpload = useMutation({
+    mutationFn: api.uploads.images,
+    onSuccess: ({ images }) => {
+      appendImageUrls(images.map((image) => image.url));
     },
     onError: (reason: Error) => setError(reason.message),
   });
+  const handleImageDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDraggingImages(false);
+    setError("");
+
+    const remainingSlots = 5 - imageList.length;
+    if (remainingSlots <= 0) {
+      setError("Podes agregar hasta 5 imagenes.");
+      return;
+    }
+
+    const files = Array.from(event.dataTransfer.files)
+      .filter((file) => /^image\/(jpeg|png|webp)$/i.test(file.type))
+      .slice(0, remainingSlots);
+    if (files.length) {
+      imageUpload.mutate(files);
+      return;
+    }
+
+    const html = event.dataTransfer.getData("text/html");
+    const htmlUrls = html
+      ? Array.from(new DOMParser().parseFromString(html, "text/html").querySelectorAll("img"))
+          .map((image) => image.src)
+      : [];
+    const uriUrls = event.dataTransfer
+      .getData("text/uri-list")
+      .split(/\r?\n/)
+      .map((url) => url.trim())
+      .filter((url) => url && !url.startsWith("#"));
+    const plainUrl = event.dataTransfer.getData("text/plain").trim();
+    const droppedUrls = Array.from(new Set([...htmlUrls, ...uriUrls, plainUrl]))
+      .filter((url) => /^https?:\/\//i.test(url))
+      .slice(0, remainingSlots);
+
+    if (droppedUrls.length) appendImageUrls(droppedUrls);
+    else setError("Arrastra archivos JPG, PNG o WebP, o una imagen desde el navegador.");
+  };
   const createCollection = useMutation({
     mutationFn: (name: string) => api.collections.create({ name }),
     onSuccess: (collection) => {
@@ -233,21 +367,23 @@ export const MovieFormModal = ({
       totalEpisodes: type === "series" ? numberOrNull(episodes) : null,
       favorite: movie?.favorite || false,
       watched: movie?.watched || false,
+      watchlist: movie?.watchlist || false,
       personalRating: numberOrNull(personalRating),
       imdbRating: numberOrNull(imdbRating),
       tmdbId: movie?.tmdbId || null,
       imdbId: movie?.imdbId || null,
       imdbUrl: imdbUrl.trim() || null,
-      filmaffinityUrl: filmaffinityUrl.trim() || null,
+      tmdbUrl: tmdbUrl.trim() || null,
+      justwatchUrl: justwatchUrl.trim() || null,
       trailerUrl: trailerUrl.trim() || null,
       tmdbCollectionId: movie?.tmdbCollectionId || null,
       tmdbCollectionName: movie?.tmdbCollectionName || null,
-      countries: split(countries).map((name, order) => {
+      countries: countries.map((name, order) => {
         const current = movie?.countries.find((item) => item.name === name);
         return { name, order, isoCode: current?.isoCode || null };
       }),
       credits: [
-        ...split(directors).map((name, order) => {
+        ...directors.map((name, order) => {
           const current = movie?.credits.find((item) => item.creditType === "director" && item.name === name);
           return { name, order, creditType: "director" as const, tmdbPersonId: current?.tmdbPersonId, tmdbCreditId: current?.tmdbCreditId, profilePath: current?.profilePath };
         }),
@@ -287,14 +423,10 @@ export const MovieFormModal = ({
         className="max-h-[96vh] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-4xl sm:rounded-md"
       >
         <div className="flex h-16 items-center border-b border-slate-200 bg-white px-4 sm:px-6">
-          <div>
-            <h2 className="text-lg font-semibold text-ink">
-              {movie ? "Editar titulo" : "Agregar titulo"}
+          <div className="min-w-0">
+            <h2 className="truncate text-lg font-semibold text-ink">
+              {movie ? `Editar ${movie.originalTitle}` : "Agregar titulo"}
             </h2>
-            <p className="text-xs text-slate-500">
-              Los campos personales no se reemplazaran en futuras
-              sincronizaciones.
-            </p>
           </div>
           <button
             type="button"
@@ -306,29 +438,32 @@ export const MovieFormModal = ({
           </button>
         </div>
         <div className="max-h-[calc(96vh-128px)] overflow-y-auto p-4 sm:p-6">
-          <div className="mb-5 grid grid-cols-2 overflow-hidden rounded-md border border-slate-200">
-            {(["movie", "series"] as const).map((value) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setType(value)}
-                className={`h-11 text-sm font-semibold ${type === value ? "bg-ink text-white" : "bg-white text-slate-500"}`}
-              >
-                {value === "movie" ? "Pelicula" : "Serie"}
-              </button>
-            ))}
-          </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <label>
-              <span className="field-label">Titulo original *</span>
+            <div>
+              <div className="mb-1.5 flex h-7 items-center justify-between gap-3">
+                <label htmlFor="movie-original-title" className="field-label !mb-0">Titulo original *</label>
+                <div className="grid shrink-0 grid-cols-2 overflow-hidden rounded-md border border-slate-200" role="group" aria-label="Tipo de titulo">
+                  {(["movie", "series"] as const).map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setType(value)}
+                      className={`h-7 min-w-[68px] px-2 text-xs font-semibold ${type === value ? "bg-aqua text-white" : "bg-white text-slate-500 hover:bg-slate-50"}`}
+                    >
+                      {value === "movie" ? "Pelicula" : "Serie"}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <input
+                id="movie-original-title"
                 className="control w-full"
                 value={originalTitle}
                 onChange={(e) => setOriginalTitle(e.target.value)}
               />
-            </label>
+            </div>
             <label>
-              <span className="field-label">Titulo en espanol</span>
+              <span className="mb-1.5 flex h-7 items-center text-xs font-semibold uppercase text-slate-500">Titulo en espanol</span>
               <input
                 className="control w-full"
                 value={spanishTitle}
@@ -336,7 +471,7 @@ export const MovieFormModal = ({
               />
             </label>
             <label>
-              <span className="field-label">Ano</span>
+              <span className="field-label">Año</span>
               <input
                 className="control w-full"
                 type="number"
@@ -388,22 +523,18 @@ export const MovieFormModal = ({
                 onChange={(e) => setSynopsis(e.target.value)}
               />
             </label>
-            <label>
-              <span className="field-label">Paises, separados por coma</span>
-              <input
-                className="control w-full"
-                value={countries}
-                onChange={(e) => setCountries(e.target.value)}
-              />
-            </label>
-            <label>
-              <span className="field-label">Direccion, separada por coma</span>
-              <input
-                className="control w-full"
-                value={directors}
-                onChange={(e) => setDirectors(e.target.value)}
-              />
-            </label>
+            <MultiSelectDropdown
+              label="Países"
+              options={metadata.data?.countries || []}
+              selected={countries}
+              onChange={setCountries}
+            />
+            <MultiSelectDropdown
+              label="Dirección"
+              options={metadata.data?.directors || []}
+              selected={directors}
+              onChange={setDirectors}
+            />
             <label className="sm:col-span-2">
               <span className="field-label">Reparto principal, hasta 6</span>
               <input
@@ -420,13 +551,6 @@ export const MovieFormModal = ({
               onChange={setGenres}
             />
             <MetadataPicker
-              label="Etiquetas"
-              kind="keywords"
-              options={metadata.data?.keywords || []}
-              selected={keywords}
-              onChange={setKeywords}
-            />
-            <MetadataPicker
               label="Plataformas"
               kind="platforms"
               options={metadata.data?.platforms || []}
@@ -435,26 +559,31 @@ export const MovieFormModal = ({
             />
             <fieldset>
               <legend className="field-label">Colecciones</legend>
-              <div className="max-h-44 overflow-auto rounded-md border border-slate-200 bg-white p-2">
-                {(collections.data || []).map((collection) => (
-                  <label
-                    key={collection.id}
-                    className="flex items-center gap-2 py-1 text-sm"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={collectionIds.includes(collection.id)}
-                      onChange={() =>
-                        setCollectionIds(
-                          collectionIds.includes(collection.id)
-                            ? collectionIds.filter((id) => id !== collection.id)
-                            : [...collectionIds, collection.id],
-                        )
-                      }
-                    />
-                    {collection.name}
-                  </label>
-                ))}
+              <div className="h-32 overflow-auto rounded-md border border-slate-200 bg-white p-2">
+                {(collections.data || []).length ? (
+                  (collections.data || []).map((collection) => (
+                    <label
+                      key={collection.id}
+                      className="flex cursor-pointer items-center gap-2 py-1 text-sm"
+                    >
+                      <input
+                        type="checkbox"
+                        className="accent-aqua"
+                        checked={collectionIds.includes(collection.id)}
+                        onChange={() =>
+                          setCollectionIds(
+                            collectionIds.includes(collection.id)
+                              ? collectionIds.filter((id) => id !== collection.id)
+                              : [...collectionIds, collection.id],
+                          )
+                        }
+                      />
+                      {collection.name}
+                    </label>
+                  ))
+                ) : (
+                  <p className="text-xs text-slate-400">Todavia no hay opciones.</p>
+                )}
               </div>
               <div className="mt-2 flex gap-2">
                 <input
@@ -482,14 +611,21 @@ export const MovieFormModal = ({
                 </button>
               </div>
             </fieldset>
+            <MetadataPicker
+              label="Etiquetas"
+              kind="keywords"
+              options={metadata.data?.keywords || []}
+              selected={keywords}
+              onChange={setKeywords}
+            />
             <label>
-              <span className="field-label">Mi puntuacion (0-10)</span>
+              <span className="field-label">Rate (1-5)</span>
               <input
                 className="control w-full"
                 type="number"
-                min="0"
-                max="10"
-                step="0.1"
+                min="1"
+                max="5"
+                step="1"
                 value={personalRating}
                 onChange={(e) => setPersonalRating(e.target.value)}
               />
@@ -506,7 +642,14 @@ export const MovieFormModal = ({
                 onChange={(e) => setImdbRating(e.target.value)}
               />
             </label>
-            <div className="sm:col-span-2">
+            <div
+              className={`relative rounded-md border-2 border-dashed p-3 transition-colors sm:col-span-2 ${isDraggingImages ? "border-coral bg-red-50" : "border-slate-200"}`}
+              onDragEnter={(event) => { event.preventDefault(); setIsDraggingImages(true); }}
+              onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = "copy"; setIsDraggingImages(true); }}
+              onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsDraggingImages(false); }}
+              onDrop={handleImageDrop}
+            >
+              {isDraggingImages && <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center rounded-md border-2 border-coral bg-white/90 text-coral"><div className="flex items-center gap-2 text-sm font-semibold"><ImagePlus className="h-5 w-5" />Soltar imagenes</div></div>}
               <span className="field-label">Imagenes (maximo 5)</span>
               {imageList.length > 0 && (
                 <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
@@ -558,12 +701,21 @@ export const MovieFormModal = ({
               />
             </label>
             <label>
-              <span className="field-label">Enlace FilmAffinity</span>
+              <span className="field-label">Enlace TMDB</span>
               <input
                 className="control w-full"
                 type="url"
-                value={filmaffinityUrl}
-                onChange={(e) => setFilmaffinityUrl(e.target.value)}
+                value={tmdbUrl}
+                onChange={(e) => setTmdbUrl(e.target.value)}
+              />
+            </label>
+            <label>
+              <span className="field-label">Enlace JustWatch</span>
+              <input
+                className="control w-full"
+                type="url"
+                value={justwatchUrl}
+                onChange={(e) => setJustwatchUrl(e.target.value)}
               />
             </label>
             <label className="sm:col-span-2">

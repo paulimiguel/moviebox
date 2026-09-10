@@ -13,10 +13,10 @@ const inputSchema = z.object({
   spanishTitle: z.string().trim().max(250).nullable().optional(), year: z.number().int().min(1888).max(2200).nullable().optional(),
   synopsis: z.string().trim().max(5000).nullable().optional(), durationMinutes: z.number().int().positive().max(2000).nullable().optional(),
   seasons: z.number().int().positive().max(999).nullable().optional(), totalEpisodes: z.number().int().positive().max(99999).nullable().optional(),
-  watched: z.boolean().optional(), favorite: z.boolean().optional(), personalRating: z.number().min(0).max(10).nullable().optional(),
+  watched: z.boolean().optional(), favorite: z.boolean().optional(), watchlist: z.boolean().optional(), personalRating: z.number().int().min(1).max(5).nullable().optional(),
   imdbRating: z.number().min(0).max(10).nullable().optional(), tmdbId: z.number().int().positive().nullable().optional(),
   imdbId: z.string().trim().max(30).nullable().optional(), imdbUrl: z.string().trim().url().nullable().optional(),
-  filmaffinityUrl: z.string().trim().url().nullable().optional(), trailerUrl: z.string().trim().url().nullable().optional(),
+  tmdbUrl: z.string().trim().url().nullable().optional(), justwatchUrl: z.string().trim().url().nullable().optional(), trailerUrl: z.string().trim().url().nullable().optional(),
   tmdbCollectionId: z.number().int().positive().nullable().optional(), tmdbCollectionName: z.string().trim().max(250).nullable().optional(),
   images: z.array(z.object({ url: z.string().trim().min(1).max(2000), localPath: z.string().nullable().optional(), tmdbFilePath: z.string().nullable().optional(), order: z.number().int().min(0), isPrimary: z.boolean().optional(), altText: z.string().max(250).nullable().optional() })).max(5).optional(),
   countries: z.array(named.extend({ isoCode: z.string().max(3).nullable().optional() })).max(20).optional(),
@@ -94,9 +94,9 @@ const saveRelations = async (tx: any, movieId: string, userId: string, input: Mo
 const scalarData = (input: MovieInput) => ({
   type: input.type, originalTitle: input.originalTitle, spanishTitle: input.spanishTitle || null, year: input.year ?? null,
   synopsis: input.synopsis || null, durationMinutes: input.durationMinutes ?? null, seasons: input.type === 'series' ? input.seasons ?? null : null,
-  totalEpisodes: input.type === 'series' ? input.totalEpisodes ?? null : null, watched: input.watched ?? false, favorite: input.favorite ?? false,
+  totalEpisodes: input.type === 'series' ? input.totalEpisodes ?? null : null, watched: input.watched ?? false, favorite: input.favorite ?? false, watchlist: input.watchlist ?? false,
   personalRating: input.personalRating ?? null, imdbRating: input.imdbRating ?? null, tmdbId: input.tmdbId ?? null, imdbId: input.imdbId || null,
-  imdbUrl: input.imdbUrl || null, filmaffinityUrl: input.filmaffinityUrl || null, trailerUrl: input.trailerUrl || null,
+  imdbUrl: input.imdbUrl || null, tmdbUrl: input.tmdbUrl || null, justwatchUrl: input.justwatchUrl || null, trailerUrl: input.trailerUrl || null,
   tmdbCollectionId: input.tmdbCollectionId ?? null, tmdbCollectionName: input.tmdbCollectionName || null,
 });
 
@@ -128,9 +128,19 @@ router.put('/:id', async (req: AuthRequest, res) => {
   return res.json(serializeMovie(movie));
 });
 router.patch('/:id/personal', async (req: AuthRequest, res) => {
-  const parsed = z.object({ favorite: z.boolean().optional(), watched: z.boolean().optional(), personalRating: z.number().min(0).max(10).nullable().optional() }).safeParse(req.body); if (!parsed.success) return res.status(400).json({ error: 'Valor personal no valido' });
+  const parsed = z.object({ favorite: z.boolean().optional(), watched: z.boolean().optional(), watchlist: z.boolean().optional(), personalRating: z.number().int().min(1).max(5).nullable().optional(), collectionIds: z.array(z.string()).max(100).optional() }).safeParse(req.body); if (!parsed.success) return res.status(400).json({ error: 'Valor personal no valido' });
   const current = await findOwnedMovie(prisma, String(req.params.id), req.user!.userId); if (!current) return res.status(404).json({ error: 'Titulo no encontrado' });
-  const movie = await prisma.movieItem.update({ where: { id: current.id }, data: parsed.data, include: movieInclude }); return res.json(serializeMovie(movie));
+  const { collectionIds, ...personalData } = parsed.data;
+  const movie = await prisma.$transaction(async (tx) => {
+    if (Object.keys(personalData).length) await tx.movieItem.update({ where: { id: current.id }, data: personalData });
+    if (collectionIds) {
+      const owned = await tx.movieCollection.findMany({ where: { userId: req.user!.userId, id: { in: collectionIds } }, select: { id: true } });
+      await tx.movieCollectionItem.deleteMany({ where: { movieId: current.id } });
+      if (owned.length) await tx.movieCollectionItem.createMany({ data: owned.map((collection, order) => ({ movieId: current.id, collectionId: collection.id, order })) });
+    }
+    return tx.movieItem.findUniqueOrThrow({ where: { id: current.id }, include: movieInclude });
+  });
+  return res.json(serializeMovie(movie));
 });
 router.delete('/:id', async (req: AuthRequest, res) => { const current = await findOwnedMovie(prisma, String(req.params.id), req.user!.userId); if (!current) return res.status(404).json({ error: 'Titulo no encontrado' }); await prisma.movieItem.delete({ where: { id: current.id } }); await removeLocalImages(current.images.map((image) => image.localPath)); return res.status(204).send(); });
 

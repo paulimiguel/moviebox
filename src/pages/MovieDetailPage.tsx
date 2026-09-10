@@ -2,9 +2,10 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
+  Bookmark,
   Check,
-  ExternalLink,
   Eye,
+  ExternalLink,
   Film,
   Heart,
   Loader2,
@@ -14,7 +15,9 @@ import {
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Header } from "@/components/Header";
-import { MovieFormModal } from "@/components/MovieFormModal";
+import { MovieEditModal } from "@/components/MovieEditModal";
+import { StarRating } from "@/components/StarRating";
+import { PlatformLogos } from "@/components/PlatformLogos";
 import { api, resolveMovieImageUrl } from "@/services/api";
 
 export const MovieDetailPage = () => {
@@ -31,6 +34,7 @@ export const MovieDetailPage = () => {
     mutationFn: (data: {
       favorite?: boolean;
       watched?: boolean;
+      watchlist?: boolean;
       personalRating?: number | null;
     }) => api.movies.updatePersonal(id, data),
     onSuccess: (movie) => {
@@ -73,9 +77,12 @@ export const MovieDetailPage = () => {
     (credit) => credit.creditType === "director",
   );
   const cast = movie.credits.filter((credit) => credit.creditType === "cast");
+  const justWatchUrl = movie.justwatchUrl || `https://www.justwatch.com/ar/buscar?q=${encodeURIComponent([title, movie.year].filter(Boolean).join(" "))}`;
+  const tmdbUrl = movie.tmdbUrl || (movie.tmdbId ? `https://www.themoviedb.org/${movie.type === "movie" ? "movie" : "tv"}/${movie.tmdbId}` : null);
   const links = [
     { label: "IMDb", url: movie.imdbUrl },
-    { label: "FilmAffinity", url: movie.filmaffinityUrl },
+    { label: "TMDB", url: tmdbUrl },
+    { label: "JustWatch", url: justWatchUrl },
     { label: "Trailer", url: movie.trailerUrl },
   ].filter((item) => item.url);
   return (
@@ -113,7 +120,7 @@ export const MovieDetailPage = () => {
         </div>
         <div className="grid gap-7 md:grid-cols-[280px_minmax(0,1fr)] lg:grid-cols-[340px_minmax(0,1fr)]">
           <section>
-            <div className="aspect-[2/3] overflow-hidden rounded-md bg-mist">
+            <div className="relative aspect-[2/3] overflow-hidden rounded-md bg-mist">
               {mainImage ? (
                 <img
                   src={resolveMovieImageUrl(mainImage.url)}
@@ -125,6 +132,33 @@ export const MovieDetailPage = () => {
                   <Film className="h-16 w-16 text-aqua" />
                 </div>
               )}
+              <span className={`absolute left-3 top-3 rounded px-2 py-1 text-[10px] font-semibold uppercase text-white shadow-sm ${movie.type === "series" ? "bg-aqua" : "bg-coral"}`}>{movie.type === "movie" ? "Película" : "Serie"}</span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+              <button
+                type="button"
+                onClick={() => personal.mutate({ watched: !movie.watched })}
+                className={`secondary-button min-w-0 px-2 text-xs uppercase ${movie.watched ? "border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]" : ""}`}
+              >
+                <Eye className="h-[18px] w-[18px]" />
+                Watch
+              </button>
+              <button
+                type="button"
+                onClick={() => personal.mutate({ favorite: !movie.favorite })}
+                className={`secondary-button min-w-0 px-2 text-xs uppercase ${movie.favorite ? "border-coral bg-red-50 text-coral" : ""}`}
+              >
+                <Heart className={`h-4 w-4 ${movie.favorite ? "fill-current" : ""}`} />
+                Like
+              </button>
+              <button
+                type="button"
+                onClick={() => personal.mutate({ watchlist: !movie.watchlist })}
+                className={`secondary-button col-span-2 min-w-0 px-2 text-xs uppercase sm:col-span-1 ${movie.watchlist ? "border-aqua bg-mist text-aqua" : ""}`}
+              >
+                <Bookmark className={`h-4 w-4 ${movie.watchlist ? "fill-current" : ""}`} />
+                Watchlist
+              </button>
             </div>
             {movie.images.length > 1 && (
               <div className="mt-3 grid grid-cols-5 gap-2">
@@ -146,10 +180,7 @@ export const MovieDetailPage = () => {
             )}
           </section>
           <section className="min-w-0">
-            <p className="text-sm font-semibold uppercase text-coral">
-              {movie.type === "movie" ? "Pelicula" : "Serie"}
-            </p>
-            <h1 className="mt-1 text-3xl font-bold text-ink sm:text-4xl">
+            <h1 className="text-3xl font-bold text-ink sm:text-4xl">
               {title}
             </h1>
             {movie.spanishTitle &&
@@ -167,54 +198,15 @@ export const MovieDetailPage = () => {
                 .filter(Boolean)
                 .join(" · ")}
             </p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => personal.mutate({ watched: !movie.watched })}
-                className={`secondary-button ${movie.watched ? "border-aqua bg-mist text-ink" : ""}`}
-              >
-                <Eye className="h-4 w-4" />
-                {movie.watched ? "Vista" : "No vista"}
-              </button>
-              <button
-                type="button"
-                onClick={() => personal.mutate({ favorite: !movie.favorite })}
-                className={`secondary-button ${movie.favorite ? "border-coral bg-red-50 text-coral" : ""}`}
-              >
-                <Heart
-                  className={`h-4 w-4 ${movie.favorite ? "fill-current" : ""}`}
-                />
-                Favorita
-              </button>
-            </div>
-            <div className="mt-6 grid grid-cols-2 gap-3 sm:max-w-md">
+            <div className="mt-6 grid gap-3 sm:max-w-xl sm:grid-cols-[minmax(280px,1.5fr)_minmax(160px,1fr)]">
               <div className="rounded-md border border-slate-200 bg-white p-4">
                 <p className="text-xs font-semibold uppercase text-slate-400">
-                  Mi puntuacion
+                  Rate
                 </p>
-                <p className="mt-1 flex items-center gap-2 text-2xl font-bold text-coral">
-                  <Star className="h-5 w-5 fill-current" />
-                  {movie.personalRating ?? "—"}
-                </p>
-                <select
-                  value={movie.personalRating ?? ""}
-                  onChange={(e) =>
-                    personal.mutate({
-                      personalRating: e.target.value
-                        ? Number(e.target.value)
-                        : null,
-                    })
-                  }
-                  className="control mt-2 w-full"
-                  aria-label="Mi puntuacion"
-                >
-                  <option value="">Sin nota</option>
-                  {Array.from({ length: 21 }, (_, i) => i / 2).map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
+                <div className="mt-2">
+                  <StarRating value={movie.personalRating} onChange={(personalRating) => personal.mutate({ personalRating })} disabled={personal.isPending} />
+                </div>
+                <p className="mt-1 text-xs text-slate-400">{movie.personalRating ? `${movie.personalRating} de 5` : "Sin puntuación"}</p>
               </div>
               <div className="rounded-md border border-slate-200 bg-white p-4">
                 <p className="text-xs font-semibold uppercase text-slate-400">
@@ -264,14 +256,13 @@ export const MovieDetailPage = () => {
                   </dd>
                 </div>
               )}
-              {movie.platforms.length > 0 && (
+              {(movie.platforms.length > 0 || movie.trailerUrl) && (
                 <div>
                   <dt className="text-xs font-semibold uppercase text-slate-400">
                     Plataformas
                   </dt>
-                  <dd className="mt-1 text-sm text-ink">
-                    {movie.platforms.map((item) => item.name).join(", ")}
-                  </dd>
+                  <dd className="mt-2"><PlatformLogos platforms={movie.platforms} large /></dd>
+                  {movie.trailerUrl && <a href={movie.trailerUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-opacity hover:opacity-70"><img src="/youtube-play.png" alt="" className="h-4 w-[23px] object-contain" aria-hidden="true" />Ver trailer</a>}
                 </div>
               )}
               {movie.type === "series" && (
@@ -301,17 +292,27 @@ export const MovieDetailPage = () => {
               )}
             </dl>
             {links.length > 0 && (
-              <div className="mt-7 flex flex-wrap gap-2">
-                {links.map((item) => (
+              <div className="mt-7 flex flex-wrap items-center justify-start gap-2">
+                {links.filter((item) => item.label !== "Trailer").map((item) => (
                   <a
                     key={item.label}
                     href={item.url!}
                     target="_blank"
                     rel="noreferrer"
-                    className="secondary-button"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-opacity hover:opacity-70"
                   >
-                    {item.label}
-                    <ExternalLink className="h-4 w-4" />
+                    {item.label === "IMDb" ? (
+                      <img src="/imdb-logo.png" alt="IMDb" className="h-6 w-[50px] object-contain" />
+                    ) : item.label === "TMDB" ? (
+                      <img src="/tmdb.png" alt="TMDB" className="h-5 w-[96px] object-contain" />
+                    ) : item.label === "JustWatch" ? (
+                      <img src="/justwatch.png" alt="JustWatch" className="h-5 w-[85px] object-contain" />
+                    ) : (
+                      <>
+                        {item.label}
+                        <ExternalLink className="h-4 w-4" />
+                      </>
+                    )}
                   </a>
                 ))}
               </div>
@@ -324,7 +325,7 @@ export const MovieDetailPage = () => {
         </div>
       </div>
       {editing && (
-        <MovieFormModal
+        <MovieEditModal
           movie={movie}
           onClose={() => setEditing(false)}
           onSaved={(saved) => {

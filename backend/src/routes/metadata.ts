@@ -12,12 +12,30 @@ router.use(authenticateToken);
 
 router.get('/', async (req: AuthRequest, res) => {
   const userId = req.user!.userId;
-  const [genres, keywords, platforms] = await Promise.all([
+  const [genres, keywords, platforms, countryRows, directorRows] = await Promise.all([
     prisma.genre.findMany({ where: { userId }, orderBy: { name: 'asc' } }),
     prisma.keyword.findMany({ where: { userId }, orderBy: { name: 'asc' } }),
     prisma.platform.findMany({ where: { userId }, orderBy: { name: 'asc' } }),
+    prisma.movieCountry.findMany({
+      where: { movie: { userId } },
+      select: { id: true, name: true, normalizedName: true },
+      orderBy: { name: 'asc' },
+    }),
+    prisma.person.findMany({
+      where: { userId, credits: { some: { creditType: 'director' } } },
+      select: { id: true, name: true, normalizedName: true },
+      orderBy: { name: 'asc' },
+    }),
   ]);
-  return res.json({ genres, keywords, platforms });
+  const uniqueByName = <T extends { normalizedName: string }>(items: T[]) =>
+    Array.from(new Map(items.map((item) => [item.normalizedName, item])).values());
+  return res.json({
+    genres,
+    keywords,
+    platforms,
+    countries: uniqueByName(countryRows),
+    directors: uniqueByName(directorRows),
+  });
 });
 
 router.post('/:kind', async (req: AuthRequest, res) => {

@@ -40,12 +40,14 @@ model MovieItem {
   totalEpisodes      Int?
   watched            Boolean   @default(false)
   favorite           Boolean   @default(false)
+  watchlist          Boolean   @default(false)
   personalRating     Float?
   imdbRating         Float?
   tmdbId             Int?
   imdbId             String?
   imdbUrl            String?
-  filmaffinityUrl    String?
+  tmdbUrl            String?
+  justwatchUrl       String?
   trailerUrl         String?
   tmdbCollectionId   Int?
   tmdbCollectionName String?
@@ -68,6 +70,7 @@ model MovieItem {
   @@index([userId, type])
   @@index([userId, favorite])
   @@index([userId, watched])
+  @@index([userId, watchlist])
   @@index([userId, year])
   @@index([userId, originalTitle, year])
   @@index([userId, spanishTitle, year])

@@ -2,13 +2,14 @@ export const MOVIE_TYPES = ["movie", "series"] as const;
 export const CREDIT_TYPES = ["director", "cast"] as const;
 
 export const MAX_MOVIE_IMAGES = 5;
-export const MAX_PRINCIPAL_CAST = 5;
-export const RATING_MIN = 0;
-export const RATING_MAX = 10;
+export const MAX_PRINCIPAL_CAST = 6;
+export const RATING_MIN = 1;
+export const RATING_MAX = 5;
 
 export const PERSONAL_MOVIE_FIELDS = [
   "favorite",
   "watched",
+  "watchlist",
   "personalRating",
   "collectionIds",
 ] as const;
@@ -28,6 +29,7 @@ export type SortDirection = "asc" | "desc";
 export type MovieTypeFilter = "all" | MovieType;
 export type WatchedFilter = "all" | "watched" | "unwatched";
 export type FavoriteFilter = "all" | "favorites";
+export type WatchlistFilter = "all" | "watchlist";
 
 export interface MovieImage {
   id: string;
@@ -106,12 +108,14 @@ export interface MovieItem {
   totalEpisodes: number | null;
   watched: boolean;
   favorite: boolean;
+  watchlist: boolean;
   personalRating: number | null;
   imdbRating: number | null;
   tmdbId: number | null;
   imdbId: string | null;
   imdbUrl: string | null;
-  filmaffinityUrl: string | null;
+  tmdbUrl: string | null;
+  justwatchUrl: string | null;
   trailerUrl: string | null;
   tmdbCollectionId: number | null;
   tmdbCollectionName: string | null;
@@ -137,6 +141,7 @@ export type MovieCardItem = Pick<
   | "year"
   | "watched"
   | "favorite"
+  | "watchlist"
   | "personalRating"
   | "imdbRating"
   | "createdAt"
@@ -202,12 +207,14 @@ export interface CreateMovieInput {
   totalEpisodes?: number | null;
   watched?: boolean;
   favorite?: boolean;
+  watchlist?: boolean;
   personalRating?: number | null;
   imdbRating?: number | null;
   tmdbId?: number | null;
   imdbId?: string | null;
   imdbUrl?: string | null;
-  filmaffinityUrl?: string | null;
+  tmdbUrl?: string | null;
+  justwatchUrl?: string | null;
   trailerUrl?: string | null;
   tmdbCollectionId?: number | null;
   tmdbCollectionName?: string | null;
@@ -225,6 +232,7 @@ export type UpdateMovieInput = Partial<CreateMovieInput>;
 export interface MoviePersonalUpdate {
   favorite?: boolean;
   watched?: boolean;
+  watchlist?: boolean;
   personalRating?: number | null;
   collectionIds?: string[];
 }
@@ -234,6 +242,7 @@ export interface MovieFilters {
   type: MovieTypeFilter;
   watched: WatchedFilter;
   favorite: FavoriteFilter;
+  watchlist: WatchlistFilter;
   genreIds: string[];
   keywordIds: string[];
   platformIds: string[];
@@ -303,7 +312,7 @@ export interface TmdbSearchCandidate {
 
 export type TmdbImportedMovieData = Omit<
   CreateMovieInput,
-  "favorite" | "watched" | "personalRating" | "collectionIds"
+  "favorite" | "watched" | "watchlist" | "personalRating" | "collectionIds"
 >;
 
 export interface TmdbImportRequest {
@@ -333,7 +342,7 @@ export interface ImdbSearchCandidate {
 
 export type ImdbImportedMovieData = Omit<
   CreateMovieInput,
-  "favorite" | "watched" | "personalRating" | "collectionIds" | "filmaffinityUrl"
+  "favorite" | "watched" | "watchlist" | "personalRating" | "collectionIds"
 >;
 
 export interface ImdbImportRequest {
