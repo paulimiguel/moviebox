@@ -82,12 +82,15 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
 
   const viewOptions: { value: MovieViewMode; label: string; icon: React.ReactNode }[] = [
     { value: 'medium', label: 'Iconos grandes', icon: <LayoutGrid className="h-4 w-4" /> },
+    { value: 'mediumIcons', label: 'Iconos medianos', icon: <LayoutGrid className="h-3.5 w-3.5" /> },
     { value: 'small', label: 'Iconos pequenos', icon: <Grid2X2 className="h-4 w-4" /> },
     { value: 'list', label: 'Lista', icon: <List className="h-4 w-4" /> },
     { value: 'details', label: 'Detalles', icon: <ListChecks className="h-4 w-4" /> },
   ];
   const activeViewIcon = props.viewMode === 'medium'
     ? <LayoutGrid className="h-5 w-5 shrink-0" />
+    : props.viewMode === 'mediumIcons'
+      ? <LayoutGrid className="h-4 w-4 shrink-0" />
     : props.viewMode === 'small'
       ? <Grid2X2 className="h-5 w-5 shrink-0" />
       : props.viewMode === 'list'
@@ -124,7 +127,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
     <section ref={toolbarRef} className="sticky top-[72px] z-30 border-b border-slate-200 bg-white shadow-sm">
       <div className="mx-auto grid max-w-[1500px] gap-3 px-4 py-3 sm:px-6 xl:grid-cols-[300px_minmax(280px,1fr)_auto] xl:items-start">
         <div className="min-w-0 self-center">
-          <h1 className="font-bebas truncate text-xl font-normal text-ink sm:text-2xl">Movies de {props.ownerName}</h1>
+          <h1 className="font-bebas truncate text-xl font-normal text-ink sm:text-2xl">Títulos de {props.ownerName}</h1>
           <p className="mt-0.5 truncate text-xs text-slate-500">Mostrando {props.visibleCount} de {props.totalCount} movies</p>
           {(selectedGenreNames.length > 0 || selectedPlatformNames.length > 0 || props.years.length > 0 || props.type !== 'all' || props.watched !== 'all' || props.favorite !== 'all' || props.watchlist !== 'all') && (
             <div className="mt-2 flex flex-wrap gap-1">

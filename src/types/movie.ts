@@ -310,6 +310,20 @@ export interface TmdbSearchCandidate {
   posterPath: string | null;
 }
 
+export interface TmdbSuggestionCandidate {
+  tmdbId: number;
+  imdbId: string;
+  type: MovieType;
+  title: string;
+  originalTitle: string;
+  year: number | null;
+  overview: string | null;
+  genres: string[];
+  posterUrl: string | null;
+  rating: number | null;
+  popularity: number;
+}
+
 export type TmdbImportedMovieData = Omit<
   CreateMovieInput,
   "favorite" | "watched" | "watchlist" | "personalRating" | "collectionIds"

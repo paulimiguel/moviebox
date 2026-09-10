@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronDown, FolderOpen, LogOut, Plus, Search } from 'lucide-react';
+import { ChevronDown, FolderOpen, LogOut } from 'lucide-react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/services/api';
@@ -37,15 +37,6 @@ export const Header = () => {
     .map((part) => part[0])
     .join('')
     .toLocaleUpperCase();
-  const focusLibrarySearch = () => {
-    try {
-      window.sessionStorage.setItem('moviebox:focus-search', 'true');
-    } catch {
-      // The event below still focuses the field when already in the library.
-    }
-    navigate('/');
-    window.setTimeout(() => window.dispatchEvent(new Event('moviebox:focus-search')), 0);
-  };
   const filterLibraryByGenre = (genreId: string) => {
     try {
       window.sessionStorage.setItem('moviebox:genre-filter', genreId);
@@ -93,8 +84,7 @@ export const Header = () => {
                 </div>
               </div>}
             </div>
-            <button type="button" onClick={focusLibrarySearch} className="flex h-full items-center gap-1.5 border-b-2 border-transparent px-3 text-sm font-semibold text-slate-500 hover:text-ink"><Search className="h-4 w-4" />BUSCAR</button>
-            <NavLink to="/agregar" className={({ isActive }) => `flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${isActive ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`}><Plus className="h-4 w-4" />AGREGAR</NavLink>
+            <NavLink to="/agregar" className={({ isActive }) => `flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${isActive ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`}>AGREGAR</NavLink>
           </nav>
           <div ref={menuRef} className="relative">
           <button
@@ -114,10 +104,6 @@ export const Header = () => {
                 <p className="truncate text-sm font-semibold text-ink">{user?.name}</p>
                 <p className="truncate text-xs text-slate-500">{user?.email}</p>
               </div>
-              <button type="button" onClick={() => { setMenuOpen(false); focusLibrarySearch(); }} className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 xl:hidden">
-                <Search className="h-4 w-4" />
-                Buscar
-              </button>
               <Link to="/colecciones" onClick={() => setMenuOpen(false)} className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 xl:hidden">
                 <FolderOpen className="h-4 w-4" />
                 Colecciones
@@ -135,7 +121,6 @@ export const Header = () => {
                 </div>
               </div>
               <Link to="/agregar" onClick={() => setMenuOpen(false)} className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 xl:hidden">
-                <Plus className="h-4 w-4" />
                 Agregar
               </Link>
               <button type="button" onClick={logout} className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50">

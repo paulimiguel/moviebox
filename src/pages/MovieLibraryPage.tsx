@@ -14,7 +14,7 @@ import type { FavoriteFilter, MovieItem, MovieTypeFilter, SortDirection, Watched
 
 const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es');
 const VIEW_MODE_STORAGE_KEY = 'moviebox:view-mode';
-const VIEW_MODES: MovieViewMode[] = ['medium', 'small', 'list', 'details'];
+const VIEW_MODES: MovieViewMode[] = ['medium', 'mediumIcons', 'small', 'list', 'details'];
 
 const getInitialViewMode = (): MovieViewMode => {
   try {
@@ -186,6 +186,8 @@ export const MovieLibraryPage = () => {
   };
   const gridClass = viewMode === 'small'
     ? 'grid grid-cols-2 gap-2 min-[520px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-9'
+    : viewMode === 'mediumIcons'
+      ? 'grid grid-cols-2 gap-3 min-[520px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 sm:gap-4 2xl:grid-cols-7'
     : 'grid grid-cols-1 gap-4 min-[520px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 sm:gap-5 2xl:grid-cols-5';
 
   return (
@@ -247,7 +249,7 @@ export const MovieLibraryPage = () => {
         {moviesQuery.isLoading ? <div className="grid min-h-[45vh] place-items-center"><Loader2 className="h-8 w-8 animate-spin text-aqua" /></div>
           : moviesQuery.isError ? <div className="grid min-h-[45vh] place-items-center text-center"><div><p className="font-semibold text-ink">No se pudo cargar la biblioteca</p><button type="button" onClick={() => moviesQuery.refetch()} className="primary-button mt-4">Reintentar</button></div></div>
           : filteredMovies.length === 0 ? <div className="grid min-h-[45vh] place-items-center px-4 text-center"><div><Film className="mx-auto h-14 w-14 text-aqua" /><h2 className="mt-4 text-lg font-semibold text-ink">{moviesQuery.data?.length ? 'No hay coincidencias' : 'Tu biblioteca esta vacia'}</h2></div></div>
-          : viewMode === 'medium' || viewMode === 'small' ? <section className={gridClass}>{filteredMovies.map((movie) => <MovieCard key={movie.id} movie={movie} mode={viewMode} onOpen={setDetailMovie} onPersonal={(item, field) => personalMutation.mutate({ movie: item, field })} onRating={(item, rating) => ratingMutation.mutate({ movie: item, rating })} onEdit={setEditingMovie} onDelete={(item) => { setSelectedIds(new Set([item.id])); setDeleteConfirmOpen(true); }} selectionMode={Boolean(bulkMode)} selected={selectedIds.has(movie.id)} onSelectionChange={toggleSelection} />)}</section>
+          : viewMode === 'medium' || viewMode === 'mediumIcons' || viewMode === 'small' ? <section className={gridClass}>{filteredMovies.map((movie) => <MovieCard key={movie.id} movie={movie} mode={viewMode} onOpen={setDetailMovie} onPersonal={(item, field) => personalMutation.mutate({ movie: item, field })} onRating={(item, rating) => ratingMutation.mutate({ movie: item, rating })} onEdit={setEditingMovie} onDelete={(item) => { setSelectedIds(new Set([item.id])); setDeleteConfirmOpen(true); }} selectionMode={Boolean(bulkMode)} selected={selectedIds.has(movie.id)} onSelectionChange={toggleSelection} />)}</section>
           : <section className="rounded-md border border-slate-200">{filteredMovies.map((movie) => <MovieCard key={movie.id} movie={movie} mode={viewMode} onOpen={setDetailMovie} onPersonal={(item, field) => personalMutation.mutate({ movie: item, field })} onRating={(item, rating) => ratingMutation.mutate({ movie: item, rating })} onEdit={setEditingMovie} onDelete={(item) => { setSelectedIds(new Set([item.id])); setDeleteConfirmOpen(true); }} selectionMode={Boolean(bulkMode)} selected={selectedIds.has(movie.id)} onSelectionChange={toggleSelection} />)}</section>}
       </div>
 

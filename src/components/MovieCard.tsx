@@ -6,7 +6,7 @@ import { resolveMovieImageUrl } from '@/services/api';
 import { printMovies } from '@/utils/printMovies';
 import type { MovieItem } from '@/types/movie';
 
-export type MovieViewMode = 'medium' | 'small' | 'list' | 'details';
+export type MovieViewMode = 'medium' | 'mediumIcons' | 'small' | 'list' | 'details';
 
 interface MovieCardProps {
   movie: MovieItem;
@@ -186,12 +186,13 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
     );
   }
 
-  if (mode === 'medium') {
+  if (mode === 'medium' || mode === 'mediumIcons') {
+    const mediumIcons = mode === 'mediumIcons';
     return (
-      <article role="button" tabIndex={0} onClick={activate} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(); }} className={`group relative flex h-full min-w-0 cursor-pointer flex-col rounded-md bg-white p-3 shadow-card transition-transform hover:-translate-y-0.5 ${menuOpen ? 'z-40' : ''} ${selected ? 'ring-2 ring-coral ring-offset-2' : ''}`}>
+      <article role="button" tabIndex={0} onClick={activate} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(); }} className={`group relative flex h-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-md bg-white shadow-card transition-transform hover:-translate-y-0.5 ${menuOpen ? 'z-40 overflow-visible' : ''} ${selected ? 'ring-2 ring-coral ring-offset-2' : ''}`}>
         <div className="relative aspect-[2/3]">
           {selectionMark()}
-          <div className="h-full overflow-hidden bg-slate-100">{poster('h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]')}</div>
+          <div className="h-full overflow-hidden rounded-t-md bg-slate-100">{poster('h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]')}</div>
           <span className={`absolute left-2 top-2 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase text-white shadow-sm ${movie.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>
             {typeLabel}
           </span>
@@ -201,14 +202,14 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
           </div>
         </div>
 
-        <div className="flex flex-1 flex-col pt-3">
-          <h2 className="font-bebas line-clamp-2 text-[28px] font-normal uppercase leading-8 text-ink">{title}</h2>
+        <div className={`flex flex-1 flex-col ${mediumIcons ? 'p-2.5' : 'p-3'}`}>
+          <h2 className={`font-bebas line-clamp-2 font-normal uppercase text-ink ${mediumIcons ? 'text-[23px] leading-6' : 'text-[28px] leading-8'}`}>{title}</h2>
           {(movie.year || movie.imdbRating != null) && <div className="mt-1 flex flex-wrap items-center gap-3">
             {movie.year && <span className="text-base font-bold text-slate-500">{movie.year}</span>}
             {movie.imdbRating != null && <span className="inline-flex items-center gap-1 text-sm font-semibold text-slate-500"><Star className="h-4 w-4 fill-amber-400 text-amber-400" />{movie.imdbRating}</span>}
           </div>}
-          <p className="mt-2 text-sm text-slate-500">{movie.durationMinutes ? `${movie.durationMinutes} minutos` : 'Duracion desconocida'}</p>
-          <p className="mt-1 line-clamp-2 text-sm text-slate-500">{genres || 'Sin genero'}</p>
+          <p className={`${mediumIcons ? 'mt-1.5 text-xs' : 'mt-2 text-sm'} text-slate-500`}>{movie.durationMinutes ? `${movie.durationMinutes} minutos` : 'Duracion desconocida'}</p>
+          <p className={`mt-1 line-clamp-2 text-slate-500 ${mediumIcons ? 'text-xs' : 'text-sm'}`}>{genres || 'Sin genero'}</p>
           <div className="mt-2 flex flex-wrap items-center gap-3">
             <PlatformLogos platforms={movie.platforms} limit={4} />
             {trailerLink && <span className="text-xs [&_img]:h-3 [&_img]:w-[18px]">{trailerLink}</span>}
