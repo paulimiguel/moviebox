@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Bookmark, Check, ChevronDown, ExternalLink, Eye, Film, Heart, Pencil, Star, Trash2, X } from 'lucide-react';
 import { PlatformLogos } from '@/components/PlatformLogos';
@@ -18,6 +18,18 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
   const collections = useQuery({ queryKey: ['collections'], queryFn: api.collections.getAll });
   const [collectionMenuOpen, setCollectionMenuOpen] = useState(false);
   const [selectedCollectionIds, setSelectedCollectionIds] = useState(movie.collections.map((collection) => collection.id));
+  const [modalOffset, setModalOffset] = useState({ x: 0, y: 0 });
+  const modalRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    originX: number;
+    originY: number;
+    left: number;
+    top: number;
+    width: number;
+  } | null>(null);
   useEffect(() => setSelectedCollectionIds(movie.collections.map((collection) => collection.id)), [movie.collections]);
   const title = movie.originalTitle;
   const spanishTitle = movie.spanishTitle && movie.spanishTitle !== movie.originalTitle ? movie.spanishTitle : null;
@@ -30,11 +42,45 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
     { label: 'JustWatch', url: justWatchUrl },
     { label: 'Trailer', url: movie.trailerUrl },
   ].filter((item) => item.url);
+  const startDragging = (event: ReactPointerEvent<HTMLElement>) => {
+    if (event.button !== 0 || window.innerWidth < 640 || (event.target as HTMLElement).closest('button, a, input')) return;
+    const bounds = modalRef.current?.getBoundingClientRect();
+    if (!bounds) return;
+    dragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: modalOffset.x,
+      originY: modalOffset.y,
+      left: bounds.left,
+      top: bounds.top,
+      width: bounds.width,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+  const dragModal = (event: ReactPointerEvent<HTMLElement>) => {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const deltaX = Math.min(
+      window.innerWidth - 80 - drag.left,
+      Math.max(80 - drag.left - drag.width, event.clientX - drag.startX),
+    );
+    const deltaY = Math.min(
+      window.innerHeight - 48 - drag.top,
+      Math.max(-drag.top, event.clientY - drag.startY),
+    );
+    setModalOffset({ x: drag.originX + deltaX, y: drag.originY + deltaY });
+  };
+  const stopDragging = (event: ReactPointerEvent<HTMLElement>) => {
+    if (dragRef.current?.pointerId !== event.pointerId) return;
+    dragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/55 sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="movie-detail-title">
-      <div className="max-h-[96vh] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-5xl sm:rounded-md">
-        <header className="flex min-h-16 items-center gap-2 border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
+      <div ref={modalRef} className="max-h-[96vh] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-5xl sm:rounded-md" style={{ transform: `translate3d(${modalOffset.x}px, ${modalOffset.y}px, 0)` }}>
+        <header onPointerDown={startDragging} onPointerMove={dragModal} onPointerUp={stopDragging} onPointerCancel={stopDragging} className="flex min-h-16 touch-none select-none items-center gap-2 border-b border-slate-200 bg-white px-4 py-3 sm:cursor-move sm:px-6">
           <div className="min-w-0">
             <h2 id="movie-detail-title" className="font-bebas truncate text-[24px] font-normal uppercase leading-7 text-ink">{title}</h2>
           </div>
@@ -66,7 +112,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                     <span className={`min-w-0 flex-1 truncate ${selectedCollectionIds.length ? 'text-ink' : 'text-slate-400'}`}>{selectedCollectionIds.length ? collections.data?.filter((collection) => selectedCollectionIds.includes(collection.id)).map((collection) => collection.name).join(', ') || `${selectedCollectionIds.length} seleccionada${selectedCollectionIds.length === 1 ? '' : 's'}` : 'Elegir colección'}</span>
                     <ChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${collectionMenuOpen ? 'rotate-180' : ''}`} />
                   </button>
-                  {collectionMenuOpen && <div className="absolute left-0 right-0 top-full z-[80] mt-1 max-h-48 overflow-y-auto rounded-md border border-slate-200 bg-white p-1.5 shadow-card">
+                  {collectionMenuOpen && <div className="absolute bottom-full left-0 right-0 z-[80] mb-1 max-h-48 overflow-y-auto rounded-md border border-slate-200 bg-white p-1.5 shadow-card">
                     {collections.data?.length ? collections.data.map((collection) => {
                       const selected = selectedCollectionIds.includes(collection.id);
                       return <button key={collection.id} type="button" onClick={() => { const next = selected ? selectedCollectionIds.filter((id) => id !== collection.id) : [...selectedCollectionIds, collection.id]; setSelectedCollectionIds(next); onCollections(movie, next); }} className={`flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm ${selected ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`}><Check className={`h-4 w-4 shrink-0 ${selected ? 'text-aqua' : 'text-transparent'}`} />{collection.name}</button>;

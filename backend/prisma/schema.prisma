@@ -151,6 +151,7 @@ model Genre {
   normalizedName String
   tmdbGenreId    Int?
   tmdbMediaType  String?
+  imagePath      String?
   createdAt      DateTime @default(now())
 
   user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)

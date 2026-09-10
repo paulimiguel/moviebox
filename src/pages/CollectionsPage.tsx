@@ -1,228 +1,238 @@
-import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FolderOpen, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
-import { Header } from "@/components/Header";
-import { api } from "@/services/api";
-import type { MovieCollection } from "@/types/movie";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { FolderOpen, ImagePlus, Loader2, MoreVertical, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Header } from '@/components/Header';
+import { api, resolveMovieImageUrl } from '@/services/api';
+import type { MovieCollection } from '@/types/movie';
 
 export const CollectionsPage = () => {
   const queryClient = useQueryClient();
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [editing, setEditing] = useState<MovieCollection | null>(null);
   const [creating, setCreating] = useState(false);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [error, setError] = useState("");
-  const [collectionToDelete, setCollectionToDelete] =
-    useState<MovieCollection | null>(null);
-  const collections = useQuery({
-    queryKey: ["collections"],
-    queryFn: api.collections.getAll,
-  });
-  const save = useMutation({
-    mutationFn: () =>
-      editing
-        ? api.collections.update(editing.id, {
-            name,
-            description: description || null,
-          })
-        : api.collections.create({ name, description: description || null }),
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [error, setError] = useState('');
+  const [editName, setEditName] = useState('');
+  const [editFile, setEditFile] = useState<File | null>(null);
+  const [editDroppedUrl, setEditDroppedUrl] = useState<string | null>(null);
+  const [editPreview, setEditPreview] = useState<string | null>(null);
+  const [isDraggingImage, setIsDraggingImage] = useState(false);
+  const [editError, setEditError] = useState('');
+  const [collectionToDelete, setCollectionToDelete] = useState<MovieCollection | null>(null);
+
+  const collections = useQuery({ queryKey: ['collections'], queryFn: api.collections.getAll });
+  useEffect(() => {
+    if (!editFile) return undefined;
+    const previewUrl = URL.createObjectURL(editFile);
+    setEditPreview(previewUrl);
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [editFile]);
+
+  const createCollection = useMutation({
+    mutationFn: () => api.collections.create({ name, description: description || null }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["collections"] });
+      queryClient.invalidateQueries({ queryKey: ['collections'] });
       setCreating(false);
-      setEditing(null);
-      setName("");
-      setDescription("");
+      setName('');
+      setDescription('');
+      setError('');
     },
     onError: (reason: Error) => setError(reason.message),
+  });
+  const updateCollection = useMutation({
+    mutationFn: async () => {
+      if (!editing) throw new Error('Colección no encontrada');
+      const editedName = editName.trim();
+      if (!editedName) throw new Error('Escribí un nombre para la colección');
+      let coverImage: string | undefined;
+      if (editFile) {
+        const uploaded = await api.uploads.images([editFile]);
+        coverImage = uploaded.images[0]?.url;
+        if (!coverImage) throw new Error('No se pudo guardar la imagen');
+      } else if (editDroppedUrl) {
+        coverImage = editDroppedUrl;
+      }
+      return api.collections.update(editing.id, {
+        name: editedName,
+        description: editing.description,
+        ...(coverImage ? { coverImage } : {}),
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['collections'] });
+      setEditing(null);
+    },
+    onError: (reason: Error) => setEditError(reason.message),
   });
   const remove = useMutation({
     mutationFn: api.collections.remove,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["collections"] });
+      queryClient.invalidateQueries({ queryKey: ['collections'] });
       setCollectionToDelete(null);
     },
   });
+
   const openEdit = (collection: MovieCollection) => {
+    setOpenMenuId(null);
     setEditing(collection);
     setCreating(false);
-    setName(collection.name);
-    setDescription(collection.description || "");
-    setError("");
+    setEditName(collection.name);
+    setEditFile(null);
+    setEditDroppedUrl(null);
+    setEditPreview(collection.coverImage ? resolveMovieImageUrl(collection.coverImage) : null);
+    setIsDraggingImage(false);
+    setEditError('');
   };
   const openCreate = () => {
     setCreating(true);
     setEditing(null);
-    setName("");
-    setDescription("");
-    setError("");
+    setName('');
+    setDescription('');
+    setError('');
   };
+  const closeEditor = () => {
+    setCreating(false);
+    setError('');
+  };
+  const handleImageDrop = (event: React.DragEvent<HTMLLabelElement>) => {
+    event.preventDefault();
+    setIsDraggingImage(false);
+    setEditError('');
+    const file = Array.from(event.dataTransfer.files).find((item) => /^image\/(jpeg|png|webp)$/i.test(item.type));
+    if (file) {
+      setEditDroppedUrl(null);
+      setEditFile(file);
+      return;
+    }
+    const html = event.dataTransfer.getData('text/html');
+    const htmlUrls = html ? Array.from(new DOMParser().parseFromString(html, 'text/html').querySelectorAll('img')).map((image) => image.src) : [];
+    const uriUrls = event.dataTransfer.getData('text/uri-list').split(/\r?\n/).map((url) => url.trim()).filter((url) => url && !url.startsWith('#'));
+    const plainUrl = event.dataTransfer.getData('text/plain').trim();
+    const imageUrl = [...htmlUrls, ...uriUrls, plainUrl].find((url) => /^https?:\/\//i.test(url));
+    if (imageUrl) {
+      setEditFile(null);
+      setEditDroppedUrl(imageUrl);
+      setEditPreview(imageUrl);
+      return;
+    }
+    setEditError('Arrastrá un archivo JPG, PNG o WebP, o una imagen desde una página web.');
+  };
+
   return (
     <main className="min-h-screen bg-canvas">
       <Header />
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
-        <div className="flex items-center">
+      <section className="border-b border-slate-200 bg-white shadow-sm">
+        <div className="mx-auto flex max-w-[1500px] items-center px-4 py-4 sm:px-6">
           <div>
-            <h1 className="text-2xl font-semibold text-ink">Colecciones</h1>
-            <p className="mt-1 text-sm text-slate-500">
-              Organiza titulos sin duplicarlos.
-            </p>
+            <h1 className="font-bebas text-2xl font-normal uppercase text-ink">Colecciones</h1>
+            <p className="mt-0.5 text-xs text-slate-500">{collections.data?.length || 0} colecciones</p>
           </div>
-          <button
-            type="button"
-            onClick={openCreate}
-            className="primary-button ml-auto"
-          >
-            <Plus className="h-4 w-4" />
-            Nueva
-          </button>
+          <button type="button" onClick={openCreate} className="primary-button ml-auto"><Plus className="h-4 w-4" />Nueva</button>
         </div>
-        {(creating || editing) && (
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (name.trim()) save.mutate();
-            }}
-            className="mt-6 border-y border-slate-200 bg-white p-4 sm:rounded-md sm:border sm:p-5"
-          >
-            <h2 className="font-semibold text-ink">
-              {editing ? "Editar coleccion" : "Nueva coleccion"}
-            </h2>
+      </section>
+
+      <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8">
+        {creating && (
+          <form onSubmit={(event) => { event.preventDefault(); if (name.trim()) createCollection.mutate(); }} className="mb-6 border-y border-slate-200 bg-white p-4 sm:rounded-md sm:border sm:p-5">
+            <h2 className="font-bebas text-xl uppercase text-ink">Nueva colección</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_2fr_auto]">
-              <input
-                className="control w-full"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Nombre"
-                autoFocus
-              />
-              <input
-                className="control w-full"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Descripcion opcional"
-              />
+              <input className="control w-full" value={name} onChange={(event) => setName(event.target.value)} placeholder="Nombre" autoFocus />
+              <input className="control w-full" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Descripción opcional" />
               <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setCreating(false);
-                    setEditing(null);
-                  }}
-                  className="secondary-button"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="primary-button"
-                  disabled={save.isPending}
-                >
-                  Guardar
-                </button>
+                <button type="button" onClick={closeEditor} className="secondary-button">Cancelar</button>
+                <button type="submit" className="primary-button" disabled={createCollection.isPending || !name.trim()}>{createCollection.isPending && <Loader2 className="h-4 w-4 animate-spin" />}Guardar</button>
               </div>
             </div>
-            {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+            {error && <p className="mt-3 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
           </form>
         )}
+
         {collections.isLoading ? (
-          <div className="grid min-h-[50vh] place-items-center">
-            <Loader2 className="h-8 w-8 animate-spin text-aqua" />
-          </div>
+          <div className="grid min-h-[45vh] place-items-center"><Loader2 className="h-8 w-8 animate-spin text-aqua" /></div>
+        ) : collections.isError ? (
+          <div className="grid min-h-[45vh] place-items-center text-center"><div><p className="font-semibold text-ink">No se pudieron cargar las colecciones</p><button type="button" onClick={() => collections.refetch()} className="primary-button mt-4">Reintentar</button></div></div>
         ) : collections.data?.length ? (
-          <section className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
             {collections.data.map((collection) => (
-              <article
-                key={collection.id}
-                className="rounded-md border border-slate-200 bg-white p-5 shadow-card"
-              >
-                <div className="flex items-start">
-                  <FolderOpen className="h-8 w-8 text-aqua" />
-                  <div className="ml-auto flex gap-1">
-                    <button
-                      type="button"
-                      onClick={() => openEdit(collection)}
-                      className="icon-button border-0 shadow-none"
-                      title="Editar"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setCollectionToDelete(collection)}
-                      className="icon-button border-0 text-red-600 shadow-none"
-                      title="Eliminar"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+              <article key={collection.id} className={`relative min-w-0 overflow-hidden rounded-md bg-white shadow-card transition-transform hover:-translate-y-0.5 ${openMenuId === collection.id ? 'z-20 overflow-visible' : ''}`}>
+                <Link to={`/colecciones/${collection.id}`} className="block">
+                  <div className="relative aspect-square overflow-hidden rounded-t-md bg-slate-100">
+                    {collection.coverImage
+                      ? <img src={resolveMovieImageUrl(collection.coverImage)} alt={collection.name} className="h-full w-full object-cover" loading="lazy" />
+                      : <div className="grid h-full place-items-center"><FolderOpen className="h-16 w-16 text-aqua" /></div>}
                   </div>
-                </div>
-                <Link to={`/colecciones/${collection.id}`}>
-                  <h2 className="mt-4 text-lg font-semibold text-ink hover:text-coral">
-                    {collection.name}
-                  </h2>
+                  <div className="p-3"><h2 className="font-bebas line-clamp-2 text-[24px] font-normal uppercase leading-7 text-ink">{collection.name}</h2></div>
                 </Link>
-                {collection.description && (
-                  <p className="mt-2 text-sm text-slate-500">
-                    {collection.description}
-                  </p>
-                )}
-                <p className="mt-4 text-xs font-semibold uppercase text-slate-400">
-                  {collection.movieCount}{" "}
-                  {collection.movieCount === 1 ? "titulo" : "titulos"}
-                </p>
+                <div className="absolute right-2 top-2" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpenMenuId(null); }}>
+                  <button type="button" onClick={() => setOpenMenuId((current) => current === collection.id ? null : collection.id)} className="grid h-8 w-8 place-items-center rounded-md border border-white/60 bg-white/80 text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white" title="Más acciones" aria-label={`Acciones de ${collection.name}`} aria-expanded={openMenuId === collection.id}><MoreVertical className="h-4 w-4" /></button>
+                  {openMenuId === collection.id && (
+                    <div className="absolute right-0 top-9 z-30 w-40 rounded-md border border-slate-200 bg-white p-1.5 text-sm shadow-card">
+                      <button type="button" onClick={() => openEdit(collection)} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50"><Pencil className="h-4 w-4" />Editar</button>
+                      <button type="button" onClick={() => { setOpenMenuId(null); setCollectionToDelete(collection); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" />Eliminar</button>
+                    </div>
+                  )}
+                </div>
               </article>
             ))}
           </section>
         ) : (
-          <div className="grid min-h-[50vh] place-items-center text-center">
-            <div>
-              <FolderOpen className="mx-auto h-14 w-14 text-aqua" />
-              <h2 className="mt-3 font-semibold text-ink">
-                Todavia no hay colecciones
-              </h2>
-            </div>
-          </div>
+          <div className="grid min-h-[45vh] place-items-center text-center"><div><FolderOpen className="mx-auto h-14 w-14 text-aqua" /><h2 className="mt-4 text-lg font-semibold text-ink">Todavía no hay colecciones</h2></div></div>
         )}
       </div>
+
+      {editing && (
+        <div className="fixed inset-0 z-[70] grid place-items-center bg-ink/55 p-4" role="dialog" aria-modal="true" aria-labelledby="edit-collection-title">
+          <form onSubmit={(event) => { event.preventDefault(); setEditError(''); updateCollection.mutate(); }} className="w-full max-w-lg overflow-hidden rounded-md bg-canvas shadow-xl">
+            <header className="flex min-h-16 items-center border-b border-slate-200 bg-white px-5">
+              <h2 id="edit-collection-title" className="font-bebas text-2xl uppercase text-ink">Editar colección</h2>
+              <button type="button" onClick={() => setEditing(null)} className="icon-button ml-auto border-0 shadow-none" title="Cerrar" aria-label="Cerrar"><X className="h-5 w-5" /></button>
+            </header>
+            <div className="space-y-5 p-5">
+              <label className="block">
+                <span className="field-label">Nombre</span>
+                <input autoFocus value={editName} onChange={(event) => setEditName(event.target.value)} className="control w-full" maxLength={80} />
+              </label>
+              <div>
+                <span className="field-label">Imagen</span>
+                <label
+                  className={`relative flex cursor-pointer items-center gap-4 rounded-md border-2 border-dashed bg-white p-3 transition-colors ${isDraggingImage ? 'border-coral bg-red-50' : 'border-slate-300 hover:border-aqua'}`}
+                  onDragEnter={(event) => { event.preventDefault(); setIsDraggingImage(true); }}
+                  onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; setIsDraggingImage(true); }}
+                  onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsDraggingImage(false); }}
+                  onDrop={handleImageDrop}
+                >
+                  {isDraggingImage && <span className="pointer-events-none absolute inset-0 z-10 grid place-items-center rounded-md bg-white/90 text-sm font-semibold text-coral"><span className="flex items-center gap-2"><ImagePlus className="h-5 w-5" />Soltar imagen</span></span>}
+                  <span className="grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-md bg-slate-100">
+                    {editPreview ? <img src={editPreview} alt="Vista previa" className="h-full w-full object-cover" /> : <FolderOpen className="h-10 w-10 text-aqua" />}
+                  </span>
+                  <span>
+                    <span className="block text-sm font-semibold text-ink">Cambiar o arrastrar imagen</span>
+                    <span className="mt-1 block text-xs text-slate-500">Archivo JPG, PNG o WebP, o imagen de una página web</span>
+                  </span>
+                  <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { setEditDroppedUrl(null); setEditFile(event.target.files?.[0] || null); }} className="hidden" />
+                </label>
+              </div>
+              {editError && <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">{editError}</p>}
+            </div>
+            <footer className="flex justify-end gap-2 border-t border-slate-200 bg-white px-5 py-4">
+              <button type="button" onClick={() => setEditing(null)} className="secondary-button">Cancelar</button>
+              <button type="submit" disabled={updateCollection.isPending || !editName.trim()} className="primary-button">{updateCollection.isPending && <Loader2 className="h-4 w-4 animate-spin" />}Guardar</button>
+            </footer>
+          </form>
+        </div>
+      )}
+
       {collectionToDelete && (
-        <div
-          className="fixed inset-0 z-[70] grid place-items-center bg-ink/55 p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="delete-collection-title"
-        >
+        <div className="fixed inset-0 z-[70] grid place-items-center bg-ink/55 p-4" role="dialog" aria-modal="true" aria-labelledby="delete-collection-title">
           <div className="w-full max-w-md rounded-md bg-white p-5 shadow-xl">
-            <h2
-              id="delete-collection-title"
-              className="font-bebas text-2xl uppercase text-ink"
-            >
-              Eliminar colección
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              ¿Eliminar la colección {collectionToDelete.name}? Las películas
-              no se eliminarán.
-            </p>
+            <h2 id="delete-collection-title" className="font-bebas text-2xl uppercase text-ink">Eliminar colección</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">¿Eliminar la colección {collectionToDelete.name}? Se quitará de {collectionToDelete.movieCount} {collectionToDelete.movieCount === 1 ? 'título asociado' : 'títulos asociados'}. Los títulos no se eliminarán.</p>
+            {remove.isError && <p className="mt-3 rounded-md bg-red-50 p-3 text-sm text-red-700">{remove.error.message}</p>}
             <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setCollectionToDelete(null)}
-                className="secondary-button"
-                disabled={remove.isPending}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={() => remove.mutate(collectionToDelete.id)}
-                className="primary-button bg-red-600 hover:bg-red-700"
-                disabled={remove.isPending}
-              >
-                {remove.isPending && (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                )}
-                Eliminar
-              </button>
+              <button type="button" onClick={() => setCollectionToDelete(null)} className="secondary-button" disabled={remove.isPending}>Cancelar</button>
+              <button type="button" onClick={() => remove.mutate(collectionToDelete.id)} className="primary-button bg-red-600 hover:bg-red-700" disabled={remove.isPending}>{remove.isPending && <Loader2 className="h-4 w-4 animate-spin" />}Eliminar</button>
             </div>
           </div>
         </div>

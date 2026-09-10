@@ -1,4 +1,4 @@
-import type { CreateMovieCollectionInput, CreateMovieInput, ImdbImportedMovieData, ImdbImportRequest, ImdbSearchCandidate, MovieCollection, MovieItem, MoviePersonalUpdate, TmdbSuggestionCandidate } from '@/types/movie';
+import type { CreateMovieCollectionInput, CreateMovieInput, GenreCatalogItem, ImdbImportedMovieData, ImdbImportRequest, ImdbSearchCandidate, MovieCollection, MovieItem, MoviePersonalUpdate, PlatformCatalogItem, TmdbSuggestionCandidate } from '@/types/movie';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:3003/api');
 const TOKEN_KEY = 'moviebox_auth_token';
@@ -91,6 +91,16 @@ export const api = {
     create: (input: CreateMovieCollectionInput) => request<MovieCollection>('/collections', { method: 'POST', body: JSON.stringify(input) }),
     update: (id: string, input: CreateMovieCollectionInput) => request<MovieCollection>(`/collections/${id}`, { method: 'PUT', body: JSON.stringify(input) }),
     remove: (id: string) => request<void>(`/collections/${id}`, { method: 'DELETE' }),
+  },
+  platforms: {
+    getAll: () => request<PlatformCatalogItem[]>('/platforms'),
+    update: (id: string, input: { name: string; logoPath?: string | null }) => request<PlatformCatalogItem>(`/platforms/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
+    remove: (id: string) => request<{ deleted: true; movieCount: number }>(`/platforms/${id}`, { method: 'DELETE' }),
+  },
+  genres: {
+    getAll: () => request<GenreCatalogItem[]>('/genres'),
+    update: (id: string, input: { name: string; imagePath?: string | null }) => request<GenreCatalogItem>(`/genres/${id}`, { method: 'PATCH', body: JSON.stringify(input) }),
+    remove: (id: string) => request<{ deleted: true; movieCount: number }>(`/genres/${id}`, { method: 'DELETE' }),
   },
   metadata: {
     getAll: () => request<{ genres: { id: string; name: string }[]; keywords: { id: string; name: string }[]; platforms: { id: string; name: string }[]; countries: { id: string; name: string }[]; directors: { id: string; name: string }[] }>('/metadata'),

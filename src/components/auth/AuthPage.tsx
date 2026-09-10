@@ -88,7 +88,7 @@ export const AuthPage = () => {
 
   return (
     <main className="min-h-screen bg-canvas lg:grid lg:grid-cols-[minmax(420px,0.8fr)_1.2fr]">
-      <section className="flex min-h-screen items-center justify-center bg-white px-5 py-10 sm:px-10">
+      <section className="flex min-h-screen items-center justify-center bg-canvas px-5 py-10 sm:px-10">
         <div className="w-full max-w-sm">
           <img
             src="/moviebox-logo-red.png"

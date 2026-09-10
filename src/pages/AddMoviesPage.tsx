@@ -87,7 +87,7 @@ export const AddMoviesPage = () => {
     },
     onSuccess: (results) => {
       setGroups(results);
-      setSelectedIds(Object.fromEntries(results.flatMap((group, index) => group.candidates[0] ? [[index, [group.candidates[0].imdbId]]] : [])));
+      setSelectedIds({});
       const failedCount = results.filter((group) => group.error).length;
       setError(failedCount ? `No se pudieron buscar ${failedCount} de ${results.length} títulos. Podés volver a intentarlo.` : '');
     },
@@ -223,8 +223,8 @@ export const AddMoviesPage = () => {
               <button type="button" onClick={() => setBulkMenuOpen((current) => !current)} className="secondary-button h-9 gap-1.5 px-3 text-xs uppercase" aria-expanded={bulkMenuOpen}>Buscar títulos<ChevronDown className={`h-4 w-4 transition-transform ${bulkMenuOpen ? 'rotate-180' : ''}`} /></button>
               {bulkMenuOpen && <div className="absolute right-0 top-10 z-50 w-56 rounded-md border border-slate-200 bg-white p-1.5 shadow-card">
                 <button type="button" onClick={() => { setBulkMenuOpen(false); setBulkDialogOpen(true); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><Search className="h-4 w-4" />Buscar por título</button>
-                <button type="button" onClick={() => txtInputRef.current?.click()} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><FileText className="h-4 w-4" />Importar de TXT</button>
-                <button type="button" onClick={() => spreadsheetInputRef.current?.click()} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><FileSpreadsheet className="h-4 w-4" />Importar de XLS</button>
+                <button type="button" onClick={() => txtInputRef.current?.click()} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><FileText className="h-4 w-4" />Importar TXT</button>
+                <button type="button" onClick={() => spreadsheetInputRef.current?.click()} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><FileSpreadsheet className="h-4 w-4" />Importar XLS</button>
               </div>}
               <input ref={txtInputRef} type="file" accept=".txt,text/plain" onChange={(event) => void importTextFile(event)} className="hidden" />
               <input ref={spreadsheetInputRef} type="file" accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" onChange={(event) => void importSpreadsheet(event)} className="hidden" />
@@ -234,7 +234,7 @@ export const AddMoviesPage = () => {
       </section>
 
       <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8">
-        <h2 className="font-bebas text-2xl uppercase text-ink">Trending</h2>
+        {!appliedSuggestionSearch && <h2 className="font-bebas text-2xl uppercase text-ink">Sugerencias</h2>}
         {suggestions.isLoading ? <div className="grid min-h-[360px] place-items-center"><Loader2 className="h-8 w-8 animate-spin text-aqua" /></div> : suggestions.isError ? <div className="mt-4 rounded-md border border-red-100 bg-red-50 p-5 text-center"><p className="text-sm text-red-700">No se pudieron cargar las sugerencias de TMDB.</p><button type="button" onClick={() => suggestions.refetch()} className="secondary-button mt-3">Reintentar</button></div> : visibleSuggestions.length ? (
           <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
             {visibleSuggestions.map((candidate) => {
@@ -261,7 +261,7 @@ export const AddMoviesPage = () => {
         {bulkDialogOpen && <div className="fixed inset-0 z-[80] flex items-end justify-center bg-ink/55 sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="bulk-search-title">
           <div className="max-h-[94vh] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-4xl sm:rounded-md">
             <header className="flex min-h-16 items-center border-b border-slate-200 bg-white px-4 sm:px-6">
-              <div><h2 id="bulk-search-title" className="font-bebas text-2xl uppercase text-ink">Buscar varias</h2><p className="text-xs text-slate-500">Ingresá títulos o revisá los cargados desde un archivo.</p></div>
+              <div><h2 id="bulk-search-title" className="font-bebas text-2xl uppercase text-ink">Buscar títulos</h2><p className="text-xs text-slate-500">Ingresá títulos o revisá los cargados desde un archivo.</p></div>
               <button type="button" onClick={() => setBulkDialogOpen(false)} className="icon-button ml-auto border-0 shadow-none" title="Cerrar" aria-label="Cerrar"><X className="h-5 w-5" /></button>
             </header>
             <div className="max-h-[calc(94vh-64px)] overflow-y-auto p-4 sm:p-6">
@@ -281,8 +281,6 @@ export const AddMoviesPage = () => {
             </div>
           </div>
         </form>
-
-        {error && <p className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
         {groups && (
           <div className="mt-6 space-y-4">
@@ -324,6 +322,10 @@ export const AddMoviesPage = () => {
             </div>
           </div>
         )}
+        {error && <p className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+        <div className="mt-6 flex justify-end border-t border-slate-200 pt-4">
+          <button type="button" onClick={() => setBulkDialogOpen(false)} className="secondary-button">Finalizar</button>
+        </div>
             </div>
           </div>
         </div>}

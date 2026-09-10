@@ -12,6 +12,8 @@ import collectionRoutes from './routes/collections';
 import metadataRoutes from './routes/metadata';
 import uploadRoutes from './routes/uploads';
 import tmdbRoutes from './routes/tmdb';
+import platformRoutes from './routes/platforms';
+import genreRoutes from './routes/genres';
 import path from 'node:path';
 
 const app = express();
@@ -40,6 +42,8 @@ app.use('/api/collections', collectionRoutes);
 app.use('/api/metadata', metadataRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/tmdb', tmdbRoutes);
+app.use('/api/platforms', platformRoutes);
+app.use('/api/genres', genreRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({

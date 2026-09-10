@@ -21,7 +21,7 @@ const inputSchema = z.object({
   images: z.array(z.object({ url: z.string().trim().min(1).max(2000), localPath: z.string().nullable().optional(), tmdbFilePath: z.string().nullable().optional(), order: z.number().int().min(0), isPrimary: z.boolean().optional(), altText: z.string().max(250).nullable().optional() })).max(5).optional(),
   countries: z.array(named.extend({ isoCode: z.string().max(3).nullable().optional() })).max(20).optional(),
   credits: z.array(named.extend({ creditType: z.enum(['director', 'cast']), characterName: z.string().max(150).nullable().optional(), tmdbPersonId: z.number().int().positive().nullable().optional(), tmdbCreditId: z.string().nullable().optional(), profilePath: z.string().nullable().optional() })).max(25).refine((items) => items.filter((item) => item.creditType === 'cast').length <= 6, 'El reparto principal admite hasta 6 personas').optional(),
-  genres: z.array(named).max(30).optional(), keywords: z.array(named).max(50).optional(),
+  genres: z.array(named.extend({ tmdbGenreId: z.number().int().positive().nullable().optional(), tmdbMediaType: z.enum(['movie', 'series']).nullable().optional() })).max(30).optional(), keywords: z.array(named).max(50).optional(),
   platforms: z.array(named.extend({ isPrimary: z.boolean().optional(), tmdbProviderId: z.number().int().positive().nullable().optional(), logoPath: z.string().max(500).nullable().optional() })).max(30).optional(), collectionIds: z.array(z.string()).max(100).optional(),
 });
 type MovieInput = z.infer<typeof inputSchema>;
@@ -61,7 +61,19 @@ const saveRelations = async (tx: any, movieId: string, userId: string, input: Mo
     await tx.movieCredit.create({ data: { movieId, personId: person.id, creditType: credit.creditType, order: index, characterName: credit.characterName, tmdbCreditId: credit.tmdbCreditId } });
   }
   for (const [index, item] of (input.genres || []).entries()) {
-    const normalizedName = normalizeName(item.name); const genre = await tx.genre.upsert({ where: { userId_normalizedName: { userId, normalizedName } }, update: { name: item.name }, create: { userId, name: item.name, normalizedName } });
+    const normalizedName = normalizeName(item.name);
+    let genre = await tx.genre.findFirst({
+      where: {
+        userId,
+        OR: [
+          { normalizedName },
+          ...(item.tmdbGenreId ? [{ tmdbGenreId: item.tmdbGenreId, tmdbMediaType: item.tmdbMediaType }] : []),
+        ],
+      },
+    });
+    genre = genre
+      ? await tx.genre.update({ where: { id: genre.id }, data: { tmdbGenreId: genre.tmdbGenreId ?? item.tmdbGenreId, tmdbMediaType: genre.tmdbMediaType ?? item.tmdbMediaType } })
+      : await tx.genre.create({ data: { userId, name: item.name, normalizedName, tmdbGenreId: item.tmdbGenreId, tmdbMediaType: item.tmdbMediaType } });
     await tx.movieGenre.create({ data: { movieId, genreId: genre.id, order: index } });
   }
   for (const [index, item] of (input.keywords || []).entries()) {
@@ -81,7 +93,7 @@ const saveRelations = async (tx: any, movieId: string, userId: string, input: Mo
     });
     const platformData = { name: item.name, normalizedName, tmdbProviderId: item.tmdbProviderId, logoPath: item.logoPath };
     platform = platform
-      ? await tx.platform.update({ where: { id: platform.id }, data: platformData })
+      ? await tx.platform.update({ where: { id: platform.id }, data: { tmdbProviderId: platform.tmdbProviderId ?? item.tmdbProviderId, logoPath: platform.logoPath ?? item.logoPath } })
       : await tx.platform.create({ data: { userId, ...platformData } });
     await tx.moviePlatform.create({ data: { movieId, platformId: platform.id, order: index, isPrimary: item.isPrimary ?? index === 0 } });
   }

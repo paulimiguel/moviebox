@@ -46,8 +46,9 @@ interface ToolbarProps {
 const menuButton = 'inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold uppercase text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50 xl:w-[150px]';
 
 export const MovieLibraryToolbar = (props: ToolbarProps) => {
-  const [openMenu, setOpenMenu] = useState<'view' | 'sort' | 'genre' | null>(null);
+  const [openMenu, setOpenMenu] = useState<'view' | 'sort' | 'genre' | 'platform' | null>(null);
   const [genreSearch, setGenreSearch] = useState('');
+  const [platformSearch, setPlatformSearch] = useState('');
   const [yearDraft, setYearDraft] = useState('');
   const toolbarRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -106,6 +107,9 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
   const filteredGenres = props.genres.filter((genre) =>
     genre.name.toLocaleLowerCase('es').includes(genreSearch.trim().toLocaleLowerCase('es')),
   );
+  const filteredPlatforms = props.platforms.filter((platform) =>
+    platform.name.toLocaleLowerCase('es').includes(platformSearch.trim().toLocaleLowerCase('es')),
+  );
   const selectedGenreNames = props.genres.filter((genre) => props.genreIds.includes(genre.id));
   const selectedPlatformNames = props.platforms.filter((platform) => props.platformIds.includes(platform.id));
   const toggleGenre = (genreId: string) => {
@@ -113,6 +117,13 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
       props.genreIds.includes(genreId)
         ? props.genreIds.filter((id) => id !== genreId)
         : [...props.genreIds, genreId],
+    );
+  };
+  const togglePlatform = (platformId: string) => {
+    props.onPlatformChange(
+      props.platformIds.includes(platformId)
+        ? props.platformIds.filter((id) => id !== platformId)
+        : [...props.platformIds, platformId],
     );
   };
   const addYear = () => {
@@ -135,10 +146,10 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
               {selectedPlatformNames.map((platform) => <button key={`active-platform-${platform.id}`} type="button" onClick={() => props.onPlatformChange(props.platformIds.filter((id) => id !== platform.id))} className="inline-flex max-w-full items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar plataforma ${platform.name}`}><span className="truncate">{platform.name}</span><X className="h-3 w-3 shrink-0" /></button>)}
               {props.years.map((year) => <button key={`active-year-${year}`} type="button" onClick={() => props.onYearChange(props.years.filter((value) => value !== year))} className="inline-flex items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar año ${year}`}>{year}<X className="h-3 w-3" /></button>)}
               {props.type !== 'all' && <button type="button" onClick={() => props.onTypeChange('all')} className="inline-flex items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title="Quitar filtro de tipo">{props.type === 'movie' ? 'Película' : 'Serie'}<X className="h-3 w-3" /></button>}
-              {props.watched !== 'all' && <button type="button" onClick={() => props.onWatchedChange('all')} className="inline-flex items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title="Quitar filtro de visualización">{props.watched === 'watched' ? 'Vista' : 'No vista'}<X className="h-3 w-3" /></button>}
+              {props.watched !== 'all' && <button type="button" onClick={() => props.onWatchedChange('all')} className="inline-flex items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar filtro ${props.watched === 'watched' ? 'Watch' : 'No Watch'}`}>{props.watched === 'watched' ? 'Watch' : 'No Watch'}<X className="h-3 w-3" /></button>}
               {props.favorite === 'favorites' && <button type="button" onClick={() => props.onFavoriteChange('all')} className="inline-flex items-center gap-1 rounded bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-coral" title="Quitar filtro Like">Like<X className="h-3 w-3" /></button>}
               {props.watchlist === 'watchlist' && <button type="button" onClick={() => props.onWatchlistChange('all')} className="inline-flex items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title="Quitar filtro Watchlist">Watchlist<X className="h-3 w-3" /></button>}
-              <button type="button" onClick={() => { props.onClearFilters(); setGenreSearch(''); setYearDraft(''); setOpenMenu(null); }} className="ml-1 px-1 py-0.5 text-[11px] font-semibold uppercase text-coral hover:underline">Limpiar</button>
+              <button type="button" onClick={() => { props.onClearFilters(); setGenreSearch(''); setPlatformSearch(''); setYearDraft(''); setOpenMenu(null); }} className="ml-1 px-1 py-0.5 text-[11px] font-semibold uppercase text-coral hover:underline">Limpiar</button>
             </div>
           )}
         </div>
@@ -170,8 +181,8 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
 
       {props.filtersOpen && (
         <div className="relative border-t border-slate-100 bg-canvas">
-          <button type="button" onClick={() => { setGenreSearch(''); setOpenMenu(null); props.onFiltersToggle(); }} className="absolute right-2 top-2 z-10 grid h-7 w-7 place-items-center rounded-md text-slate-400 hover:bg-slate-200 hover:text-ink" title="Cerrar filtros" aria-label="Cerrar filtros"><X className="h-4 w-4" /></button>
-          <div className="mx-auto grid max-w-[1500px] gap-4 px-4 py-4 pr-11 sm:px-6 sm:pr-12 xl:grid-cols-[minmax(280px,1fr)_150px_minmax(420px,auto)_auto] xl:items-start">
+          <button type="button" onClick={() => { setGenreSearch(''); setPlatformSearch(''); setOpenMenu(null); props.onFiltersToggle(); }} className="absolute right-2 top-2 z-10 grid h-7 w-7 place-items-center rounded-md text-slate-400 hover:bg-slate-200 hover:text-ink" title="Cerrar filtros" aria-label="Cerrar filtros"><X className="h-4 w-4" /></button>
+          <div className="mx-auto grid max-w-[1500px] gap-4 px-4 py-4 pr-11 sm:px-6 sm:pr-12 xl:grid-cols-[minmax(220px,1fr)_minmax(220px,1fr)_130px] xl:items-start 2xl:grid-cols-[minmax(180px,1fr)_minmax(180px,1fr)_110px_auto]">
             <div className="relative">
               <span className="field-label">Género</span>
               <button type="button" onClick={() => { setGenreSearch(''); setOpenMenu(openMenu === 'genre' ? null : 'genre'); }} className={`control flex w-full items-center justify-between gap-2 text-left ${openMenu === 'genre' ? 'border-coral' : ''}`} aria-haspopup="listbox" aria-expanded={openMenu === 'genre'}>
@@ -195,22 +206,44 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
               {selectedGenreNames.length > 0 && <div className="mt-2 flex flex-wrap gap-1">{selectedGenreNames.map((genre) => <button key={genre.id} type="button" onClick={() => toggleGenre(genre.id)} className="inline-flex items-center gap-1 rounded bg-mist px-2 py-1 text-xs font-medium text-slate-600" title={`Quitar ${genre.name}`}>{genre.name}<X className="h-3 w-3" /></button>)}</div>}
             </div>
 
+            <div className="relative">
+              <span className="field-label">Plataforma</span>
+              <button type="button" onClick={() => { setPlatformSearch(''); setOpenMenu(openMenu === 'platform' ? null : 'platform'); }} className={`control flex w-full items-center justify-between gap-2 text-left ${openMenu === 'platform' ? 'border-coral' : ''}`} aria-haspopup="listbox" aria-expanded={openMenu === 'platform'}>
+                <span className={`truncate ${props.platformIds.length ? 'text-ink' : 'text-slate-400'}`}>{props.platformIds.length ? `${props.platformIds.length} seleccionada${props.platformIds.length > 1 ? 's' : ''}` : 'Filtrar por plataforma'}</span>
+                <ChevronsUpDown className="h-4 w-4 shrink-0 text-slate-400" />
+              </button>
+              {openMenu === 'platform' && (
+                <div className="absolute left-0 top-full z-50 mt-1 w-full min-w-[220px] overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
+                  <label className="relative block border-b border-slate-200">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input autoFocus type="search" value={platformSearch} onChange={(event) => setPlatformSearch(event.target.value)} className="h-11 w-full pl-9 pr-3 text-sm outline-none" placeholder="Buscar plataforma..." />
+                  </label>
+                  <div className="max-h-64 overflow-y-auto p-1.5" role="listbox" aria-multiselectable="true">
+                    {filteredPlatforms.length ? filteredPlatforms.map((platform) => {
+                      const selected = props.platformIds.includes(platform.id);
+                      return <button key={platform.id} type="button" onClick={() => togglePlatform(platform.id)} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${selected ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`} role="option" aria-selected={selected}><Check className={`h-4 w-4 shrink-0 ${selected ? 'text-coral' : 'text-transparent'}`} /><span className="min-w-0 flex-1 truncate">{platform.name}</span></button>;
+                    }) : <p className="px-3 py-4 text-center text-sm text-slate-400">Sin resultados.</p>}
+                  </div>
+                </div>
+              )}
+              {selectedPlatformNames.length > 0 && <div className="mt-2 flex flex-wrap gap-1">{selectedPlatformNames.map((platform) => <button key={platform.id} type="button" onClick={() => togglePlatform(platform.id)} className="inline-flex items-center gap-1 rounded bg-mist px-2 py-1 text-xs font-medium text-slate-600" title={`Quitar ${platform.name}`}>{platform.name}<X className="h-3 w-3" /></button>)}</div>}
+            </div>
+
             <div>
               <label htmlFor="movie-year-filter" className="field-label">Año</label>
               <input id="movie-year-filter" className="control w-full" type="text" inputMode="numeric" value={yearDraft} onChange={(event) => setYearDraft(event.target.value.replace(/\D/g, '').slice(0, 4))} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addYear(); } }} placeholder="Escribir y Enter" aria-label="Agregar año" />
               {props.years.length > 0 && <div className="mt-2 flex flex-wrap gap-1">{props.years.map((year) => <button key={year} type="button" onClick={() => props.onYearChange(props.years.filter((value) => value !== year))} className="inline-flex items-center gap-1 rounded bg-mist px-2 py-1 text-xs font-medium text-slate-600" title={`Quitar ${year}`}>{year}<X className="h-3 w-3" /></button>)}</div>}
             </div>
 
-            <div className="flex flex-wrap gap-2 xl:pt-[22px]">
-              <button type="button" onClick={() => props.onTypeChange(props.type === 'movie' ? 'all' : 'movie')} className={`inline-flex h-10 items-center gap-1.5 rounded-md border px-3 text-sm font-semibold transition-colors ${props.type === 'movie' ? 'border-coral bg-coral text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}><Film className="h-4 w-4" />Película</button>
-              <button type="button" onClick={() => props.onTypeChange(props.type === 'series' ? 'all' : 'series')} className={`inline-flex h-10 items-center gap-1.5 rounded-md border px-3 text-sm font-semibold transition-colors ${props.type === 'series' ? 'border-coral bg-coral text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}><Tv className="h-4 w-4" />Serie</button>
-              <button type="button" onClick={() => props.onWatchedChange(props.watched === 'watched' ? 'all' : 'watched')} className={`inline-flex h-10 items-center gap-1.5 rounded-md border px-3 text-sm font-semibold transition-colors ${props.watched === 'watched' ? 'border-coral bg-coral text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}><Eye className="h-4 w-4" />Vista</button>
-              <button type="button" onClick={() => props.onWatchedChange(props.watched === 'unwatched' ? 'all' : 'unwatched')} className={`inline-flex h-10 items-center gap-1.5 rounded-md border px-3 text-sm font-semibold transition-colors ${props.watched === 'unwatched' ? 'border-coral bg-coral text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}><EyeOff className="h-4 w-4" />No vista</button>
-              <button type="button" onClick={() => props.onFavoriteChange(props.favorite === 'favorites' ? 'all' : 'favorites')} className={`inline-flex h-10 items-center gap-1.5 rounded-md border px-3 text-sm font-semibold transition-colors ${props.favorite === 'favorites' ? 'border-coral bg-coral text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}><Heart className={`h-4 w-4 ${props.favorite === 'favorites' ? 'fill-current' : ''}`} />Like</button>
-              <button type="button" onClick={() => props.onWatchlistChange(props.watchlist === 'watchlist' ? 'all' : 'watchlist')} className={`inline-flex h-10 items-center gap-1.5 rounded-md border px-3 text-sm font-semibold transition-colors ${props.watchlist === 'watchlist' ? 'border-aqua bg-aqua text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}><Bookmark className={`h-4 w-4 ${props.watchlist === 'watchlist' ? 'fill-current' : ''}`} />Watchlist</button>
+            <div className="flex flex-wrap gap-2 xl:col-span-3 2xl:col-span-1 2xl:flex-nowrap 2xl:pt-[22px]">
+              <button type="button" onClick={() => props.onTypeChange(props.type === 'movie' ? 'all' : 'movie')} className={`inline-flex h-9 w-[104px] items-center justify-center gap-1.5 rounded-md border px-1.5 text-xs font-semibold transition-colors ${props.type === 'movie' ? 'border-coral bg-coral text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}><Film className="h-4 w-4" />Película</button>
+              <button type="button" onClick={() => props.onTypeChange(props.type === 'series' ? 'all' : 'series')} className={`inline-flex h-9 w-[104px] items-center justify-center gap-1.5 rounded-md border px-1.5 text-xs font-semibold transition-colors ${props.type === 'series' ? 'border-coral bg-coral text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}><Tv className="h-4 w-4" />Serie</button>
+              <button type="button" onClick={() => props.onWatchedChange(props.watched === 'watched' ? 'all' : 'watched')} className={`inline-flex h-9 w-[104px] items-center justify-center gap-1.5 rounded-md border px-1.5 text-xs font-semibold transition-colors ${props.watched === 'watched' ? 'border-coral bg-coral text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}><Eye className="h-4 w-4" />Watch</button>
+              <button type="button" onClick={() => props.onWatchedChange(props.watched === 'unwatched' ? 'all' : 'unwatched')} className={`inline-flex h-9 w-[104px] items-center justify-center gap-1.5 rounded-md border px-1.5 text-xs font-semibold transition-colors ${props.watched === 'unwatched' ? 'border-coral bg-coral text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}><EyeOff className="h-4 w-4" />No Watch</button>
+              <button type="button" onClick={() => props.onFavoriteChange(props.favorite === 'favorites' ? 'all' : 'favorites')} className={`inline-flex h-9 w-[104px] items-center justify-center gap-1.5 rounded-md border px-1.5 text-xs font-semibold transition-colors ${props.favorite === 'favorites' ? 'border-coral bg-coral text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}><Heart className={`h-4 w-4 ${props.favorite === 'favorites' ? 'fill-current' : ''}`} />Like</button>
+              <button type="button" onClick={() => props.onWatchlistChange(props.watchlist === 'watchlist' ? 'all' : 'watchlist')} className={`inline-flex h-9 w-[104px] items-center justify-center gap-1.5 rounded-md border px-1.5 text-xs font-semibold transition-colors ${props.watchlist === 'watchlist' ? 'border-aqua bg-aqua text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}><Bookmark className={`h-4 w-4 ${props.watchlist === 'watchlist' ? 'fill-current' : ''}`} />Watchlist</button>
+              <button type="button" onClick={() => { props.onClearFilters(); setGenreSearch(''); setPlatformSearch(''); setYearDraft(''); setOpenMenu(null); }} className="secondary-button h-9 w-[104px] px-1.5 text-xs">Todos</button>
             </div>
-
-            <button type="button" onClick={() => { props.onClearFilters(); setGenreSearch(''); setYearDraft(''); setOpenMenu(null); }} className="secondary-button h-10 xl:mt-[22px]">Limpiar</button>
           </div>
         </div>
       )}

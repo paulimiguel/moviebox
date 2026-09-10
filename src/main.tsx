@@ -4,6 +4,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
 import "./index.css";
 
+try {
+  document.documentElement.dataset.theme = window.localStorage.getItem('moviebox:color-theme') === 'dark' ? 'dark' : 'light';
+} catch {
+  document.documentElement.dataset.theme = 'light';
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

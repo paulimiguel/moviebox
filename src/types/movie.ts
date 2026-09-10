@@ -68,7 +68,17 @@ export interface MovieGenre {
   name: string;
   tmdbGenreId: number | null;
   tmdbMediaType: MovieType | null;
+  imagePath: string | null;
   order: number;
+}
+
+export interface GenreCatalogItem {
+  id: string;
+  name: string;
+  tmdbGenreId: number | null;
+  tmdbMediaType: MovieType | null;
+  imagePath: string | null;
+  movieCount: number;
 }
 
 export interface MovieKeyword {
@@ -85,6 +95,14 @@ export interface MoviePlatform {
   logoPath: string | null;
   isPrimary: boolean;
   order: number;
+}
+
+export interface PlatformCatalogItem {
+  id: string;
+  name: string;
+  tmdbProviderId: number | null;
+  logoPath: string | null;
+  movieCount: number;
 }
 
 export interface MovieCollectionReference {

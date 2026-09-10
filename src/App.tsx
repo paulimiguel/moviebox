@@ -6,6 +6,9 @@ import { MovieDetailPage } from '@/pages/MovieDetailPage';
 import { CollectionsPage } from '@/pages/CollectionsPage';
 import { CollectionDetailPage } from '@/pages/CollectionDetailPage';
 import { AddMoviesPage } from '@/pages/AddMoviesPage';
+import { PlatformsPage } from '@/pages/PlatformsPage';
+import { GenresPage } from '@/pages/GenresPage';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
 const AppContent = () => {
   const { user, isLoading } = useAuth();
@@ -25,15 +28,19 @@ const AppContent = () => {
       <Route path="/colecciones" element={<CollectionsPage />} />
       <Route path="/colecciones/:id" element={<CollectionDetailPage />} />
       <Route path="/agregar" element={<AddMoviesPage />} />
+      <Route path="/plataformas" element={<PlatformsPage />} />
+      <Route path="/generos" element={<GenresPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   ) : <AuthPage />;
 };
 
 const App = () => (
-  <AuthProvider>
-    <BrowserRouter><AppContent /></BrowserRouter>
-  </AuthProvider>
+  <ThemeProvider>
+    <AuthProvider>
+      <BrowserRouter><AppContent /></BrowserRouter>
+    </AuthProvider>
+  </ThemeProvider>
 );
 
 export default App;

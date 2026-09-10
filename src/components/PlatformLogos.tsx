@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { resolveMovieImageUrl } from '@/services/api';
 import type { MoviePlatform } from '@/types/movie';
 
 const TMDB_IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w92';
@@ -23,12 +24,20 @@ const localLogoFor = (name: string) => {
   return null;
 };
 
+export const resolvePlatformLogoUrl = (platform: Pick<MoviePlatform, 'name' | 'logoPath'>) => {
+  if (platform.logoPath?.startsWith('/uploads/') || platform.logoPath?.startsWith('uploads/')) return resolveMovieImageUrl(platform.logoPath);
+  if (platform.logoPath?.startsWith('/platforms/')) return platform.logoPath;
+  const localLogo = localLogoFor(platform.name);
+  if (localLogo) return localLogo;
+  if (!platform.logoPath) return null;
+  return /^(https?:|data:|blob:)/i.test(platform.logoPath)
+    ? platform.logoPath
+    : `${TMDB_IMAGE_BASE_URL}${platform.logoPath.startsWith('/') ? '' : '/'}${platform.logoPath}`;
+};
+
 const PlatformMark = ({ platform, large }: { platform: MoviePlatform; large: boolean }) => {
   const [imageFailed, setImageFailed] = useState(false);
-  const localLogo = localLogoFor(platform.name);
-  const imageUrl = localLogo || (platform.logoPath
-    ? (/^https?:\/\//i.test(platform.logoPath) ? platform.logoPath : `${TMDB_IMAGE_BASE_URL}${platform.logoPath.startsWith('/') ? '' : '/'}${platform.logoPath}`)
-    : null);
+  const imageUrl = resolvePlatformLogoUrl(platform);
 
   if (!imageUrl || imageFailed) {
     return <span className="text-xs font-medium text-slate-500">{platform.name}</span>;
