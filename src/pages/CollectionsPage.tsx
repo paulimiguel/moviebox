@@ -166,9 +166,9 @@ export const CollectionsPage = () => {
                   <div className="p-3"><h2 className="font-bebas line-clamp-2 text-[24px] font-normal uppercase leading-7 text-ink">{collection.name}</h2></div>
                 </Link>
                 <div className="absolute right-2 top-2" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpenMenuId(null); }}>
-                  <button type="button" onClick={() => setOpenMenuId((current) => current === collection.id ? null : collection.id)} className="grid h-8 w-8 place-items-center rounded-md border border-white/60 bg-white/80 text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white" title="Más acciones" aria-label={`Acciones de ${collection.name}`} aria-expanded={openMenuId === collection.id}><MoreVertical className="h-4 w-4" /></button>
+                  <button type="button" onClick={() => setOpenMenuId((current) => current === collection.id ? null : collection.id)} className="moviebox-translucent-action grid h-8 w-8 place-items-center rounded-md border border-white/60 bg-white/80 text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white" title="Más acciones" aria-label={`Acciones de ${collection.name}`} aria-expanded={openMenuId === collection.id}><MoreVertical className="h-4 w-4" /></button>
                   {openMenuId === collection.id && (
-                    <div className="absolute right-0 top-9 z-30 w-40 rounded-md border border-slate-200 bg-white p-1.5 text-sm shadow-card">
+                    <div className="movie-card-dropdown absolute right-0 top-9 z-30 w-40 rounded-md border border-slate-200 bg-white p-1.5 text-sm shadow-card">
                       <button type="button" onClick={() => openEdit(collection)} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50"><Pencil className="h-4 w-4" />Editar</button>
                       <button type="button" onClick={() => { setOpenMenuId(null); setCollectionToDelete(collection); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" />Eliminar</button>
                     </div>

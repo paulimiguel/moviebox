@@ -30,6 +30,8 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
     : null;
   const primaryImage = movie.images.find((image) => image.isPrimary) || movie.images[0];
   const typeLabel = movie.type === 'movie' ? 'Película' : 'Serie';
+  const typeBadgeClass = movie.type === 'series' ? 'bg-aqua' : 'bg-coral';
+  const typeBadgeStyle = `rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase text-white shadow-sm ${typeBadgeClass}`;
   const primaryGenre = movie.genres[0]?.name || null;
   const genres = movie.genres.map((genre) => genre.name).join(', ');
   const cast = movie.credits.filter((credit) => credit.creditType === 'cast').map((credit) => credit.name).join(', ');
@@ -86,10 +88,10 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
   const actionControls = (overlay = false, includeWatch = false, compact = false) => selectionMode ? null : (
     <div ref={menuRef} className={`relative flex shrink-0 flex-col items-end gap-1 ${menuOpen ? 'z-[60]' : ''}`} onClick={interactive} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) closeMenu(); }}>
       <div className={`flex items-center ${compact ? 'gap-0.5' : 'gap-1'}`}>
-        {includeWatch && <button type="button" onClick={() => onPersonal?.(movie, 'watched')} className={`grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : 'h-8 w-8'} ${overlay ? 'border border-white/30 bg-white/70 shadow-sm backdrop-blur-sm hover:bg-white/90' : 'border border-slate-200 bg-white hover:bg-slate-50'} ${movie.watched ? 'text-[#2cbc63]' : 'text-slate-500'}`} title="Watch" aria-label="Watch"><Eye className={compact ? 'h-3.5 w-3.5' : 'h-[18px] w-[18px]'} /></button>}
-        <button type="button" onClick={() => onPersonal?.(movie, 'favorite')} className={`grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : 'h-8 w-8'} ${overlay ? 'border border-white/30 bg-white/70 shadow-sm backdrop-blur-sm hover:bg-white/90' : 'border border-slate-200 bg-white hover:bg-slate-50'} ${movie.favorite ? 'text-coral' : 'text-slate-500'}`} title="Like" aria-label="Like"><Heart className={`${compact ? 'h-3 w-3' : 'h-4 w-4'} ${movie.favorite ? 'fill-current' : ''}`} /></button>
-        <button type="button" onClick={() => onPersonal?.(movie, 'watchlist')} className={`grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : 'h-8 w-8'} ${overlay ? 'border border-white/30 bg-white/70 shadow-sm backdrop-blur-sm hover:bg-white/90' : 'border border-slate-200 bg-white hover:bg-slate-50'} ${movie.watchlist ? 'text-aqua' : 'text-slate-500'}`} title={movie.watchlist ? 'Quitar de Watchlist' : 'Agregar a Watchlist'} aria-label={movie.watchlist ? 'Quitar de Watchlist' : 'Agregar a Watchlist'}><Bookmark className={`${compact ? 'h-3 w-3' : 'h-4 w-4'} ${movie.watchlist ? 'fill-current' : ''}`} /></button>
-        <button type="button" onClick={() => setMenuOpen((current) => !current)} className={`grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : 'h-8 w-8'} ${overlay ? 'border border-white/30 bg-white/70 text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white/90' : 'border border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`} title="Más acciones" aria-label="Más acciones" aria-expanded={menuOpen}><MoreVertical className={compact ? 'h-3 w-3' : 'h-4 w-4'} /></button>
+        {includeWatch && <button type="button" aria-pressed={movie.watched} onClick={() => onPersonal?.(movie, 'watched')} className={`moviebox-translucent-action grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : 'h-8 w-8'} ${overlay ? 'border border-white/30 bg-white/70 shadow-sm backdrop-blur-sm hover:bg-white/90' : 'border border-slate-200 bg-white hover:bg-slate-50'} ${movie.watched ? 'text-[#2cbc63]' : 'text-slate-500'}`} title="Watch" aria-label="Watch"><Eye className={compact ? 'h-3.5 w-3.5' : 'h-[18px] w-[18px]'} /></button>}
+        <button type="button" aria-pressed={movie.favorite} onClick={() => onPersonal?.(movie, 'favorite')} className={`moviebox-translucent-action grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : 'h-8 w-8'} ${overlay ? 'border border-white/30 bg-white/70 shadow-sm backdrop-blur-sm hover:bg-white/90' : 'border border-slate-200 bg-white hover:bg-slate-50'} ${movie.favorite ? 'text-coral' : 'text-slate-500'}`} title="Like" aria-label="Like"><Heart className={`${compact ? 'h-3 w-3' : 'h-4 w-4'} ${movie.favorite ? 'fill-current' : ''}`} /></button>
+        <button type="button" aria-pressed={movie.watchlist} onClick={() => onPersonal?.(movie, 'watchlist')} className={`moviebox-translucent-action grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : 'h-8 w-8'} ${overlay ? 'border border-white/30 bg-white/70 shadow-sm backdrop-blur-sm hover:bg-white/90' : 'border border-slate-200 bg-white hover:bg-slate-50'} ${movie.watchlist ? 'text-aqua' : 'text-slate-500'}`} title={movie.watchlist ? 'Quitar de Watchlist' : 'Agregar a Watchlist'} aria-label={movie.watchlist ? 'Quitar de Watchlist' : 'Agregar a Watchlist'}><Bookmark className={`${compact ? 'h-3 w-3' : 'h-4 w-4'} ${movie.watchlist ? 'fill-current' : ''}`} /></button>
+        <button type="button" onClick={() => setMenuOpen((current) => !current)} className={`moviebox-translucent-action grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : 'h-8 w-8'} ${overlay ? 'border border-white/30 bg-white/70 text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white/90' : 'border border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`} title="Más acciones" aria-label="Más acciones" aria-expanded={menuOpen}><MoreVertical className={compact ? 'h-3 w-3' : 'h-4 w-4'} /></button>
       </div>
       {menuOpen && <div className={`movie-card-dropdown absolute right-0 z-[70] w-52 rounded-md border border-slate-200 bg-white p-1.5 text-xs shadow-card ${compact ? 'top-6' : 'top-9'}`}>
         {movie.trailerUrl ? <a href={movie.trailerUrl} target="_blank" rel="noreferrer" onClick={closeMenu} className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-slate-600 hover:bg-slate-50"><Youtube className="h-4 w-4" />Ver trailer</a> : <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-3 py-1.5 text-slate-300"><Youtube className="h-4 w-4" />Ver trailer</span>}
@@ -122,6 +124,9 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
             {movie.imdbRating != null && <span className="inline-flex items-center gap-1 text-sm font-semibold"><Star className="h-4 w-4 fill-amber-400 text-amber-400" />{movie.imdbRating}</span>}
           </div>
           {genres && <p className="mt-2 text-sm leading-5 text-slate-500">{genres}</p>}
+          <div className="mt-2">
+            <span className={`inline-flex ${typeBadgeStyle}`}>{typeLabel}</span>
+          </div>
           <div className="mt-2 flex flex-wrap items-center gap-4">
             {trailerLink && <span className="text-xs [&_img]:h-3 [&_img]:w-[18px]">{trailerLink}</span>}
           </div>
@@ -165,7 +170,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
 
           <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-4">
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="rounded bg-ink px-2 py-1 text-[11px] font-semibold text-white">{typeLabel}</span>
+              <span className={typeBadgeStyle}>{typeLabel}</span>
               {primaryGenre && <span className="rounded bg-mist px-2 py-1 text-[11px] font-semibold text-ink">{primaryGenre}</span>}
             </div>
           </div>
@@ -193,11 +198,11 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
         <div className="relative aspect-[2/3]">
           {selectionMark()}
           <div className="h-full overflow-hidden rounded-t-md bg-slate-100">{poster('h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]')}</div>
-          <span className={`absolute left-2 top-2 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase text-white shadow-sm ${movie.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>
+          <span className={`absolute left-2 top-2 ${typeBadgeStyle}`}>
             {typeLabel}
           </span>
           <div className="absolute bottom-2 right-2 flex shrink-0 gap-1" onClick={interactive}>
-            <button type="button" onClick={() => onPersonal?.(movie, 'watched')} className={`grid h-8 w-8 place-items-center rounded-md border border-white/60 bg-white/50 shadow-sm backdrop-blur-sm hover:bg-white/70 ${movie.watched ? 'text-[#2cbc63]' : 'text-gray-500'}`} title="Watch" aria-label="Watch"><Eye className="h-[18px] w-[18px]" /></button>
+            <button type="button" aria-pressed={movie.watched} onClick={() => onPersonal?.(movie, 'watched')} className={`moviebox-translucent-action grid h-8 w-8 place-items-center rounded-md border border-white/60 bg-white/50 shadow-sm backdrop-blur-sm hover:bg-white/70 ${movie.watched ? 'text-[#2cbc63]' : 'text-gray-500'}`} title="Watch" aria-label="Watch"><Eye className="h-[18px] w-[18px]" /></button>
             {actionControls(true)}
           </div>
         </div>

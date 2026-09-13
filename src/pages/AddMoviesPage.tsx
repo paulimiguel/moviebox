@@ -209,18 +209,20 @@ export const AddMoviesPage = () => {
         <div className="mx-auto grid max-w-[1500px] gap-3 px-4 py-3 sm:px-6 xl:grid-cols-[300px_minmax(280px,1fr)_auto] xl:items-center">
           <div className="min-w-0">
             <h1 className="font-bebas truncate text-xl font-normal uppercase text-ink sm:text-2xl">Agregar títulos</h1>
-            <p className="mt-0.5 truncate text-xs text-slate-500">Mostrando {visibleSuggestions.length} sugerencias de TMDB</p>
+            <p className="mt-0.5 truncate text-xs text-slate-500">{appliedSuggestionSearch ? `Mostrando ${visibleSuggestions.length} resultados de TMDB` : `Mostrando ${visibleSuggestions.length} títulos populares de JustWatch`}</p>
           </div>
-          <form onSubmit={(event) => { event.preventDefault(); const next = suggestionSearch.trim(); if (next === appliedSuggestionSearch) void suggestions.refetch(); else setAppliedSuggestionSearch(next); }} className="relative min-w-0">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input autoFocus type="search" value={suggestionSearch} onChange={(event) => setSuggestionSearch(event.target.value)} className="control w-full pl-9 pr-20" placeholder="Buscar películas o series en TMDB" />
-            <button type="submit" className="absolute right-1 top-1/2 h-8 -translate-y-1/2 rounded px-3 text-xs font-semibold uppercase text-coral hover:bg-red-50">Buscar</button>
+          <form onSubmit={(event) => { event.preventDefault(); const next = suggestionSearch.trim(); if (next === appliedSuggestionSearch) void suggestions.refetch(); else setAppliedSuggestionSearch(next); }} className="flex min-w-0 items-center gap-2">
+            <label className="relative min-w-0 flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input autoFocus type="search" value={suggestionSearch} onChange={(event) => setSuggestionSearch(event.target.value)} className="control w-full pl-9" placeholder="Escribí el título a buscar" title="Escribí el título y presioná Enter para buscar" />
+            </label>
+            <button type="submit" className="inline-flex h-10 shrink-0 items-center rounded-md border border-coral bg-coral px-3 text-xs font-semibold uppercase text-white transition-colors hover:bg-[#dc493a]">Buscar</button>
           </form>
           <div className="flex flex-wrap items-center gap-2">
-            {(['all', 'movie', 'series'] as MovieTypeFilter[]).map((type) => <button key={type} type="button" onClick={() => setSuggestionType(type)} className={`inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-xs font-semibold uppercase ${suggestionType === type ? 'border-coral bg-coral text-white' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`}>{type === 'movie' ? <Film className="h-4 w-4" /> : type === 'series' ? <Tv className="h-4 w-4" /> : null}{type === 'all' ? 'Todo' : type === 'movie' ? 'Películas' : 'Series'}</button>)}
-            <button type="button" onClick={() => { setSuggestionSearch(''); if (appliedSuggestionSearch) setAppliedSuggestionSearch(''); else void suggestions.refetch(); }} className="icon-button h-9 w-9" title="Actualizar sugerencias" aria-label="Actualizar sugerencias"><RefreshCw className={`h-4 w-4 ${suggestions.isFetching ? 'animate-spin' : ''}`} /></button>
+            {(['movie', 'series'] as MovieTypeFilter[]).map((type) => <button key={type} type="button" aria-pressed={suggestionType === type} onClick={() => setSuggestionType((current) => current === type ? 'all' : type)} className={`inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-xs font-semibold uppercase ${suggestionType === type ? 'border-coral bg-coral text-white' : 'border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`}>{type === 'movie' ? <Film className="h-4 w-4" /> : <Tv className="h-4 w-4" />}{type === 'movie' ? 'Películas' : 'Series'}</button>)}
+            <button type="button" onClick={() => { setSuggestionSearch(''); if (appliedSuggestionSearch) setAppliedSuggestionSearch(''); else void suggestions.refetch(); }} className="primary-button h-9 w-9 px-0" title="Actualizar sugerencias" aria-label="Actualizar sugerencias"><RefreshCw className={`h-4 w-4 ${suggestions.isFetching ? 'animate-spin' : ''}`} /></button>
             <div className="relative shrink-0" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setBulkMenuOpen(false); }}>
-              <button type="button" onClick={() => setBulkMenuOpen((current) => !current)} className="secondary-button h-9 gap-1.5 px-3 text-xs uppercase" aria-expanded={bulkMenuOpen}>Buscar títulos<ChevronDown className={`h-4 w-4 transition-transform ${bulkMenuOpen ? 'rotate-180' : ''}`} /></button>
+              <button type="button" onClick={() => setBulkMenuOpen((current) => !current)} className="primary-button h-9 gap-1.5 px-3 text-xs uppercase" aria-expanded={bulkMenuOpen}>Buscar títulos<ChevronDown className={`h-4 w-4 transition-transform ${bulkMenuOpen ? 'rotate-180' : ''}`} /></button>
               {bulkMenuOpen && <div className="library-toolbar-dropdown absolute right-0 top-10 z-50 w-56 rounded-md border border-slate-200 bg-white p-1.5 shadow-card">
                 <button type="button" onClick={() => { setBulkMenuOpen(false); setBulkDialogOpen(true); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><Search className="h-4 w-4" />Buscar por título</button>
                 <button type="button" onClick={() => txtInputRef.current?.click()} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><FileText className="h-4 w-4" />Importar TXT</button>
@@ -234,9 +236,9 @@ export const AddMoviesPage = () => {
       </section>
 
       <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8">
-        {!appliedSuggestionSearch && <h2 className="font-bebas text-2xl uppercase text-ink">Sugerencias</h2>}
-        {suggestions.isLoading ? <div className="grid min-h-[360px] place-items-center"><Loader2 className="h-8 w-8 animate-spin text-aqua" /></div> : suggestions.isError ? <div className="mt-4 rounded-md border border-red-100 bg-red-50 p-5 text-center"><p className="text-sm text-red-700">No se pudieron cargar las sugerencias de TMDB.</p><button type="button" onClick={() => suggestions.refetch()} className="secondary-button mt-3">Reintentar</button></div> : visibleSuggestions.length ? (
-          <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+        {!appliedSuggestionSearch && <h2 className="add-suggestions-title font-bebas text-2xl uppercase text-ink">Sugerencias</h2>}
+        {suggestions.isLoading ? <div className="grid min-h-[360px] place-items-center"><Loader2 className="h-8 w-8 animate-spin text-aqua" /></div> : suggestions.isError ? <div className="mt-4 rounded-md border border-red-100 bg-red-50 p-5 text-center"><p className="text-sm text-red-700">{appliedSuggestionSearch ? 'No se pudieron cargar los resultados de TMDB.' : 'No se pudieron cargar los títulos populares de JustWatch.'}</p><button type="button" onClick={() => suggestions.refetch()} className="secondary-button mt-3">Reintentar</button></div> : visibleSuggestions.length ? (
+          <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
             {visibleSuggestions.map((candidate) => {
               const added = movieAlreadyAdded(candidate);
               const adding = importSuggestion.isPending && importSuggestion.variables?.tmdbId === candidate.tmdbId;
@@ -244,12 +246,12 @@ export const AddMoviesPage = () => {
                 <div className="relative aspect-[2/3] bg-mist">
                   {candidate.posterUrl ? <img src={candidate.posterUrl} alt={candidate.title} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-aqua/70">{candidate.type === 'movie' ? <Film className="h-12 w-12" /> : <Tv className="h-12 w-12" />}</div>}
                   <span className={`absolute left-2 top-2 rounded px-2 py-1 text-[9px] font-semibold uppercase text-white shadow-sm ${candidate.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>{candidate.type === 'movie' ? 'Película' : 'Serie'}</span>
+                  <button type="button" onClick={() => importSuggestion.mutate(candidate)} disabled={added || importSuggestion.isPending} className={`absolute bottom-2 right-2 grid h-8 w-8 place-items-center rounded-md text-white shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-70 ${added ? 'bg-[#2cbc63]' : 'bg-coral hover:bg-[#dc493a]'}`} title={added ? 'Título agregado' : 'Agregar título'} aria-label={added ? `${candidate.title} ya está agregado` : `Agregar ${candidate.title}`}>{adding ? <Loader2 className="h-4 w-4 animate-spin" /> : added ? <Check className="h-4 w-4" strokeWidth={3} /> : <Plus className="h-5 w-5" strokeWidth={4} />}</button>
                 </div>
                 <div className="flex flex-1 flex-col p-3">
                   <h2 className="font-bebas line-clamp-2 text-xl uppercase leading-6 text-ink">{candidate.title}</h2>
                   <div className="mt-1 flex items-center gap-3 text-xs text-slate-500">{candidate.year && <span className="font-semibold">{candidate.year}</span>}{candidate.rating != null && candidate.rating > 0 && <span className="inline-flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />{candidate.rating.toFixed(1)}</span>}</div>
                   <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-500">{candidate.genres.join(', ') || 'Sin género'}</p>
-                  <div className="mt-auto flex justify-end pt-3"><button type="button" onClick={() => importSuggestion.mutate(candidate)} disabled={added || importSuggestion.isPending} className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-md px-3 text-[11px] font-semibold uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${added ? 'text-[#218f4c]' : 'bg-coral text-white hover:bg-[#dc493a]'}`}>{adding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : added ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}{added ? 'Agregada' : adding ? 'Agregando' : 'Agregar'}</button></div>
                 </div>
               </article>;
             })}

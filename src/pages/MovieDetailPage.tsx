@@ -137,24 +137,27 @@ export const MovieDetailPage = () => {
             <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
               <button
                 type="button"
+                aria-pressed={movie.watched}
                 onClick={() => personal.mutate({ watched: !movie.watched })}
-                className={`secondary-button min-w-0 px-2 text-xs uppercase ${movie.watched ? "border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]" : ""}`}
+                className={`moviebox-translucent-action secondary-button min-w-0 px-2 text-xs uppercase ${movie.watched ? "border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]" : ""}`}
               >
                 <Eye className="h-[18px] w-[18px]" />
                 Watch
               </button>
               <button
                 type="button"
+                aria-pressed={movie.favorite}
                 onClick={() => personal.mutate({ favorite: !movie.favorite })}
-                className={`secondary-button min-w-0 px-2 text-xs uppercase ${movie.favorite ? "border-coral bg-red-50 text-coral" : ""}`}
+                className={`moviebox-translucent-action secondary-button min-w-0 px-2 text-xs uppercase ${movie.favorite ? "border-coral bg-red-50 text-coral" : ""}`}
               >
                 <Heart className={`h-4 w-4 ${movie.favorite ? "fill-current" : ""}`} />
                 Like
               </button>
               <button
                 type="button"
+                aria-pressed={movie.watchlist}
                 onClick={() => personal.mutate({ watchlist: !movie.watchlist })}
-                className={`secondary-button col-span-2 min-w-0 px-2 text-xs uppercase sm:col-span-1 ${movie.watchlist ? "border-aqua bg-mist text-aqua" : ""}`}
+                className={`moviebox-translucent-action secondary-button col-span-2 min-w-0 px-2 text-xs uppercase sm:col-span-1 ${movie.watchlist ? "border-aqua bg-mist text-aqua" : ""}`}
               >
                 <Bookmark className={`h-4 w-4 ${movie.watchlist ? "fill-current" : ""}`} />
                 Watchlist

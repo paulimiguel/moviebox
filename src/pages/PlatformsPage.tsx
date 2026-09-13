@@ -121,22 +121,22 @@ export const PlatformsPage = () => {
         ) : platforms.isError ? (
           <div className="grid min-h-[45vh] place-items-center text-center"><div><p className="font-semibold text-ink">No se pudieron cargar las plataformas</p><button type="button" onClick={() => platforms.refetch()} className="primary-button mt-4">Reintentar</button></div></div>
         ) : platforms.data?.length ? (
-          <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+          <section className="grid grid-cols-2 gap-3 min-[480px]:grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-9">
             {platforms.data.map((platform) => {
               const imageUrl = resolvePlatformLogoUrl(platform);
               return (
                 <article key={platform.id} role="button" tabIndex={0} onClick={() => showPlatformMovies(platform.id)} onKeyDown={(event) => { if ((event.key === 'Enter' || event.key === ' ') && event.target === event.currentTarget) { event.preventDefault(); showPlatformMovies(platform.id); } }} className={`movie-card relative flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-md bg-white shadow-card transition-transform hover:-translate-y-0.5 ${openMenuId === platform.id ? 'z-20 overflow-visible' : ''}`}>
                   <div className="relative aspect-square overflow-hidden rounded-t-md bg-slate-100">
-                    {imageUrl ? <img src={imageUrl} alt={platform.name} className="h-full w-full object-contain p-3" loading="lazy" /> : <div className="grid h-full place-items-center"><MonitorPlay className="h-16 w-16 text-aqua" /></div>}
+                    {imageUrl ? <img src={imageUrl} alt={platform.name} className="h-full w-full object-contain" loading="lazy" /> : <div className="grid h-full place-items-center"><MonitorPlay className="h-12 w-12 text-aqua" /></div>}
                     <div className="absolute right-2 top-2" onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpenMenuId(null); }}>
-                      <button type="button" onClick={() => setOpenMenuId((current) => current === platform.id ? null : platform.id)} className="grid h-8 w-8 place-items-center rounded-md border border-white/60 bg-white/80 text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white" title="Más acciones" aria-label={`Acciones de ${platform.name}`} aria-expanded={openMenuId === platform.id}><MoreVertical className="h-4 w-4" /></button>
-                      {openMenuId === platform.id && <div className="absolute right-0 top-9 z-30 w-40 rounded-md border border-slate-200 bg-white p-1.5 text-sm shadow-card">
+                      <button type="button" onClick={() => setOpenMenuId((current) => current === platform.id ? null : platform.id)} className="moviebox-translucent-action grid h-8 w-8 place-items-center rounded-md border border-white/25 bg-ink/65 text-white shadow-sm backdrop-blur-md transition-colors hover:bg-ink/80" title="Más acciones" aria-label={`Acciones de ${platform.name}`} aria-expanded={openMenuId === platform.id}><MoreVertical className="h-4 w-4" /></button>
+                      {openMenuId === platform.id && <div className="movie-card-dropdown absolute right-0 top-9 z-30 w-40 rounded-md border border-slate-200 bg-white p-1.5 text-sm shadow-card">
                         <button type="button" onClick={() => beginEdit(platform)} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50"><Pencil className="h-4 w-4" />Editar</button>
                         <button type="button" onClick={() => { setOpenMenuId(null); setDeleting(platform); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" />Eliminar</button>
                       </div>}
                     </div>
                   </div>
-                  <div className="p-3"><h2 className="font-bebas line-clamp-2 text-[24px] font-normal uppercase leading-7 text-ink">{platform.name}</h2></div>
+                  <div className="p-2.5"><h2 className="font-bebas line-clamp-2 text-xl font-normal uppercase leading-6 text-ink">{platform.name}</h2></div>
                 </article>
               );
             })}

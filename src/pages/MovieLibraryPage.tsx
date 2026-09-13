@@ -15,6 +15,8 @@ import type { FavoriteFilter, MovieItem, MovieTypeFilter, SortDirection, Watched
 const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es');
 const VIEW_MODE_STORAGE_KEY = 'moviebox:view-mode';
 const VIEW_MODES: MovieViewMode[] = ['medium', 'mediumIcons', 'small', 'list', 'details'];
+type LibraryFilterPreset = 'all' | 'movie' | 'series' | 'watchlist' | 'favorite' | 'watched' | 'unwatched';
+const LIBRARY_FILTER_PRESETS: LibraryFilterPreset[] = ['all', 'movie', 'series', 'watchlist', 'favorite', 'watched', 'unwatched'];
 
 const getInitialViewMode = (): MovieViewMode => {
   try {
@@ -49,6 +51,28 @@ export const MovieLibraryPage = () => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   useEffect(() => {
+    const applyLibraryFilter = (preset: LibraryFilterPreset) => {
+      setSearch('');
+      setType(preset === 'movie' ? 'movie' : preset === 'series' ? 'series' : 'all');
+      setGenreIds([]);
+      setPlatformIds([]);
+      setYears([]);
+      setWatched(preset === 'watched' ? 'watched' : preset === 'unwatched' ? 'unwatched' : 'all');
+      setFavorite(preset === 'favorite' ? 'favorites' : 'all');
+      setWatchlist(preset === 'watchlist' ? 'watchlist' : 'all');
+      setFiltersOpen(false);
+      setBulkMode(null);
+      setSelectedIds(new Set());
+      try {
+        window.sessionStorage.removeItem('moviebox:library-filter');
+      } catch {
+        // The selected library filter was still applied.
+      }
+    };
+    const handleLibraryFilter = (event: Event) => {
+      const preset = (event as CustomEvent<string>).detail as LibraryFilterPreset;
+      if (LIBRARY_FILTER_PRESETS.includes(preset)) applyLibraryFilter(preset);
+    };
     const applyGenreFilter = (genreId: string) => {
       setGenreIds([genreId]);
       setFiltersOpen(false);
@@ -69,9 +93,12 @@ export const MovieLibraryPage = () => {
       }
     };
     const handlePlatformFilter = (event: Event) => applyPlatformFilter((event as CustomEvent<string>).detail);
+    window.addEventListener('moviebox:filter-library', handleLibraryFilter);
     window.addEventListener('moviebox:filter-genre', handleGenreFilter);
     window.addEventListener('moviebox:filter-platform', handlePlatformFilter);
     try {
+      const storedLibraryFilter = window.sessionStorage.getItem('moviebox:library-filter') as LibraryFilterPreset | null;
+      if (storedLibraryFilter && LIBRARY_FILTER_PRESETS.includes(storedLibraryFilter)) applyLibraryFilter(storedLibraryFilter);
       const storedGenreId = window.sessionStorage.getItem('moviebox:genre-filter');
       if (storedGenreId) applyGenreFilter(storedGenreId);
       const storedPlatformId = window.sessionStorage.getItem('moviebox:platform-filter');
@@ -80,6 +107,7 @@ export const MovieLibraryPage = () => {
       // Genre selection remains available from the library filters.
     }
     return () => {
+      window.removeEventListener('moviebox:filter-library', handleLibraryFilter);
       window.removeEventListener('moviebox:filter-genre', handleGenreFilter);
       window.removeEventListener('moviebox:filter-platform', handlePlatformFilter);
     };
@@ -191,7 +219,7 @@ export const MovieLibraryPage = () => {
     : 'grid grid-cols-1 gap-4 min-[520px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 sm:gap-5 2xl:grid-cols-5';
 
   return (
-    <main className="min-h-screen bg-canvas">
+    <main className="movie-library-page min-h-screen bg-canvas">
       <Header />
       <MovieLibraryToolbar
         ownerName={user?.alias || user?.name || 'Usuario'}

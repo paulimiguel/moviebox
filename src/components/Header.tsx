@@ -1,20 +1,35 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronDown, LayoutGrid, LogOut, Moon, Sun } from 'lucide-react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/services/api';
 import { useTheme } from '@/contexts/ThemeContext';
+
+type LibraryFilterPreset = 'all' | 'movie' | 'series' | 'watchlist' | 'favorite' | 'watched' | 'unwatched';
+
+const libraryOptions: Array<{ label: string; preset: LibraryFilterPreset }> = [
+  { label: 'Todos los títulos', preset: 'all' },
+  { label: 'Películas', preset: 'movie' },
+  { label: 'Series', preset: 'series' },
+  { label: 'Watchlist', preset: 'watchlist' },
+  { label: 'Like', preset: 'favorite' },
+  { label: 'Watch', preset: 'watched' },
+  { label: 'No Watch', preset: 'unwatched' },
+];
 
 export const Header = () => {
   const { user, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [libraryMenuOpen, setLibraryMenuOpen] = useState(false);
   const [collectionMenuOpen, setCollectionMenuOpen] = useState(false);
   const [platformMenuOpen, setPlatformMenuOpen] = useState(false);
   const [genreMenuOpen, setGenreMenuOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [profilePhotoFailed, setProfilePhotoFailed] = useState(false);
+  const libraryMenuRef = useRef<HTMLDivElement>(null);
   const collectionMenuRef = useRef<HTMLDivElement>(null);
   const platformMenuRef = useRef<HTMLDivElement>(null);
   const genreMenuRef = useRef<HTMLDivElement>(null);
@@ -24,6 +39,7 @@ export const Header = () => {
 
   useEffect(() => {
     const close = (event: MouseEvent) => {
+      if (!libraryMenuRef.current?.contains(event.target as Node)) setLibraryMenuOpen(false);
       if (!collectionMenuRef.current?.contains(event.target as Node)) setCollectionMenuOpen(false);
       if (!platformMenuRef.current?.contains(event.target as Node)) setPlatformMenuOpen(false);
       if (!genreMenuRef.current?.contains(event.target as Node)) setGenreMenuOpen(false);
@@ -43,9 +59,23 @@ export const Header = () => {
     .map((part) => part[0])
     .join('')
     .toLocaleUpperCase();
+  const filterLibrary = (preset: LibraryFilterPreset) => {
+    try {
+      window.sessionStorage.setItem('moviebox:library-filter', preset);
+      window.sessionStorage.removeItem('moviebox:genre-filter');
+      window.sessionStorage.removeItem('moviebox:platform-filter');
+    } catch {
+      // The event below still applies the filter when already in the library.
+    }
+    setLibraryMenuOpen(false);
+    setMenuOpen(false);
+    navigate('/');
+    window.setTimeout(() => window.dispatchEvent(new CustomEvent('moviebox:filter-library', { detail: preset })), 0);
+  };
   const filterLibraryByGenre = (genreId: string) => {
     try {
       window.sessionStorage.setItem('moviebox:genre-filter', genreId);
+      window.sessionStorage.removeItem('moviebox:library-filter');
     } catch {
       // The event below still applies the filter when already in the library.
     }
@@ -57,6 +87,7 @@ export const Header = () => {
   const filterLibraryByPlatform = (platformId: string) => {
     try {
       window.sessionStorage.setItem('moviebox:platform-filter', platformId);
+      window.sessionStorage.removeItem('moviebox:library-filter');
     } catch {
       // The event below still applies the filter when already in the library.
     }
@@ -72,9 +103,14 @@ export const Header = () => {
         <Link to="/" className="shrink-0"><img src={theme === 'dark' ? '/moviebox-logo-white.png' : '/moviebox-logo-red.png'} alt="MovieBox" className="h-10 w-auto max-w-[190px] object-contain sm:h-11" /></Link>
         <div className="ml-auto flex h-full min-w-0 items-center gap-2 sm:gap-4">
           <nav className="main-navigation hidden h-full items-end xl:flex">
-            <NavLink to="/" className={({ isActive }) => `flex h-full items-center border-b-2 px-3 text-sm font-semibold ${isActive ? 'border-coral text-ink' : 'border-transparent text-slate-500'}`}>BIBLIOTECA</NavLink>
+            <div ref={libraryMenuRef} className="relative h-full">
+              <button type="button" onClick={() => { setLibraryMenuOpen((current) => !current); setPlatformMenuOpen(false); setGenreMenuOpen(false); setCollectionMenuOpen(false); }} className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${libraryMenuOpen || location.pathname === '/' ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={libraryMenuOpen}>BIBLIOTECA<ChevronDown className="h-4 w-4" /></button>
+              {libraryMenuOpen && <div className="header-dropdown absolute left-0 top-full w-52 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
+                {libraryOptions.map((option) => <button key={option.preset} type="button" onClick={() => filterLibrary(option.preset)} className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink">{option.label}</button>)}
+              </div>}
+            </div>
             <div ref={platformMenuRef} className="relative h-full">
-              <button type="button" onClick={() => { setPlatformMenuOpen((current) => !current); setCollectionMenuOpen(false); setGenreMenuOpen(false); }} className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${platformMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={platformMenuOpen}>PLATAFORMAS<ChevronDown className="h-4 w-4" /></button>
+              <button type="button" onClick={() => { setPlatformMenuOpen((current) => !current); setLibraryMenuOpen(false); setCollectionMenuOpen(false); setGenreMenuOpen(false); }} className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${platformMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={platformMenuOpen}>PLATAFORMAS<ChevronDown className="h-4 w-4" /></button>
               {platformMenuOpen && <div className="header-dropdown absolute left-0 top-full w-56 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
                 <div className="max-h-72 overflow-y-auto">
                   {(metadataQuery.data?.platforms || []).length ? (metadataQuery.data?.platforms || []).map((platform) => <button key={platform.id} type="button" onClick={() => filterLibraryByPlatform(platform.id)} className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink">{platform.name}</button>) : <p className="px-3 py-3 text-sm text-slate-400">No hay plataformas.</p>}
@@ -83,7 +119,7 @@ export const Header = () => {
               </div>}
             </div>
             <div ref={genreMenuRef} className="relative h-full">
-              <button type="button" onClick={() => { setGenreMenuOpen((current) => !current); setCollectionMenuOpen(false); setPlatformMenuOpen(false); }} className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${genreMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={genreMenuOpen}>GÉNEROS<ChevronDown className="h-4 w-4" /></button>
+              <button type="button" onClick={() => { setGenreMenuOpen((current) => !current); setLibraryMenuOpen(false); setCollectionMenuOpen(false); setPlatformMenuOpen(false); }} className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${genreMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={genreMenuOpen}>GÉNEROS<ChevronDown className="h-4 w-4" /></button>
               {genreMenuOpen && <div className="header-dropdown absolute left-0 top-full w-56 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
                 <div className="max-h-72 overflow-y-auto">
                   {(metadataQuery.data?.genres || []).length ? (metadataQuery.data?.genres || []).map((genre) => <button key={genre.id} type="button" onClick={() => filterLibraryByGenre(genre.id)} className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink">{genre.name}</button>) : <p className="px-3 py-3 text-sm text-slate-400">No hay géneros.</p>}
@@ -92,7 +128,7 @@ export const Header = () => {
               </div>}
             </div>
             <div ref={collectionMenuRef} className="relative h-full">
-              <button type="button" onClick={() => { setCollectionMenuOpen((current) => !current); setPlatformMenuOpen(false); setGenreMenuOpen(false); }} className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${collectionMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={collectionMenuOpen}>COLECCIONES<ChevronDown className="h-4 w-4" /></button>
+              <button type="button" onClick={() => { setCollectionMenuOpen((current) => !current); setLibraryMenuOpen(false); setPlatformMenuOpen(false); setGenreMenuOpen(false); }} className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${collectionMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={collectionMenuOpen}>COLECCIONES<ChevronDown className="h-4 w-4" /></button>
               {collectionMenuOpen && <div className="header-dropdown absolute left-0 top-full w-64 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
                 <div className="max-h-72 overflow-y-auto">
                   {(collectionsQuery.data || []).length ? (collectionsQuery.data || []).map((collection) => <Link key={collection.id} to={`/colecciones/${collection.id}`} onClick={() => setCollectionMenuOpen(false)} className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink">{collection.name}</Link>) : <p className="px-3 py-3 text-sm text-slate-400">No hay colecciones.</p>}
@@ -106,7 +142,7 @@ export const Header = () => {
           <button
             type="button"
             onClick={() => setMenuOpen((current) => !current)}
-            className="flex h-10 items-center gap-2 rounded-md px-1.5 text-sm text-slate-600 hover:bg-slate-100"
+            className="profile-menu-trigger flex h-10 items-center gap-2 rounded-md px-1.5 text-sm text-slate-600 hover:bg-slate-100"
             aria-expanded={menuOpen}
           >
             {user?.profilePhoto && !profilePhotoFailed
@@ -119,6 +155,10 @@ export const Header = () => {
               <div className="border-b border-slate-100 px-3 py-2.5">
                 <p className="truncate text-sm font-semibold text-ink">{user?.name}</p>
                 <p className="truncate text-xs text-slate-500">{user?.email}</p>
+              </div>
+              <div className="mt-1 border-b border-slate-100 py-1 xl:hidden">
+                <p className="px-3 py-1.5 text-xs font-semibold uppercase text-slate-400">Biblioteca</p>
+                {libraryOptions.map((option) => <button key={`mobile-library-${option.preset}`} type="button" onClick={() => filterLibrary(option.preset)} className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50">{option.label}</button>)}
               </div>
               <div className="mt-1 border-t border-slate-100 py-1 xl:hidden">
                 <p className="px-3 py-1.5 text-xs font-semibold uppercase text-slate-400">Plataformas</p>
