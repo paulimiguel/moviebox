@@ -23,7 +23,14 @@ const allowedOrigins = new Set([
   'http://127.0.0.1:8081',
 ]);
 
-app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: {
+    directives: {
+      imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+    },
+  },
+}));
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin || allowedOrigins.has(origin)) callback(null, true);
