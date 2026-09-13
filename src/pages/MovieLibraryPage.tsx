@@ -180,6 +180,12 @@ export const MovieLibraryPage = () => {
       const factor = sortDirection === 'asc' ? 1 : -1;
       if (sortKey === 'createdAt') return factor * (new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime());
       if (sortKey === 'year') return factor * ((left.year || 0) - (right.year || 0));
+      if (sortKey === 'imdbRating') {
+        if (left.imdbRating == null && right.imdbRating == null) return 0;
+        if (left.imdbRating == null) return 1;
+        if (right.imdbRating == null) return -1;
+        return factor * (left.imdbRating - right.imdbRating);
+      }
       return factor * textValue(left).localeCompare(textValue(right), 'es');
     });
   }, [favorite, genreIds, moviesQuery.data, platformIds, search, searchScope, sortDirection, sortKey, type, watched, watchlist, years]);

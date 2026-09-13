@@ -1,3 +1,5 @@
+import { unlink } from 'node:fs/promises';
+import path from 'node:path';
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
@@ -5,11 +7,19 @@ import { authenticateToken, type AuthRequest } from '../middleware/auth';
 import { normalizeName } from '../lib/movies';
 
 const router = Router();
+const uploadDir = path.resolve(process.cwd(), 'uploads');
 const schema = z.object({
   name: z.string().trim().min(1).max(80),
   description: z.string().trim().max(500).nullable().optional(),
   coverImage: z.string().trim().max(1000).nullable().optional(),
 });
+
+const removeUploadedCover = async (coverImage: string | null | undefined) => {
+  if (!coverImage?.startsWith('/uploads/')) return;
+  const filename = path.basename(coverImage);
+  if (!filename || filename !== coverImage.slice('/uploads/'.length)) return;
+  await unlink(path.join(uploadDir, filename)).catch(() => undefined);
+};
 
 router.use(authenticateToken);
 
@@ -48,6 +58,9 @@ router.put('/:id', async (req: AuthRequest, res) => {
   const existing = await prisma.movieCollection.findMany({ where: { userId: req.user!.userId, id: { not: current.id } } });
   if (existing.some((item) => normalizeName(item.name) === normalizeName(parsed.data.name))) return res.status(409).json({ error: 'Ya existe una coleccion con ese nombre' });
   const collection = await prisma.movieCollection.update({ where: { id: current.id }, data: parsed.data });
+  if (parsed.data.coverImage !== undefined && parsed.data.coverImage !== current.coverImage) {
+    await removeUploadedCover(current.coverImage);
+  }
   return res.json(collection);
 });
 
@@ -56,6 +69,7 @@ router.delete('/:id', async (req: AuthRequest, res) => {
   const current = await prisma.movieCollection.findFirst({ where: { id, userId: req.user!.userId } });
   if (!current) return res.status(404).json({ error: 'Coleccion no encontrada' });
   await prisma.movieCollection.delete({ where: { id: current.id } });
+  await removeUploadedCover(current.coverImage);
   return res.status(204).send();
 });
 

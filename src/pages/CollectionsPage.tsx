@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FolderOpen, ImagePlus, Loader2, MoreVertical, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
+import { CatalogToolbar, catalogGridClass, type CatalogViewMode } from '@/components/CatalogToolbar';
 import { api, resolveMovieImageUrl } from '@/services/api';
-import type { MovieCollection } from '@/types/movie';
+import type { MovieCollection, SortDirection } from '@/types/movie';
 
 export const CollectionsPage = () => {
   const queryClient = useQueryClient();
@@ -18,11 +19,22 @@ export const CollectionsPage = () => {
   const [editFile, setEditFile] = useState<File | null>(null);
   const [editDroppedUrl, setEditDroppedUrl] = useState<string | null>(null);
   const [editPreview, setEditPreview] = useState<string | null>(null);
+  const [editImageRemoved, setEditImageRemoved] = useState(false);
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const [editError, setEditError] = useState('');
   const [collectionToDelete, setCollectionToDelete] = useState<MovieCollection | null>(null);
+  const [search, setSearch] = useState('');
+  const [viewMode, setViewMode] = useState<CatalogViewMode>('large');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   const collections = useQuery({ queryKey: ['collections'], queryFn: api.collections.getAll });
+  const visibleCollections = useMemo(() => {
+    const query = search.trim().toLocaleLowerCase('es');
+    const direction = sortDirection === 'asc' ? 1 : -1;
+    return (collections.data || [])
+      .filter((collection) => !query || collection.name.toLocaleLowerCase('es').includes(query))
+      .sort((left, right) => direction * left.name.localeCompare(right.name, 'es', { sensitivity: 'base' }));
+  }, [collections.data, search, sortDirection]);
   useEffect(() => {
     if (!editFile) return undefined;
     const previewUrl = URL.createObjectURL(editFile);
@@ -46,7 +58,7 @@ export const CollectionsPage = () => {
       if (!editing) throw new Error('Colección no encontrada');
       const editedName = editName.trim();
       if (!editedName) throw new Error('Escribí un nombre para la colección');
-      let coverImage: string | undefined;
+      let coverImage: string | null | undefined = editImageRemoved ? null : undefined;
       if (editFile) {
         const uploaded = await api.uploads.images([editFile]);
         coverImage = uploaded.images[0]?.url;
@@ -57,7 +69,7 @@ export const CollectionsPage = () => {
       return api.collections.update(editing.id, {
         name: editedName,
         description: editing.description,
-        ...(coverImage ? { coverImage } : {}),
+        ...(coverImage !== undefined ? { coverImage } : {}),
       });
     },
     onSuccess: () => {
@@ -82,6 +94,7 @@ export const CollectionsPage = () => {
     setEditFile(null);
     setEditDroppedUrl(null);
     setEditPreview(collection.coverImage ? resolveMovieImageUrl(collection.coverImage) : null);
+    setEditImageRemoved(false);
     setIsDraggingImage(false);
     setEditError('');
   };
@@ -104,6 +117,7 @@ export const CollectionsPage = () => {
     if (file) {
       setEditDroppedUrl(null);
       setEditFile(file);
+      setEditImageRemoved(false);
       return;
     }
     const html = event.dataTransfer.getData('text/html');
@@ -115,6 +129,7 @@ export const CollectionsPage = () => {
       setEditFile(null);
       setEditDroppedUrl(imageUrl);
       setEditPreview(imageUrl);
+      setEditImageRemoved(false);
       return;
     }
     setEditError('Arrastrá un archivo JPG, PNG o WebP, o una imagen desde una página web.');
@@ -123,15 +138,7 @@ export const CollectionsPage = () => {
   return (
     <main className="min-h-screen bg-canvas">
       <Header />
-      <section className="library-toolbar border-b border-slate-200 bg-white shadow-sm">
-        <div className="mx-auto flex max-w-[1500px] items-center px-4 py-4 sm:px-6">
-          <div>
-            <h1 className="font-bebas text-2xl font-normal uppercase text-ink">Colecciones</h1>
-            <p className="mt-0.5 text-xs text-slate-500">{collections.data?.length || 0} colecciones</p>
-          </div>
-          <button type="button" onClick={openCreate} className="primary-button ml-auto"><Plus className="h-4 w-4" />Nueva</button>
-        </div>
-      </section>
+      <CatalogToolbar title="Colecciones" itemLabel="colecciones" visibleCount={visibleCollections.length} totalCount={collections.data?.length || 0} search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode} sortDirection={sortDirection} onSortDirectionChange={setSortDirection} action={<button type="button" onClick={openCreate} className="primary-button h-9 px-3"><Plus className="h-4 w-4" />Nueva</button>} />
 
       <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8">
         {creating && (
@@ -153,9 +160,9 @@ export const CollectionsPage = () => {
           <div className="grid min-h-[45vh] place-items-center"><Loader2 className="h-8 w-8 animate-spin text-aqua" /></div>
         ) : collections.isError ? (
           <div className="grid min-h-[45vh] place-items-center text-center"><div><p className="font-semibold text-ink">No se pudieron cargar las colecciones</p><button type="button" onClick={() => collections.refetch()} className="primary-button mt-4">Reintentar</button></div></div>
-        ) : collections.data?.length ? (
-          <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-            {collections.data.map((collection) => (
+        ) : collections.data?.length ? visibleCollections.length ? (
+          <section className={catalogGridClass[viewMode]}>
+            {visibleCollections.map((collection) => (
               <article key={collection.id} className={`movie-card relative min-w-0 overflow-hidden rounded-md bg-white shadow-card transition-transform hover:-translate-y-0.5 ${openMenuId === collection.id ? 'z-20 overflow-visible' : ''}`}>
                 <Link to={`/colecciones/${collection.id}`} className="block">
                   <div className="relative aspect-square overflow-hidden rounded-t-md bg-slate-100">
@@ -177,6 +184,8 @@ export const CollectionsPage = () => {
               </article>
             ))}
           </section>
+        ) : (
+          <div className="grid min-h-[45vh] place-items-center text-center"><div><FolderOpen className="mx-auto h-14 w-14 text-aqua" /><h2 className="mt-4 text-lg font-semibold text-ink">No hay coincidencias</h2></div></div>
         ) : (
           <div className="grid min-h-[45vh] place-items-center text-center"><div><FolderOpen className="mx-auto h-14 w-14 text-aqua" /><h2 className="mt-4 text-lg font-semibold text-ink">Todavía no hay colecciones</h2></div></div>
         )}
@@ -211,8 +220,9 @@ export const CollectionsPage = () => {
                     <span className="block text-sm font-semibold text-ink">Cambiar o arrastrar imagen</span>
                     <span className="mt-1 block text-xs text-slate-500">Archivo JPG, PNG o WebP, o imagen de una página web</span>
                   </span>
-                  <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { setEditDroppedUrl(null); setEditFile(event.target.files?.[0] || null); }} className="hidden" />
+                  <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { const file = event.target.files?.[0] || null; setEditDroppedUrl(null); setEditFile(file); if (file) setEditImageRemoved(false); }} className="hidden" />
                 </label>
+                {editPreview && <button type="button" onClick={() => { setEditFile(null); setEditDroppedUrl(null); setEditPreview(null); setEditImageRemoved(true); }} className="secondary-button mt-2 gap-2 text-red-600"><Trash2 className="h-4 w-4" />Eliminar imagen</button>}
               </div>
               {editError && <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">{editError}</p>}
             </div>

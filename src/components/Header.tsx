@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ChevronDown, LayoutGrid, LogOut, Moon, Sun } from 'lucide-react';
+import { Bookmark, ChevronDown, Eye, EyeOff, Film, Heart, LayoutGrid, LogOut, Moon, Sun, Tv } from 'lucide-react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/services/api';
@@ -8,14 +8,14 @@ import { useTheme } from '@/contexts/ThemeContext';
 
 type LibraryFilterPreset = 'all' | 'movie' | 'series' | 'watchlist' | 'favorite' | 'watched' | 'unwatched';
 
-const libraryOptions: Array<{ label: string; preset: LibraryFilterPreset }> = [
-  { label: 'Todos los títulos', preset: 'all' },
-  { label: 'Películas', preset: 'movie' },
-  { label: 'Series', preset: 'series' },
-  { label: 'Watchlist', preset: 'watchlist' },
-  { label: 'Like', preset: 'favorite' },
-  { label: 'Watch', preset: 'watched' },
-  { label: 'No Watch', preset: 'unwatched' },
+const libraryOptions: Array<{ label: string; preset: LibraryFilterPreset; icon: React.ReactNode }> = [
+  { label: 'Todos los títulos', preset: 'all', icon: <LayoutGrid className="h-4 w-4" /> },
+  { label: 'Películas', preset: 'movie', icon: <Film className="h-4 w-4" /> },
+  { label: 'Series', preset: 'series', icon: <Tv className="h-4 w-4" /> },
+  { label: 'Watchlist', preset: 'watchlist', icon: <Bookmark className="h-4 w-4" /> },
+  { label: 'Like', preset: 'favorite', icon: <Heart className="h-4 w-4" /> },
+  { label: 'Watch', preset: 'watched', icon: <Eye className="h-4 w-4" /> },
+  { label: 'No Watch', preset: 'unwatched', icon: <EyeOff className="h-4 w-4" /> },
 ];
 
 export const Header = () => {
@@ -106,7 +106,7 @@ export const Header = () => {
             <div ref={libraryMenuRef} className="relative h-full">
               <button type="button" onClick={() => { setLibraryMenuOpen((current) => !current); setPlatformMenuOpen(false); setGenreMenuOpen(false); setCollectionMenuOpen(false); }} className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${libraryMenuOpen || location.pathname === '/' ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={libraryMenuOpen}>BIBLIOTECA<ChevronDown className="h-4 w-4" /></button>
               {libraryMenuOpen && <div className="header-dropdown absolute left-0 top-full w-52 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
-                {libraryOptions.map((option) => <button key={option.preset} type="button" onClick={() => filterLibrary(option.preset)} className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink">{option.label}</button>)}
+                {libraryOptions.map((option) => <button key={option.preset} type="button" onClick={() => filterLibrary(option.preset)} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink">{option.icon}<span>{option.label}</span></button>)}
               </div>}
             </div>
             <div ref={platformMenuRef} className="relative h-full">
@@ -158,7 +158,7 @@ export const Header = () => {
               </div>
               <div className="mt-1 border-b border-slate-100 py-1 xl:hidden">
                 <p className="px-3 py-1.5 text-xs font-semibold uppercase text-slate-400">Biblioteca</p>
-                {libraryOptions.map((option) => <button key={`mobile-library-${option.preset}`} type="button" onClick={() => filterLibrary(option.preset)} className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50">{option.label}</button>)}
+                {libraryOptions.map((option) => <button key={`mobile-library-${option.preset}`} type="button" onClick={() => filterLibrary(option.preset)} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50">{option.icon}<span>{option.label}</span></button>)}
               </div>
               <div className="mt-1 border-t border-slate-100 py-1 xl:hidden">
                 <p className="px-3 py-1.5 text-xs font-semibold uppercase text-slate-400">Plataformas</p>

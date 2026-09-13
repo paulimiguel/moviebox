@@ -3,7 +3,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown, Bookmark, Check, ChevronDown, Chevrons
 import type { MovieViewMode } from '@/components/MovieCard';
 import type { FavoriteFilter, MovieTypeFilter, SortDirection, WatchedFilter, WatchlistFilter } from '@/types/movie';
 
-export type MovieLibrarySort = 'title' | 'createdAt' | 'year' | 'collection' | 'genre';
+export type MovieLibrarySort = 'title' | 'createdAt' | 'year' | 'collection' | 'genre' | 'imdbRating';
 export type MovieBulkMode = 'edit' | 'print' | 'delete' | null;
 export type MovieSearchScope = 'name' | 'actor' | 'genre';
 
@@ -108,6 +108,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
     { value: 'year', label: 'Año' },
     { value: 'collection', label: 'Colección' },
     { value: 'genre', label: 'Género' },
+    { value: 'imdbRating', label: 'Puntuación IMDb' },
   ];
   const filteredGenres = props.genres.filter((genre) =>
     genre.name.toLocaleLowerCase('es').includes(genreSearch.trim().toLocaleLowerCase('es')),

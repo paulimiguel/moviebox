@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ImagePlus, Loader2, MonitorPlay, MoreVertical, Pencil, Trash2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
+import { CatalogToolbar, catalogGridClass, type CatalogViewMode } from '@/components/CatalogToolbar';
 import { resolvePlatformLogoUrl } from '@/components/PlatformLogos';
 import { api } from '@/services/api';
-import type { PlatformCatalogItem } from '@/types/movie';
+import type { PlatformCatalogItem, SortDirection } from '@/types/movie';
 
 export const PlatformsPage = () => {
   const queryClient = useQueryClient();
@@ -18,8 +19,20 @@ export const PlatformsPage = () => {
   const [editFile, setEditFile] = useState<File | null>(null);
   const [editDroppedUrl, setEditDroppedUrl] = useState<string | null>(null);
   const [editPreview, setEditPreview] = useState<string | null>(null);
+  const [editImageRemoved, setEditImageRemoved] = useState(false);
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const [editError, setEditError] = useState('');
+  const [search, setSearch] = useState('');
+  const [viewMode, setViewMode] = useState<CatalogViewMode>('medium');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+
+  const visiblePlatforms = useMemo(() => {
+    const query = search.trim().toLocaleLowerCase('es');
+    const direction = sortDirection === 'asc' ? 1 : -1;
+    return (platforms.data || [])
+      .filter((platform) => !query || platform.name.toLocaleLowerCase('es').includes(query))
+      .sort((left, right) => direction * left.name.localeCompare(right.name, 'es', { sensitivity: 'base' }));
+  }, [platforms.data, search, sortDirection]);
 
   useEffect(() => {
     if (!editFile) return undefined;
@@ -35,6 +48,7 @@ export const PlatformsPage = () => {
     setEditFile(null);
     setEditDroppedUrl(null);
     setEditPreview(resolvePlatformLogoUrl(platform));
+    setEditImageRemoved(false);
     setIsDraggingImage(false);
     setEditError('');
   };
@@ -52,7 +66,7 @@ export const PlatformsPage = () => {
       if (!editing) throw new Error('Plataforma no encontrada');
       const name = editName.trim();
       if (!name) throw new Error('Escribí un título para la plataforma');
-      let logoPath: string | undefined = editing.logoPath ? undefined : resolvePlatformLogoUrl(editing) || undefined;
+      let logoPath: string | null | undefined = editImageRemoved ? null : undefined;
       if (editFile) {
         const uploaded = await api.uploads.images([editFile]);
         logoPath = uploaded.images[0]?.url;
@@ -60,7 +74,7 @@ export const PlatformsPage = () => {
       } else if (editDroppedUrl) {
         logoPath = editDroppedUrl;
       }
-      return api.platforms.update(editing.id, { name, ...(logoPath ? { logoPath } : {}) });
+      return api.platforms.update(editing.id, { name, ...(logoPath !== undefined ? { logoPath } : {}) });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['platforms'] });
@@ -88,6 +102,7 @@ export const PlatformsPage = () => {
     if (file) {
       setEditDroppedUrl(null);
       setEditFile(file);
+      setEditImageRemoved(false);
       return;
     }
     const html = event.dataTransfer.getData('text/html');
@@ -100,6 +115,7 @@ export const PlatformsPage = () => {
       setEditFile(null);
       setEditDroppedUrl(imageUrl);
       setEditPreview(imageUrl);
+      setEditImageRemoved(false);
       return;
     }
     setEditError('Arrastrá un archivo JPG, PNG o WebP, o una imagen desde una página web.');
@@ -108,21 +124,16 @@ export const PlatformsPage = () => {
   return (
     <main className="min-h-screen bg-canvas">
       <Header />
-      <section className="library-toolbar border-b border-slate-200 bg-white shadow-sm">
-        <div className="mx-auto max-w-[1500px] px-4 py-4 sm:px-6">
-          <h1 className="font-bebas text-2xl font-normal uppercase text-ink">Plataformas</h1>
-          <p className="mt-0.5 text-xs text-slate-500">{platforms.data?.length || 0} plataformas</p>
-        </div>
-      </section>
+      <CatalogToolbar title="Plataformas" itemLabel="plataformas" visibleCount={visiblePlatforms.length} totalCount={platforms.data?.length || 0} search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode} sortDirection={sortDirection} onSortDirectionChange={setSortDirection} />
 
       <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8">
         {platforms.isLoading ? (
           <div className="grid min-h-[45vh] place-items-center"><Loader2 className="h-8 w-8 animate-spin text-aqua" /></div>
         ) : platforms.isError ? (
           <div className="grid min-h-[45vh] place-items-center text-center"><div><p className="font-semibold text-ink">No se pudieron cargar las plataformas</p><button type="button" onClick={() => platforms.refetch()} className="primary-button mt-4">Reintentar</button></div></div>
-        ) : platforms.data?.length ? (
-          <section className="grid grid-cols-2 gap-3 min-[480px]:grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-9">
-            {platforms.data.map((platform) => {
+        ) : platforms.data?.length ? visiblePlatforms.length ? (
+          <section className={catalogGridClass[viewMode]}>
+            {visiblePlatforms.map((platform) => {
               const imageUrl = resolvePlatformLogoUrl(platform);
               return (
                 <article key={platform.id} role="button" tabIndex={0} onClick={() => showPlatformMovies(platform.id)} onKeyDown={(event) => { if ((event.key === 'Enter' || event.key === ' ') && event.target === event.currentTarget) { event.preventDefault(); showPlatformMovies(platform.id); } }} className={`movie-card relative flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-md bg-white shadow-card transition-transform hover:-translate-y-0.5 ${openMenuId === platform.id ? 'z-20 overflow-visible' : ''}`}>
@@ -141,6 +152,8 @@ export const PlatformsPage = () => {
               );
             })}
           </section>
+        ) : (
+          <div className="grid min-h-[45vh] place-items-center text-center"><div><MonitorPlay className="mx-auto h-14 w-14 text-aqua" /><h2 className="mt-4 text-lg font-semibold text-ink">No hay coincidencias</h2></div></div>
         ) : (
           <div className="grid min-h-[45vh] place-items-center text-center"><div><MonitorPlay className="mx-auto h-14 w-14 text-aqua" /><h2 className="mt-4 text-lg font-semibold text-ink">No hay plataformas</h2></div></div>
         )}
@@ -166,8 +179,9 @@ export const PlatformsPage = () => {
                 {isDraggingImage && <span className="pointer-events-none absolute inset-0 z-10 grid place-items-center rounded-md bg-white/90 text-sm font-semibold text-coral"><span className="flex items-center gap-2"><ImagePlus className="h-5 w-5" />Soltar imagen</span></span>}
                 <span className="grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-md bg-slate-100">{editPreview ? <img src={editPreview} alt="Vista previa" className="h-full w-full object-contain p-2" /> : <ImagePlus className="h-8 w-8 text-aqua" />}</span>
                 <span><span className="block text-sm font-semibold text-ink">Cambiar o arrastrar imagen</span><span className="mt-1 block text-xs text-slate-500">Archivo JPG, PNG o WebP, o imagen de una página web</span></span>
-                <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { setEditDroppedUrl(null); setEditFile(event.target.files?.[0] || null); }} className="hidden" />
+                <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { const file = event.target.files?.[0] || null; setEditDroppedUrl(null); setEditFile(file); if (file) setEditImageRemoved(false); }} className="hidden" />
               </label>
+              {editPreview && <button type="button" onClick={() => { setEditFile(null); setEditDroppedUrl(null); setEditPreview(null); setEditImageRemoved(true); }} className="secondary-button mt-2 gap-2 text-red-600"><Trash2 className="h-4 w-4" />Eliminar imagen</button>}
             </div>
             {editError && <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">{editError}</p>}
           </div>

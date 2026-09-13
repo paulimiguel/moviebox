@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ImagePlus, Loader2, MoreVertical, Pencil, Tags, Trash2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
+import { CatalogToolbar, catalogGridClass, type CatalogViewMode } from '@/components/CatalogToolbar';
 import { api, resolveMovieImageUrl } from '@/services/api';
-import type { GenreCatalogItem } from '@/types/movie';
+import type { GenreCatalogItem, SortDirection } from '@/types/movie';
 
 const resolveGenreImageUrl = (genre: Pick<GenreCatalogItem, 'imagePath'>) => {
   if (!genre.imagePath) return null;
@@ -24,8 +25,20 @@ export const GenresPage = () => {
   const [editFile, setEditFile] = useState<File | null>(null);
   const [editDroppedUrl, setEditDroppedUrl] = useState<string | null>(null);
   const [editPreview, setEditPreview] = useState<string | null>(null);
+  const [editImageRemoved, setEditImageRemoved] = useState(false);
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const [editError, setEditError] = useState('');
+  const [search, setSearch] = useState('');
+  const [viewMode, setViewMode] = useState<CatalogViewMode>('large');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+
+  const visibleGenres = useMemo(() => {
+    const query = search.trim().toLocaleLowerCase('es');
+    const direction = sortDirection === 'asc' ? 1 : -1;
+    return (genres.data || [])
+      .filter((genre) => !query || genre.name.toLocaleLowerCase('es').includes(query))
+      .sort((left, right) => direction * left.name.localeCompare(right.name, 'es', { sensitivity: 'base' }));
+  }, [genres.data, search, sortDirection]);
 
   useEffect(() => {
     if (!editFile) return undefined;
@@ -50,6 +63,7 @@ export const GenresPage = () => {
     setEditFile(null);
     setEditDroppedUrl(null);
     setEditPreview(resolveGenreImageUrl(genre));
+    setEditImageRemoved(false);
     setIsDraggingImage(false);
     setEditError('');
   };
@@ -59,7 +73,7 @@ export const GenresPage = () => {
       if (!editing) throw new Error('Género no encontrado');
       const name = editName.trim();
       if (!name) throw new Error('Escribí un título para el género');
-      let imagePath: string | undefined;
+      let imagePath: string | null | undefined = editImageRemoved ? null : undefined;
       if (editFile) {
         const uploaded = await api.uploads.images([editFile]);
         imagePath = uploaded.images[0]?.url;
@@ -67,7 +81,7 @@ export const GenresPage = () => {
       } else if (editDroppedUrl) {
         imagePath = editDroppedUrl;
       }
-      return api.genres.update(editing.id, { name, ...(imagePath ? { imagePath } : {}) });
+      return api.genres.update(editing.id, { name, ...(imagePath !== undefined ? { imagePath } : {}) });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['genres'] });
@@ -96,6 +110,7 @@ export const GenresPage = () => {
     if (file) {
       setEditDroppedUrl(null);
       setEditFile(file);
+      setEditImageRemoved(false);
       return;
     }
     const html = event.dataTransfer.getData('text/html');
@@ -107,6 +122,7 @@ export const GenresPage = () => {
       setEditFile(null);
       setEditDroppedUrl(imageUrl);
       setEditPreview(imageUrl);
+      setEditImageRemoved(false);
       return;
     }
     setEditError('Arrastrá un archivo JPG, PNG o WebP, o una imagen desde una página web.');
@@ -115,18 +131,13 @@ export const GenresPage = () => {
   return (
     <main className="min-h-screen bg-canvas">
       <Header />
-      <section className="library-toolbar border-b border-slate-200 bg-white shadow-sm">
-        <div className="mx-auto max-w-[1500px] px-4 py-4 sm:px-6">
-          <h1 className="font-bebas text-2xl font-normal uppercase text-ink">Géneros</h1>
-          <p className="mt-0.5 text-xs text-slate-500">{genres.data?.length || 0} géneros</p>
-        </div>
-      </section>
+      <CatalogToolbar title="Géneros" itemLabel="géneros" visibleCount={visibleGenres.length} totalCount={genres.data?.length || 0} search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode} sortDirection={sortDirection} onSortDirectionChange={setSortDirection} />
 
       <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8">
         {genres.isLoading ? <div className="grid min-h-[45vh] place-items-center"><Loader2 className="h-8 w-8 animate-spin text-aqua" /></div>
           : genres.isError ? <div className="grid min-h-[45vh] place-items-center text-center"><div><p className="font-semibold text-ink">No se pudieron cargar los géneros</p><button type="button" onClick={() => genres.refetch()} className="primary-button mt-4">Reintentar</button></div></div>
-            : genres.data?.length ? <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-              {genres.data.map((genre) => {
+            : genres.data?.length ? visibleGenres.length ? <section className={catalogGridClass[viewMode]}>
+              {visibleGenres.map((genre) => {
                 const imageUrl = resolveGenreImageUrl(genre);
                 return <article key={genre.id} role="button" tabIndex={0} onClick={() => showGenreMovies(genre.id)} onKeyDown={(event) => { if ((event.key === 'Enter' || event.key === ' ') && event.target === event.currentTarget) { event.preventDefault(); showGenreMovies(genre.id); } }} className={`movie-card relative flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-md bg-white shadow-card transition-transform hover:-translate-y-0.5 ${openMenuId === genre.id ? 'z-20 overflow-visible' : ''}`}>
                   <div className="relative aspect-square overflow-hidden rounded-t-md bg-slate-100">
@@ -142,7 +153,7 @@ export const GenresPage = () => {
                   <div className="p-3"><h2 className="font-bebas line-clamp-2 text-[24px] font-normal uppercase leading-7 text-ink">{genre.name}</h2></div>
                 </article>;
               })}
-            </section> : <div className="grid min-h-[45vh] place-items-center text-center"><div><Tags className="mx-auto h-14 w-14 text-aqua" /><h2 className="mt-4 text-lg font-semibold text-ink">No hay géneros</h2></div></div>}
+            </section> : <div className="grid min-h-[45vh] place-items-center text-center"><div><Tags className="mx-auto h-14 w-14 text-aqua" /><h2 className="mt-4 text-lg font-semibold text-ink">No hay coincidencias</h2></div></div> : <div className="grid min-h-[45vh] place-items-center text-center"><div><Tags className="mx-auto h-14 w-14 text-aqua" /><h2 className="mt-4 text-lg font-semibold text-ink">No hay géneros</h2></div></div>}
       </div>
 
       {editing && <div className="fixed inset-0 z-[70] grid place-items-center bg-ink/55 p-4" role="dialog" aria-modal="true" aria-labelledby="edit-genre-title">
@@ -154,8 +165,8 @@ export const GenresPage = () => {
               {isDraggingImage && <span className="pointer-events-none absolute inset-0 z-10 grid place-items-center rounded-md bg-white/90 text-sm font-semibold text-coral"><span className="flex items-center gap-2"><ImagePlus className="h-5 w-5" />Soltar imagen</span></span>}
               <span className="grid h-24 w-24 shrink-0 place-items-center overflow-hidden rounded-md bg-slate-100">{editPreview ? <img src={editPreview} alt="Vista previa" className="h-full w-full object-cover" /> : <ImagePlus className="h-8 w-8 text-aqua" />}</span>
               <span><span className="block text-sm font-semibold text-ink">Cambiar o arrastrar imagen</span><span className="mt-1 block text-xs text-slate-500">Archivo JPG, PNG o WebP, o imagen de una página web</span></span>
-              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { setEditDroppedUrl(null); setEditFile(event.target.files?.[0] || null); }} className="hidden" />
-            </label></div>
+              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { const file = event.target.files?.[0] || null; setEditDroppedUrl(null); setEditFile(file); if (file) setEditImageRemoved(false); }} className="hidden" />
+            </label>{editPreview && <button type="button" onClick={() => { setEditFile(null); setEditDroppedUrl(null); setEditPreview(null); setEditImageRemoved(true); }} className="secondary-button mt-2 gap-2 text-red-600"><Trash2 className="h-4 w-4" />Eliminar imagen</button>}</div>
             {editError && <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">{editError}</p>}
           </div>
           <footer className="flex justify-end gap-2 border-t border-slate-200 bg-white px-5 py-4"><button type="button" onClick={() => setEditing(null)} className="secondary-button">Cancelar</button><button type="submit" disabled={updateGenre.isPending || !editName.trim()} className="primary-button">{updateGenre.isPending && <Loader2 className="h-4 w-4 animate-spin" />}Guardar</button></footer>
