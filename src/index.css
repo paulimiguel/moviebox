@@ -426,6 +426,20 @@ body {
   border-color: rgb(55 59 65);
 }
 
+:root[data-theme="dark"] .auth-page .control,
+:root[data-theme="dark"] .auth-page .auth-google-button {
+  border-color: rgb(71 76 83);
+  background-color: rgb(42 45 49);
+  color: #fff;
+}
+
+:root[data-theme="dark"] .auth-page .control:hover,
+:root[data-theme="dark"] .auth-page .auth-google-button:hover {
+  border-color: rgb(100 116 139);
+  background-color: rgb(52 56 62);
+  color: #fff;
+}
+
 :root[data-theme="dark"] .moviebox-header,
 :root[data-theme="dark"] .library-toolbar {
   border-bottom-width: 0;

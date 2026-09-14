@@ -60,7 +60,7 @@ export const PlatformLogos = ({ platforms, limit, large = false }: {
   limit?: number;
   large?: boolean;
 }) => {
-  if (!platforms.length) return <span className="text-xs font-medium text-slate-500">No disponible en plataformas</span>;
+  if (!platforms.length) return <span className="text-[10px] font-medium text-slate-500">No disponible en plataformas</span>;
 
   const visiblePlatforms = limit ? platforms.slice(0, limit) : platforms;
   const remaining = platforms.length - visiblePlatforms.length;

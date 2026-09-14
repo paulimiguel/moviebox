@@ -89,7 +89,7 @@ export const AuthPage = () => {
   };
 
   return (
-    <main className="min-h-screen bg-canvas lg:grid lg:grid-cols-[minmax(420px,0.8fr)_1.2fr]">
+    <main className="auth-page min-h-screen bg-canvas lg:grid lg:grid-cols-[minmax(420px,0.8fr)_1.2fr]">
       <section className="flex min-h-screen items-center justify-center bg-canvas px-5 py-10 sm:px-10">
         <div className="w-full max-w-sm">
           <img
@@ -205,7 +205,7 @@ export const AuthPage = () => {
 
           <button
             type="button"
-            className="inline-flex h-11 w-full items-center justify-center gap-3 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            className="auth-google-button inline-flex h-11 w-full items-center justify-center gap-3 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
             disabled={submitting}
             onClick={() => window.location.assign(api.auth.getGoogleLoginUrl(window.location.href))}
           >
