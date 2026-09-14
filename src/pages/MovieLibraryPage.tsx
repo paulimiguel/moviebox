@@ -312,7 +312,7 @@ export const MovieLibraryPage = () => {
             <button type="button" onClick={() => setSelectedIds(new Set())} className="secondary-button gap-2"><Square className="h-4 w-4" />Quitar seleccion</button>
             <span className="text-sm text-slate-500">{selectedMovies.length} seleccionadas</span>
             <div className="ml-auto flex flex-wrap gap-2">
-              {bulkMode === 'edit' && <button type="button" onClick={() => setBulkEditOpen(true)} disabled={!selectedMovies.length} className="primary-button"><Edit3 className="h-4 w-4" />Editar seleccion</button>}
+              {bulkMode === 'edit' && <button type="button" onClick={() => setBulkEditOpen(true)} disabled={!selectedMovies.length} className="primary-button"><Edit3 className="h-4 w-4" />Editar campos comunes</button>}
               {bulkMode === 'print' && <><button type="button" onClick={() => printMovies(selectedMovies, 'cards')} disabled={!selectedMovies.length} className="secondary-button gap-2"><Printer className="h-4 w-4" />Imprimir tarjetas</button><button type="button" onClick={() => printMovies(selectedMovies, 'list')} disabled={!selectedMovies.length} className="secondary-button gap-2"><Printer className="h-4 w-4" />Imprimir lista</button></>}
               {bulkMode === 'delete' && <button type="button" onClick={() => setDeleteConfirmOpen(true)} disabled={!selectedMovies.length} className="primary-button bg-red-600 hover:bg-red-700"><Trash2 className="h-4 w-4" />Eliminar movies</button>}
               <button type="button" onClick={() => handleBulkModeChange(null)} className="icon-button" title="Cerrar" aria-label="Cerrar"><X className="h-4 w-4" /></button>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronsUpDown, Eye, EyeOff, Film, Filter, Grid2X2, Heart, LayoutGrid, List, ListChecks, Search, Tv, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronsUpDown, Edit3, Eye, EyeOff, Film, Filter, Grid2X2, Heart, LayoutGrid, List, ListChecks, Search, Tv, X } from 'lucide-react';
 import type { MovieViewMode } from '@/components/MovieCard';
 import type { FavoriteFilter, MovieTypeFilter, SortDirection, WatchedFilter, WatchlistFilter } from '@/types/movie';
 
@@ -209,7 +209,10 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
           <button type="button" onClick={() => { setOpenMenu(null); props.onFiltersToggle(); }} className={`${menuButton} ${props.filtersOpen ? 'border-coral bg-red-50 text-coral' : ''}`}><Filter className="h-5 w-5 shrink-0" />Filtrar<ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${props.filtersOpen ? 'rotate-180' : ''}`} /></button>
           <div className="relative">
             <button type="button" onClick={() => setOpenMenu(openMenu === 'actions' ? null : 'actions')} className={`${menuButton} ${props.emptyFieldsCount ? 'border-coral bg-red-50 text-coral' : ''}`} aria-expanded={openMenu === 'actions'}><ListChecks className="h-5 w-5 shrink-0" />Acciones<ChevronDown className="h-4 w-4 shrink-0" /></button>
-            {openMenu === 'actions' && <div className="library-toolbar-dropdown absolute right-0 top-[80px] z-40 w-56 rounded-md border border-slate-200 bg-white p-1.5 shadow-card xl:top-10"><button type="button" onClick={() => { setOpenMenu(null); props.onEmptyFieldsSearch(); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><Search className="h-4 w-4" />Buscar campos vacíos</button></div>}
+            {openMenu === 'actions' && <div className="library-toolbar-dropdown absolute right-0 top-[80px] z-40 w-64 rounded-md border border-slate-200 bg-white p-1.5 shadow-card xl:top-10">
+              <button type="button" onClick={() => { setOpenMenu(null); props.onBulkModeChange('edit'); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><Edit3 className="h-4 w-4" />Editar campos comunes</button>
+              <button type="button" onClick={() => { setOpenMenu(null); props.onEmptyFieldsSearch(); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><Search className="h-4 w-4" />Buscar campos vacíos</button>
+            </div>}
           </div>
         </div>
       </div>

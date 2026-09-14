@@ -217,9 +217,9 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
           </div>}
           <p className={`${mediumIcons ? 'mt-1.5 text-xs' : 'mt-2 text-sm'} text-slate-500`}>{movie.durationMinutes ? `${movie.durationMinutes} minutos` : 'Duracion desconocida'}</p>
           <p className={`mt-1 line-clamp-2 text-slate-500 ${mediumIcons ? 'text-xs' : 'text-sm'}`}>{genres || 'Sin genero'}</p>
-          <div className="mt-2 flex flex-wrap items-center gap-3">
+          <div className="mt-2">
             <PlatformLogos platforms={movie.platforms} limit={4} />
-            {trailerLink && <span className="text-xs [&_img]:h-3 [&_img]:w-[18px]">{trailerLink}</span>}
+            {trailerLink && <div className="mt-2 text-xs [&_img]:h-3 [&_img]:w-[18px]">{trailerLink}</div>}
           </div>
         </div>
       </article>
