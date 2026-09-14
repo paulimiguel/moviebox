@@ -166,6 +166,15 @@ export const AddMoviesPage = () => {
     setError('');
   };
 
+  const pasteSuggestionSearch = async () => {
+    try {
+      const text = (await navigator.clipboard.readText()).trim().replace(/\s+/g, ' ');
+      if (text) setSuggestionSearch(text);
+    } catch {
+      setError('No se pudo leer el portapapeles. Revisá el permiso del navegador.');
+    }
+  };
+
   const loadImportedTitles = (titles: string[]) => {
     const headerNames = new Set(['titulo', 'title', 'pelicula', 'movie']);
     const cleaned = titles.map((title) => title.trim()).filter((title, index) => title && !(index === 0 && headerNames.has(title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es'))));
@@ -214,7 +223,8 @@ export const AddMoviesPage = () => {
           <form onSubmit={(event) => { event.preventDefault(); const next = suggestionSearch.trim(); if (next === appliedSuggestionSearch) void suggestions.refetch(); else setAppliedSuggestionSearch(next); }} className="flex min-w-0 items-center gap-2">
             <label className="relative min-w-0 flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input autoFocus type="search" value={suggestionSearch} onChange={(event) => setSuggestionSearch(event.target.value)} className="control w-full pl-9" placeholder="Escribí el título a buscar" title="Escribí el título y presioná Enter para buscar" />
+              <input autoFocus type="search" value={suggestionSearch} onChange={(event) => setSuggestionSearch(event.target.value)} className={`control w-full pl-9 ${suggestionSearch ? '' : 'pr-16'}`} placeholder="Escribí el título a buscar" title="Escribí el título y presioná Enter para buscar" />
+              {!suggestionSearch && <button type="button" onClick={() => void pasteSuggestionSearch()} className="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-slate-100 px-2 py-1 text-[10px] font-semibold uppercase text-slate-600 transition-colors hover:bg-slate-200 hover:text-ink">Pegar</button>}
             </label>
             <button type="submit" className="inline-flex h-10 shrink-0 items-center rounded-md border border-coral bg-coral px-3 text-xs font-semibold uppercase text-white transition-colors hover:bg-[#dc493a]">Buscar</button>
           </form>

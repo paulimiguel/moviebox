@@ -151,6 +151,17 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
     if (!props.years.includes(value)) props.onYearChange([...props.years, value]);
     setYearDraft('');
   };
+  const pasteSearch = async () => {
+    try {
+      const text = (await navigator.clipboard.readText()).trim().replace(/\s+/g, ' ');
+      if (text) {
+        props.onSearchChange(text);
+        searchInputRef.current?.focus();
+      }
+    } catch {
+      searchInputRef.current?.focus();
+    }
+  };
 
   return (
     <section ref={toolbarRef} className="library-toolbar sticky top-[72px] z-30 border-b border-slate-200 bg-white shadow-sm">
@@ -176,7 +187,8 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
         <div className="min-w-0 xl:ml-2">
           <label className="relative block">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input ref={searchInputRef} type="search" value={props.search} onChange={(event) => props.onSearchChange(event.target.value)} className="control w-full pl-9" placeholder="Buscar" />
+            <input ref={searchInputRef} type="search" value={props.search} onChange={(event) => props.onSearchChange(event.target.value)} className={`control w-full pl-9 ${props.search ? '' : 'pr-16'}`} placeholder="Buscar" />
+            {!props.search && <button type="button" onClick={() => void pasteSearch()} className="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-slate-100 px-2 py-1 text-[10px] font-semibold uppercase text-slate-600 transition-colors hover:bg-slate-200 hover:text-ink">Pegar</button>}
           </label>
           <div className="search-scope-selector mt-2 inline-flex items-center rounded-lg border border-slate-200 bg-slate-100 p-1" role="radiogroup" aria-label="Campo de búsqueda">
             {searchScopeOptions.map((option) => {
