@@ -335,6 +335,7 @@ export const MovieLibraryPage = () => {
 
       {bulkMode && (
         <section className="sticky top-[72px] z-20 border-b border-slate-200 bg-white shadow-card">
+        <section className="library-toolbar sticky top-[72px] z-20 border-b border-slate-200 bg-white shadow-card">
           <div className="mx-auto flex min-h-16 max-w-[1500px] flex-wrap items-center gap-2 px-4 py-3 sm:px-6">
             <button type="button" onClick={() => setSelectedIds(new Set(filteredMovies.map((movie) => movie.id)))} className="secondary-button gap-2"><CheckSquare className="h-4 w-4" />Seleccionar todas</button>
             <button type="button" onClick={() => { setSelectedIds(new Set()); selectionAnchorId.current = null; }} className="secondary-button gap-2"><Square className="h-4 w-4" />Quitar seleccion</button>
@@ -363,10 +364,15 @@ export const MovieLibraryPage = () => {
       {bulkEditOpen && <MovieBulkEditModal movies={selectedMovies} genres={metadataQuery.data?.genres || []} platforms={metadataQuery.data?.platforms || []} collections={collectionsQuery.data || []} onClose={() => setBulkEditOpen(false)} onSaved={() => { refreshLibrary(); setBulkEditOpen(false); setSelectedIds(new Set()); setBulkMode(null); }} />}
       {deleteConfirmOpen && (
         <div className="fixed inset-0 z-[70] grid place-items-center bg-ink/55 p-4" role="dialog" aria-modal="true" aria-labelledby="delete-movies-title">
-          <div className="w-full max-w-md rounded-md bg-white p-5 shadow-xl">
-            <h2 id="delete-movies-title" className="text-lg font-semibold text-ink">Eliminar movies</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Se eliminaran {selectedIds.size} {selectedIds.size === 1 ? 'movie seleccionada' : 'movies seleccionadas'} y todos sus datos asociados. Esta accion no se puede deshacer.</p>
-            <div className="mt-5 flex justify-end gap-2"><button type="button" onClick={() => { setDeleteConfirmOpen(false); if (!bulkMode) setSelectedIds(new Set()); }} className="secondary-button">Cancelar</button><button type="button" onClick={() => deleteMutation.mutate(Array.from(selectedIds))} disabled={deleteMutation.isPending} className="primary-button bg-red-600 hover:bg-red-700">{deleteMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}Eliminar</button></div>
+          <div className="movie-detail-modal w-full max-w-md overflow-hidden rounded-md bg-canvas shadow-xl">
+            <header className="flex min-h-16 items-center border-b border-slate-200 bg-white px-5"><h2 id="delete-movies-title" className="text-lg font-semibold text-ink">Eliminar movies</h2></header>
+            <div className="p-5">
+              <p className="text-sm leading-6 text-slate-600">Se eliminaran {selectedIds.size} {selectedIds.size === 1 ? 'movie seleccionada' : 'movies seleccionadas'} y todos sus datos asociados. Esta accion no se puede deshacer.</p>
+            </div>
+            <footer className="flex justify-end gap-2 border-t border-slate-200 bg-white px-5 py-4">
+              <button type="button" onClick={() => { setDeleteConfirmOpen(false); if (!bulkMode) setSelectedIds(new Set()); }} className="secondary-button">Cancelar</button>
+              <button type="button" onClick={() => deleteMutation.mutate(Array.from(selectedIds))} disabled={deleteMutation.isPending} className="primary-button bg-red-600 hover:bg-red-700">{deleteMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}Eliminar</button>
+            </footer>
           </div>
         </div>
       )}

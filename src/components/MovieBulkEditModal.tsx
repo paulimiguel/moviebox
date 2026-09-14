@@ -45,8 +45,8 @@ export const MovieBulkEditModal = ({ movies, genres, platforms, collections, onC
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/55 sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="bulk-edit-title">
-      <div className="movie-detail-modal w-full rounded-t-md bg-white shadow-xl sm:max-w-xl sm:rounded-md">
-        <header className="flex h-16 items-center border-b border-slate-200 px-4 sm:px-6"><div><h2 id="bulk-edit-title" className="font-semibold text-ink">Editar campos comunes</h2><p className="text-xs text-slate-500">{movies.length} seleccionadas</p></div><button type="button" onClick={onClose} className="icon-button ml-auto border-0 shadow-none" title="Cerrar" aria-label="Cerrar"><X className="h-5 w-5" /></button></header>
+      <div className="movie-detail-modal w-full rounded-t-md bg-canvas shadow-xl sm:max-w-xl sm:rounded-md">
+        <header className="flex h-16 items-center border-b border-slate-200 bg-white px-4 sm:px-6"><div><h2 id="bulk-edit-title" className="font-semibold text-ink">Editar campos comunes</h2><p className="text-xs text-slate-500">{movies.length} seleccionadas</p></div><button type="button" onClick={onClose} className="icon-button ml-auto border-0 shadow-none" title="Cerrar" aria-label="Cerrar"><X className="h-5 w-5" /></button></header>
         <div className="grid gap-4 bg-canvas p-4 sm:grid-cols-2 sm:p-6">
           <label><span className="field-label">Tipo</span><select className="control w-full" value={type} onChange={(event) => setType(event.target.value as '' | MovieType)}><option value="">No cambiar</option><option value="movie">Película</option><option value="series">Serie</option></select></label>
           <label><span className="field-label">Año</span><input className="control w-full" type="number" min="1888" max="2200" value={year} onChange={(event) => setYear(event.target.value)} placeholder="No cambiar" /></label>
@@ -65,7 +65,7 @@ export const MovieBulkEditModal = ({ movies, genres, platforms, collections, onC
           {!validYear && <p className="text-sm text-red-600 sm:col-span-2">El año debe estar entre 1888 y 2200.</p>}
           {error && <p className="rounded-md bg-red-50 p-3 text-sm text-red-700 sm:col-span-2">{error}</p>}
         </div>
-        <footer className="flex h-16 items-center justify-end gap-2 border-t border-slate-200 px-4 sm:px-6"><button type="button" onClick={onClose} className="secondary-button">Cancelar</button><button type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending || !validYear || (!type && !year && !genre && !platform && !collectionId && !markWatched && !markFavorite && !markWatchlist && !instagramRecommendation)} className="primary-button">{mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}Aplicar cambios</button></footer>
+        <footer className="flex h-16 items-center justify-end gap-2 border-t border-slate-200 bg-white px-4 sm:px-6"><button type="button" onClick={onClose} className="secondary-button">Cancelar</button><button type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending || !validYear || (!type && !year && !genre && !platform && !collectionId && !markWatched && !markFavorite && !markWatchlist && !instagramRecommendation)} className="primary-button">{mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}Aplicar cambios</button></footer>
       </div>
     </div>
   );

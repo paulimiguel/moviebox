@@ -122,11 +122,11 @@ export const MovieImportModal = ({ onClose, onSaved }: { onClose: () => void; on
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/55 sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="movie-import-title">
-      <div className="max-h-[94vh] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-3xl sm:rounded-md">
-        <div className="flex h-16 items-center border-b border-slate-200 bg-white px-4 sm:px-6">
+      <div className="movie-detail-modal max-h-[94vh] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-3xl sm:rounded-md">
+        <header className="flex h-16 items-center border-b border-slate-200 bg-white px-4 sm:px-6">
           <div><h2 id="movie-import-title" className="text-lg font-semibold text-ink">Importar películas y series</h2><p className="text-xs text-slate-500">Ingresá un nombre por línea. Máximo {MAX_NAMES}.</p></div>
           <button type="button" onClick={onClose} className="icon-button ml-auto border-0 shadow-none" title="Cerrar" aria-label="Cerrar"><X className="h-5 w-5" /></button>
-        </div>
+        </header>
 
         <div className="max-h-[calc(94vh-64px)] overflow-y-auto p-4 sm:p-6">
           <form onSubmit={submit}>
@@ -159,10 +159,10 @@ export const MovieImportModal = ({ onClose, onSaved }: { onClose: () => void; on
               </section>
             ))}
 
-            <div className="sticky bottom-0 flex items-center justify-end gap-3 border-t border-slate-200 bg-canvas py-3">
+            <footer className="sticky bottom-0 flex items-center justify-end gap-3 border-t border-slate-200 bg-canvas py-3">
               <span className="text-sm text-slate-500">{selectedCandidates.length} seleccionadas</span>
               <button type="button" onClick={() => { setError(''); importMovies.mutate(selectedCandidates); }} className="primary-button" disabled={!selectedCandidates.length || importMovies.isPending}>{importMovies.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}Importar {selectedCandidates.length}</button>
-            </div>
+            </footer>
           </div>}
         </div>
       </div>

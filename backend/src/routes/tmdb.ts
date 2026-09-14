@@ -143,4 +143,31 @@ router.get('/suggestions', async (req, res) => {
     return res.status(502).json({ error: query ? 'No se pudieron cargar los resultados de TMDB' : 'No se pudieron cargar los títulos populares de JustWatch' });
   }
 });
+router.get('/new-releases', async (req, res) => {
+  if (!token) return res.status(503).json({ error: 'TMDB todavia no esta configurado' });
+  const platform = String(req.query.platform || 'netflix');
+  const providerId = platform === 'prime' ? 119 : platform === 'apple' ? 350 : 8;
+  try {
+    const [movies, series] = await Promise.all([
+      tmdbRequest<{ results?: any[] }>(`/discover/movie?language=es-AR&sort_by=primary_release_date.desc&with_watch_providers=${providerId}&watch_region=AR&vote_count.gte=5`),
+      tmdbRequest<{ results?: any[] }>(`/discover/tv?language=es-AR&sort_by=first_air_date.desc&with_watch_providers=${providerId}&watch_region=AR&vote_count.gte=5`),
+    ]);
+    const processItems = (items: any[], type: 'movie' | 'series') => (items || []).slice(0, 12).map((item: any) => ({
+      tmdbId: String(item.id),
+      type,
+      title: item.title || item.name,
+      originalTitle: item.original_title || item.original_name,
+      year: Number((item.release_date || item.first_air_date || '').slice(0, 4)) || null,
+      posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
+      overview: item.overview || '',
+    }));
+    return res.json({
+      movies: processItems(movies.results || [], 'movie'),
+      series: processItems(series.results || [], 'series'),
+    });
+  } catch (error) {
+    return res.status(502).json({ error: 'No se pudieron cargar las novedades' });
+  }
+});
+
 export default router;

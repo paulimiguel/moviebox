@@ -420,9 +420,9 @@ export const MovieFormModal = ({
     >
       <form
         onSubmit={submit}
-        className="max-h-[96vh] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-4xl sm:rounded-md"
+        className="movie-detail-modal max-h-[96vh] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-4xl sm:rounded-md"
       >
-        <div className="flex h-16 items-center border-b border-slate-200 bg-white px-4 sm:px-6">
+        <header className="flex h-16 items-center border-b border-slate-200 bg-white px-4 sm:px-6">
           <div className="min-w-0">
             <h2 className="truncate text-lg font-semibold text-ink">
               {movie ? `Editar ${movie.originalTitle}` : "Agregar titulo"}
@@ -436,7 +436,7 @@ export const MovieFormModal = ({
           >
             <X className="h-5 w-5" />
           </button>
-        </div>
+        </header>
         <div className="max-h-[calc(96vh-128px)] overflow-y-auto p-4 sm:p-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -734,7 +734,7 @@ export const MovieFormModal = ({
             </p>
           )}
         </div>
-        <div className="flex h-16 items-center justify-end gap-2 border-t border-slate-200 bg-white px-4 sm:px-6">
+        <footer className="flex h-16 items-center justify-end gap-2 border-t border-slate-200 bg-white px-4 sm:px-6">
           <button type="button" onClick={onClose} className="secondary-button">
             Cancelar
           </button>
@@ -746,7 +746,7 @@ export const MovieFormModal = ({
             {mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
             {movie ? "Guardar cambios" : "Agregar"}
           </button>
-        </div>
+        </footer>
       </form>
     </div>
   );

@@ -136,6 +136,7 @@ export const Header = () => {
                 <Link to="/colecciones" onClick={() => setCollectionMenuOpen(false)} className="mt-1 flex w-full items-center gap-2 border-t border-slate-100 px-3 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink"><LayoutGrid className="h-4 w-4" />Mostrar colecciones</Link>
               </div>}
             </div>
+            <NavLink to="/novedades" className={({ isActive }) => `flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${isActive ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`}>NOVEDADES</NavLink>
             <NavLink to="/agregar" className={({ isActive }) => `flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${isActive ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`}>AGREGAR</NavLink>
           </nav>
           <button type="button" onClick={() => filterLibrary('all')} className="header-all-button inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md bg-coral px-3 text-xs font-semibold text-white transition-colors hover:bg-[#e7473d]" title="Mostrar todos los títulos"><Film className="h-4 w-4" />TODOS</button>

@@ -282,7 +282,7 @@ export const AddMoviesPage = () => {
         {!bulkDialogOpen && error && <p className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
         {bulkDialogOpen && <div className="fixed inset-0 z-[80] flex items-end justify-center bg-ink/55 sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="bulk-search-title">
-          <div className="max-h-[94vh] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-4xl sm:rounded-md">
+          <div className="movie-detail-modal max-h-[94vh] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-4xl sm:rounded-md">
             <header className="flex min-h-16 items-center border-b border-slate-200 bg-white px-4 sm:px-6">
               <div><h2 id="bulk-search-title" className="font-bebas text-2xl uppercase text-ink">Buscar títulos</h2><p className="text-xs text-slate-500">Ingresá títulos o revisá los cargados desde un archivo.</p></div>
               <button type="button" onClick={() => setBulkDialogOpen(false)} className="icon-button ml-auto border-0 shadow-none" title="Cerrar" aria-label="Cerrar"><X className="h-5 w-5" /></button>

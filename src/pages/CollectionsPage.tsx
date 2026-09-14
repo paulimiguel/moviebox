@@ -239,14 +239,16 @@ export const CollectionsPage = () => {
 
       {collectionToDelete && (
         <div className="fixed inset-0 z-[70] grid place-items-center bg-ink/55 p-4" role="dialog" aria-modal="true" aria-labelledby="delete-collection-title">
-          <div className="w-full max-w-md rounded-md bg-white p-5 shadow-xl">
-            <h2 id="delete-collection-title" className="font-bebas text-2xl uppercase text-ink">Eliminar colección</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">¿Eliminar la colección {collectionToDelete.name}? Se quitará de {collectionToDelete.movieCount} {collectionToDelete.movieCount === 1 ? 'título asociado' : 'títulos asociados'}. Los títulos no se eliminarán.</p>
-            {remove.isError && <p className="mt-3 rounded-md bg-red-50 p-3 text-sm text-red-700">{remove.error.message}</p>}
-            <div className="mt-5 flex justify-end gap-2">
+          <div className="movie-detail-modal w-full max-w-md overflow-hidden rounded-md bg-canvas shadow-xl">
+            <header className="flex min-h-16 items-center border-b border-slate-200 bg-white px-5"><h2 id="delete-collection-title" className="font-bebas text-2xl uppercase text-ink">Eliminar colección</h2></header>
+            <div className="p-5">
+              <p className="text-sm leading-6 text-slate-600">¿Eliminar la colección {collectionToDelete.name}? Se quitará de {collectionToDelete.movieCount} {collectionToDelete.movieCount === 1 ? 'título asociado' : 'títulos asociados'}. Los títulos no se eliminarán.</p>
+              {remove.isError && <p className="mt-3 rounded-md bg-red-50 p-3 text-sm text-red-700">{remove.error.message}</p>}
+            </div>
+            <footer className="flex justify-end gap-2 border-t border-slate-200 bg-white px-5 py-4">
               <button type="button" onClick={() => setCollectionToDelete(null)} className="secondary-button" disabled={remove.isPending}>Cancelar</button>
               <button type="button" onClick={() => remove.mutate(collectionToDelete.id)} className="primary-button bg-red-600 hover:bg-red-700" disabled={remove.isPending}>{remove.isPending && <Loader2 className="h-4 w-4 animate-spin" />}Eliminar</button>
-            </div>
+            </footer>
           </div>
         </div>
       )}
