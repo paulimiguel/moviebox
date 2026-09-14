@@ -196,7 +196,7 @@ export const CollectionsPage = () => {
 
       {editing && (
         <div className="fixed inset-0 z-[70] grid place-items-center bg-ink/55 p-4" role="dialog" aria-modal="true" aria-labelledby="edit-collection-title">
-          <form onSubmit={(event) => { event.preventDefault(); setEditError(''); updateCollection.mutate(); }} className="w-full max-w-lg overflow-hidden rounded-md bg-canvas shadow-xl">
+          <form onSubmit={(event) => { event.preventDefault(); setEditError(''); updateCollection.mutate(); }} className="movie-detail-modal w-full max-w-lg overflow-hidden rounded-md bg-canvas shadow-xl">
             <header className="flex min-h-16 items-center border-b border-slate-200 bg-white px-5">
               <h2 id="edit-collection-title" className="font-bebas text-2xl uppercase text-ink">Editar colección</h2>
               <button type="button" onClick={() => setEditing(null)} className="icon-button ml-auto border-0 shadow-none" title="Cerrar" aria-label="Cerrar"><X className="h-5 w-5" /></button>

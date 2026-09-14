@@ -160,7 +160,7 @@ export const GenresPage = () => {
       </div>
 
       {editing && <div className="fixed inset-0 z-[70] grid place-items-center bg-ink/55 p-4" role="dialog" aria-modal="true" aria-labelledby="edit-genre-title">
-        <form onSubmit={(event) => { event.preventDefault(); setEditError(''); updateGenre.mutate(); }} className="w-full max-w-lg overflow-hidden rounded-md bg-canvas shadow-xl">
+        <form onSubmit={(event) => { event.preventDefault(); setEditError(''); updateGenre.mutate(); }} className="movie-detail-modal w-full max-w-lg overflow-hidden rounded-md bg-canvas shadow-xl">
           <header className="flex min-h-16 items-center border-b border-slate-200 bg-white px-5"><h2 id="edit-genre-title" className="font-bebas text-2xl uppercase text-ink">Editar género</h2><button type="button" onClick={() => setEditing(null)} className="icon-button ml-auto border-0 shadow-none" title="Cerrar" aria-label="Cerrar"><X className="h-5 w-5" /></button></header>
           <div className="space-y-5 p-5">
             <label className="block"><span className="field-label">Título</span><input autoFocus value={editName} onChange={(event) => setEditName(event.target.value)} className="control w-full" maxLength={80} /></label>
