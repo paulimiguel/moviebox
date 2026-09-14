@@ -334,7 +334,6 @@ export const MovieLibraryPage = () => {
       />
 
       {bulkMode && (
-        <section className="sticky top-[72px] z-20 border-b border-slate-200 bg-white shadow-card">
         <section className="library-toolbar sticky top-[72px] z-20 border-b border-slate-200 bg-white shadow-card">
           <div className="mx-auto flex min-h-16 max-w-[1500px] flex-wrap items-center gap-2 px-4 py-3 sm:px-6">
             <button type="button" onClick={() => setSelectedIds(new Set(filteredMovies.map((movie) => movie.id)))} className="secondary-button gap-2"><CheckSquare className="h-4 w-4" />Seleccionar todas</button>
