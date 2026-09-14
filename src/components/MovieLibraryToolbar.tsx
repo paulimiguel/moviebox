@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronsUpDown, Edit3, Eye, EyeOff, Filter, Grid2X2, Heart, LayoutGrid, List, ListChecks, Search, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronsUpDown, Edit3, Eye, EyeOff, Film, Filter, Grid2X2, Heart, LayoutGrid, List, ListChecks, Search, Tv, X } from 'lucide-react';
 import type { MovieViewMode } from '@/components/MovieCard';
 import type { FavoriteFilter, MovieTypeFilter, SortDirection, WatchedFilter, WatchlistFilter } from '@/types/movie';
 
@@ -291,6 +291,8 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
             </div>
 
             <div className="flex flex-wrap gap-2 xl:col-span-3 2xl:col-span-1 2xl:flex-nowrap 2xl:pt-[22px]">
+              <button type="button" aria-pressed={props.type === 'movie'} onClick={() => props.onTypeChange(props.type === 'movie' ? 'all' : 'movie')} className={filterButtonClass(props.type === 'movie')}><Film className="h-4 w-4" />Película</button>
+              <button type="button" aria-pressed={props.type === 'series'} onClick={() => props.onTypeChange(props.type === 'series' ? 'all' : 'series')} className={filterButtonClass(props.type === 'series')}><Tv className="h-4 w-4" />Serie</button>
               <button type="button" aria-pressed={props.watched === 'watched'} onClick={() => props.onWatchedChange(props.watched === 'watched' ? 'all' : 'watched')} className={filterButtonClass(props.watched === 'watched')}><Eye className="h-4 w-4" />Watch</button>
               <button type="button" aria-pressed={props.watched === 'unwatched'} onClick={() => props.onWatchedChange(props.watched === 'unwatched' ? 'all' : 'unwatched')} className={filterButtonClass(props.watched === 'unwatched')}><EyeOff className="h-4 w-4" />No Watch</button>
               <button type="button" aria-pressed={props.favorite === 'favorites'} onClick={() => props.onFavoriteChange(props.favorite === 'favorites' ? 'all' : 'favorites')} className={filterButtonClass(props.favorite === 'favorites')}><Heart className={`h-4 w-4 ${props.favorite === 'favorites' ? 'fill-current' : ''}`} />Like</button>
