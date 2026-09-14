@@ -322,7 +322,7 @@ export const MovieLibraryPage = () => {
           <div className="mx-auto flex min-h-16 max-w-[1500px] flex-wrap items-center gap-2 px-4 py-3 sm:px-6">
             <button type="button" onClick={() => setSelectedIds(new Set(filteredMovies.map((movie) => movie.id)))} className="secondary-button gap-2"><CheckSquare className="h-4 w-4" />Seleccionar todas</button>
             <button type="button" onClick={() => { setSelectedIds(new Set()); selectionAnchorId.current = null; }} className="secondary-button gap-2"><Square className="h-4 w-4" />Quitar seleccion</button>
-            <span className="text-sm text-slate-500">{selectedMovies.length} seleccionadas</span>
+            <span className="text-sm text-slate-500">{selectedMovies.length} seleccionadas <span className="hidden sm:inline">· Shift + clic selecciona un rango</span></span>
             <div className="ml-auto flex flex-wrap gap-2">
               {bulkMode === 'edit' && <button type="button" onClick={() => setBulkEditOpen(true)} disabled={!selectedMovies.length} className="primary-button"><Edit3 className="h-4 w-4" />Editar campos comunes</button>}
               {bulkMode === 'print' && <><button type="button" onClick={() => printMovies(selectedMovies, 'cards')} disabled={!selectedMovies.length} className="secondary-button gap-2"><Printer className="h-4 w-4" />Imprimir tarjetas</button><button type="button" onClick={() => printMovies(selectedMovies, 'list')} disabled={!selectedMovies.length} className="secondary-button gap-2"><Printer className="h-4 w-4" />Imprimir lista</button></>}
