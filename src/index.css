@@ -248,27 +248,19 @@ body {
 }
 
 :root[data-theme="dark"] .library-toolbar .library-toolbar-menu-button {
-  border-color: transparent;
-  background-color: #ef5544;
   border-color: rgb(71 85 105);
   background-color: rgb(42 45 49);
   color: #fff;
 }
 
-.library-toolbar .library-toolbar-menu-button:hover {
-  border-color: transparent;
-  background-color: #ef5544;
-  color: #fff;
 :root[data-theme="dark"] .library-toolbar .library-toolbar-menu-button:hover {
   border-color: rgb(100 116 139) !important;
   background-color: rgb(52 56 62) !important;
   color: #fff !important;
 }
 
-:root[data-theme="dark"] .library-toolbar .library-toolbar-menu-button:hover {
 :root[data-theme="dark"] .library-toolbar .library-toolbar-menu-button[aria-expanded="true"] {
   border-color: transparent !important;
-  background-color: #dc493a !important;
   background-color: #ef5544 !important;
   color: #fff !important;
 }
