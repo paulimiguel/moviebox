@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronsUpDown, Edit3, Eye, EyeOff, Film, Filter, Grid2X2, Heart, LayoutGrid, List, ListChecks, Search, Tv, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronsUpDown, Edit3, Eye, EyeOff, Filter, Grid2X2, Heart, LayoutGrid, List, ListChecks, Search, X } from 'lucide-react';
 import type { MovieViewMode } from '@/components/MovieCard';
 import type { FavoriteFilter, MovieTypeFilter, SortDirection, WatchedFilter, WatchlistFilter } from '@/types/movie';
 
@@ -130,6 +130,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
     && props.watchlist === 'all'
     && props.emptyFieldsCount === 0;
   const filterButtonClass = (active: boolean) => `library-filter-button moviebox-translucent-action inline-flex h-9 w-[104px] items-center justify-center gap-1.5 rounded-md border px-1.5 text-xs font-semibold transition-colors ${active ? 'border-coral bg-coral text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`;
+  const quickTypeButtonClass = (active: boolean) => `library-filter-button moviebox-translucent-action inline-flex h-8 min-w-0 items-center justify-center rounded-md border px-1 text-[10px] font-semibold uppercase transition-colors ${active ? 'border-coral bg-coral text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`;
   const toggleGenre = (genreId: string) => {
     props.onGenreChange(
       props.genreIds.includes(genreId)
@@ -225,6 +226,10 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
               <button type="button" onClick={() => { setOpenMenu(null); props.onBulkModeChange('edit'); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><Edit3 className="h-4 w-4" />Editar campos comunes</button>
               <button type="button" onClick={() => { setOpenMenu(null); props.onEmptyFieldsSearch(); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><Search className="h-4 w-4" />Buscar campos vacíos</button>
             </div>}
+            <div className="mt-2 grid grid-cols-2 gap-1.5">
+              <button type="button" aria-pressed={props.type === 'movie'} onClick={() => { setOpenMenu(null); props.onTypeChange(props.type === 'movie' ? 'all' : 'movie'); }} className={quickTypeButtonClass(props.type === 'movie')}>Películas</button>
+              <button type="button" aria-pressed={props.type === 'series'} onClick={() => { setOpenMenu(null); props.onTypeChange(props.type === 'series' ? 'all' : 'series'); }} className={quickTypeButtonClass(props.type === 'series')}>Series</button>
+            </div>
           </div>
         </div>
       </div>
@@ -286,8 +291,6 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
             </div>
 
             <div className="flex flex-wrap gap-2 xl:col-span-3 2xl:col-span-1 2xl:flex-nowrap 2xl:pt-[22px]">
-              <button type="button" aria-pressed={props.type === 'movie'} onClick={() => props.onTypeChange(props.type === 'movie' ? 'all' : 'movie')} className={filterButtonClass(props.type === 'movie')}><Film className="h-4 w-4" />Película</button>
-              <button type="button" aria-pressed={props.type === 'series'} onClick={() => props.onTypeChange(props.type === 'series' ? 'all' : 'series')} className={filterButtonClass(props.type === 'series')}><Tv className="h-4 w-4" />Serie</button>
               <button type="button" aria-pressed={props.watched === 'watched'} onClick={() => props.onWatchedChange(props.watched === 'watched' ? 'all' : 'watched')} className={filterButtonClass(props.watched === 'watched')}><Eye className="h-4 w-4" />Watch</button>
               <button type="button" aria-pressed={props.watched === 'unwatched'} onClick={() => props.onWatchedChange(props.watched === 'unwatched' ? 'all' : 'unwatched')} className={filterButtonClass(props.watched === 'unwatched')}><EyeOff className="h-4 w-4" />No Watch</button>
               <button type="button" aria-pressed={props.favorite === 'favorites'} onClick={() => props.onFavoriteChange(props.favorite === 'favorites' ? 'all' : 'favorites')} className={filterButtonClass(props.favorite === 'favorites')}><Heart className={`h-4 w-4 ${props.favorite === 'favorites' ? 'fill-current' : ''}`} />Like</button>
