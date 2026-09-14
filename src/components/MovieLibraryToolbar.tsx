@@ -41,6 +41,9 @@ interface ToolbarProps {
   years: string[];
   onYearChange: (value: string[]) => void;
   onClearFilters: () => void;
+  emptyFieldsCount: number;
+  onEmptyFieldsSearch: () => void;
+  onClearEmptyFields: () => void;
 }
 
 const menuButton = 'library-toolbar-menu-button inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold uppercase text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50 xl:w-[150px]';
@@ -51,7 +54,7 @@ const searchScopeOptions: { value: MovieSearchScope; label: string }[] = [
 ];
 
 export const MovieLibraryToolbar = (props: ToolbarProps) => {
-  const [openMenu, setOpenMenu] = useState<'view' | 'sort' | 'genre' | 'platform' | null>(null);
+  const [openMenu, setOpenMenu] = useState<'view' | 'sort' | 'genre' | 'platform' | 'actions' | null>(null);
   const [genreSearch, setGenreSearch] = useState('');
   const [platformSearch, setPlatformSearch] = useState('');
   const [yearDraft, setYearDraft] = useState('');
@@ -89,7 +92,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
   const viewOptions: { value: MovieViewMode; label: string; icon: React.ReactNode }[] = [
     { value: 'medium', label: 'Iconos grandes', icon: <LayoutGrid className="h-4 w-4" /> },
     { value: 'mediumIcons', label: 'Iconos medianos', icon: <LayoutGrid className="h-3.5 w-3.5" /> },
-    { value: 'small', label: 'Iconos pequenos', icon: <Grid2X2 className="h-4 w-4" /> },
+    { value: 'small', label: 'Iconos pequeños', icon: <Grid2X2 className="h-4 w-4" /> },
     { value: 'list', label: 'Lista', icon: <List className="h-4 w-4" /> },
     { value: 'details', label: 'Detalles', icon: <ListChecks className="h-4 w-4" /> },
   ];
@@ -124,7 +127,8 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
     && props.type === 'all'
     && props.watched === 'all'
     && props.favorite === 'all'
-    && props.watchlist === 'all';
+    && props.watchlist === 'all'
+    && props.emptyFieldsCount === 0;
   const filterButtonClass = (active: boolean) => `library-filter-button moviebox-translucent-action inline-flex h-9 w-[104px] items-center justify-center gap-1.5 rounded-md border px-1.5 text-xs font-semibold transition-colors ${active ? 'border-coral bg-coral text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`;
   const toggleGenre = (genreId: string) => {
     props.onGenreChange(
@@ -154,7 +158,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
         <div className="min-w-0 self-center">
           <h1 className="font-bebas truncate text-xl font-normal text-ink sm:text-2xl">Títulos de {props.ownerName}</h1>
           <p className="mt-0.5 truncate text-xs text-slate-500">Mostrando {props.visibleCount} de {props.totalCount} movies</p>
-          {(selectedGenreNames.length > 0 || selectedPlatformNames.length > 0 || props.years.length > 0 || props.type !== 'all' || props.watched !== 'all' || props.favorite !== 'all' || props.watchlist !== 'all') && (
+          {(selectedGenreNames.length > 0 || selectedPlatformNames.length > 0 || props.years.length > 0 || props.type !== 'all' || props.watched !== 'all' || props.favorite !== 'all' || props.watchlist !== 'all' || props.emptyFieldsCount > 0) && (
             <div className="mt-2 flex flex-wrap gap-1">
               {selectedGenreNames.map((genre) => <button key={`active-genre-${genre.id}`} type="button" onClick={() => toggleGenre(genre.id)} className="inline-flex max-w-full items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar género ${genre.name}`}><span className="truncate">{genre.name}</span><X className="h-3 w-3 shrink-0" /></button>)}
               {selectedPlatformNames.map((platform) => <button key={`active-platform-${platform.id}`} type="button" onClick={() => props.onPlatformChange(props.platformIds.filter((id) => id !== platform.id))} className="inline-flex max-w-full items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar plataforma ${platform.name}`}><span className="truncate">{platform.name}</span><X className="h-3 w-3 shrink-0" /></button>)}
@@ -163,6 +167,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
               {props.watched !== 'all' && <button type="button" onClick={() => props.onWatchedChange('all')} className="inline-flex items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar filtro ${props.watched === 'watched' ? 'Watch' : 'No Watch'}`}>{props.watched === 'watched' ? 'Watch' : 'No Watch'}<X className="h-3 w-3" /></button>}
               {props.favorite === 'favorites' && <button type="button" onClick={() => props.onFavoriteChange('all')} className="inline-flex items-center gap-1 rounded bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-coral" title="Quitar filtro Like">Like<X className="h-3 w-3" /></button>}
               {props.watchlist === 'watchlist' && <button type="button" onClick={() => props.onWatchlistChange('all')} className="inline-flex items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title="Quitar filtro Watchlist">Watchlist<X className="h-3 w-3" /></button>}
+              {props.emptyFieldsCount > 0 && <button type="button" onClick={props.onClearEmptyFields} className="inline-flex items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title="Quitar búsqueda de campos vacíos">Campos vacíos: {props.emptyFieldsCount}<X className="h-3 w-3" /></button>}
               <button type="button" onClick={() => { props.onClearFilters(); setGenreSearch(''); setPlatformSearch(''); setYearDraft(''); setOpenMenu(null); }} className="ml-1 px-1 py-0.5 text-[11px] font-semibold uppercase text-coral hover:underline">Limpiar</button>
             </div>
           )}
@@ -192,7 +197,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 xl:grid-cols-3">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-4">
           <div className="relative">
             <button type="button" onClick={() => setOpenMenu(openMenu === 'view' ? null : 'view')} className={menuButton} aria-expanded={openMenu === 'view'}>{activeViewIcon}Ver<ChevronDown className="h-4 w-4 shrink-0" /></button>
             {openMenu === 'view' && <div className="library-toolbar-dropdown absolute right-0 top-[80px] z-40 w-52 rounded-md border border-slate-200 bg-white p-1.5 shadow-card xl:top-10">{viewOptions.map((option) => <button key={option.value} type="button" onClick={() => { props.onViewModeChange(option.value); setOpenMenu(null); }} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${props.viewMode === option.value ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`}>{option.icon}<span className="flex-1">{option.label}</span>{props.viewMode === option.value && <Check className="h-4 w-4 text-coral" />}</button>)}</div>}
@@ -202,6 +207,10 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
             {openMenu === 'sort' && <div className="library-toolbar-dropdown absolute right-0 top-[80px] z-40 w-52 rounded-md border border-slate-200 bg-white p-1.5 shadow-card xl:top-10">{sortOptions.map((option) => { const active = props.sortKey === option.value; return <button key={option.value} type="button" onClick={() => { props.onSortChange(option.value); setOpenMenu(null); }} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${active ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`}><Check className={`h-4 w-4 ${active ? 'text-coral' : 'text-transparent'}`} /><span className="flex-1">{option.label}</span>{active ? (props.sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />) : <ArrowUpDown className="h-4 w-4 opacity-30" />}</button>; })}</div>}
           </div>
           <button type="button" onClick={() => { setOpenMenu(null); props.onFiltersToggle(); }} className={`${menuButton} ${props.filtersOpen ? 'border-coral bg-red-50 text-coral' : ''}`}><Filter className="h-5 w-5 shrink-0" />Filtrar<ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${props.filtersOpen ? 'rotate-180' : ''}`} /></button>
+          <div className="relative">
+            <button type="button" onClick={() => setOpenMenu(openMenu === 'actions' ? null : 'actions')} className={`${menuButton} ${props.emptyFieldsCount ? 'border-coral bg-red-50 text-coral' : ''}`} aria-expanded={openMenu === 'actions'}><ListChecks className="h-5 w-5 shrink-0" />Acciones<ChevronDown className="h-4 w-4 shrink-0" /></button>
+            {openMenu === 'actions' && <div className="library-toolbar-dropdown absolute right-0 top-[80px] z-40 w-56 rounded-md border border-slate-200 bg-white p-1.5 shadow-card xl:top-10"><button type="button" onClick={() => { setOpenMenu(null); props.onEmptyFieldsSearch(); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><Search className="h-4 w-4" />Buscar campos vacíos</button></div>}
+          </div>
         </div>
       </div>
 

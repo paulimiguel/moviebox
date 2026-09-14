@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { CatalogToolbar, catalogGridClass, type CatalogViewMode } from '@/components/CatalogToolbar';
 import { api, resolveMovieImageUrl } from '@/services/api';
+import { getPersistedSortDirection, persistSortDirection } from '@/utils/persistedSort';
 import type { MovieCollection, SortDirection } from '@/types/movie';
 
 export const CollectionsPage = () => {
@@ -25,7 +26,9 @@ export const CollectionsPage = () => {
   const [collectionToDelete, setCollectionToDelete] = useState<MovieCollection | null>(null);
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<CatalogViewMode>('large');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [sortDirection, setSortDirection] = useState<SortDirection>(() => getPersistedSortDirection('moviebox:collections-sort'));
+
+  useEffect(() => persistSortDirection('moviebox:collections-sort', sortDirection), [sortDirection]);
 
   const collections = useQuery({ queryKey: ['collections'], queryFn: api.collections.getAll });
   const visibleCollections = useMemo(() => {

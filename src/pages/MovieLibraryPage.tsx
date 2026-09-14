@@ -6,6 +6,7 @@ import { MovieBulkEditModal } from '@/components/MovieBulkEditModal';
 import { MovieCard, type MovieViewMode } from '@/components/MovieCard';
 import { MovieDetailModal } from '@/components/MovieDetailModal';
 import { MovieEditModal } from '@/components/MovieEditModal';
+import { EmptyFieldsModal, type EmptyMovieField } from '@/components/EmptyFieldsModal';
 import { MovieLibraryToolbar, type MovieBulkMode, type MovieLibrarySort, type MovieSearchScope } from '@/components/MovieLibraryToolbar';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/services/api';
@@ -17,6 +18,27 @@ const VIEW_MODE_STORAGE_KEY = 'moviebox:view-mode';
 const VIEW_MODES: MovieViewMode[] = ['medium', 'mediumIcons', 'small', 'list', 'details'];
 type LibraryFilterPreset = 'all' | 'movie' | 'series' | 'watchlist' | 'favorite' | 'watched' | 'unwatched';
 const LIBRARY_FILTER_PRESETS: LibraryFilterPreset[] = ['all', 'movie', 'series', 'watchlist', 'favorite', 'watched', 'unwatched'];
+const LIBRARY_SORT_STORAGE_KEY = 'moviebox:library-sort';
+
+const getInitialLibrarySort = (): { key: MovieLibrarySort; direction: SortDirection } => {
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(LIBRARY_SORT_STORAGE_KEY) || '{}') as { key?: MovieLibrarySort; direction?: SortDirection };
+    const keys: MovieLibrarySort[] = ['title', 'createdAt', 'year', 'collection', 'genre', 'imdbRating'];
+    return { key: keys.includes(parsed.key as MovieLibrarySort) ? parsed.key! : 'title', direction: parsed.direction === 'desc' ? 'desc' : 'asc' };
+  } catch {
+    return { key: 'title', direction: 'asc' };
+  }
+};
+
+const isMovieFieldEmpty = (movie: MovieItem, field: EmptyMovieField) => {
+  if (field === 'seasons') return movie.type === 'series' && movie.seasons == null;
+  if (field === 'totalEpisodes') return movie.type === 'series' && movie.totalEpisodes == null;
+  if (field === 'images' || field === 'countries' || field === 'genres' || field === 'keywords' || field === 'platforms' || field === 'collections') return movie[field].length === 0;
+  if (field === 'directors') return !movie.credits.some((credit) => credit.creditType === 'director');
+  if (field === 'cast') return !movie.credits.some((credit) => credit.creditType === 'cast');
+  const value = movie[field];
+  return value == null || (typeof value === 'string' && value.trim() === '');
+};
 
 const getInitialViewMode = (): MovieViewMode => {
   try {
@@ -39,8 +61,9 @@ export const MovieLibraryPage = () => {
   const [watched, setWatched] = useState<WatchedFilter>('all');
   const [favorite, setFavorite] = useState<FavoriteFilter>('all');
   const [watchlist, setWatchlist] = useState<WatchlistFilter>('all');
-  const [sortKey, setSortKey] = useState<MovieLibrarySort>('title');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const initialSort = useMemo(getInitialLibrarySort, []);
+  const [sortKey, setSortKey] = useState<MovieLibrarySort>(initialSort.key);
+  const [sortDirection, setSortDirection] = useState<SortDirection>(initialSort.direction);
   const [viewMode, setViewMode] = useState<MovieViewMode>(getInitialViewMode);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [bulkMode, setBulkMode] = useState<MovieBulkMode>(null);
@@ -49,6 +72,16 @@ export const MovieLibraryPage = () => {
   const [editingMovie, setEditingMovie] = useState<MovieItem | null>(null);
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [emptyFieldsOpen, setEmptyFieldsOpen] = useState(false);
+  const [emptyFields, setEmptyFields] = useState<EmptyMovieField[]>([]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(LIBRARY_SORT_STORAGE_KEY, JSON.stringify({ key: sortKey, direction: sortDirection }));
+    } catch {
+      // The selected order remains active for the current session.
+    }
+  }, [sortDirection, sortKey]);
 
   useEffect(() => {
     const applyLibraryFilter = (preset: LibraryFilterPreset) => {
@@ -60,6 +93,7 @@ export const MovieLibraryPage = () => {
       setWatched(preset === 'watched' ? 'watched' : preset === 'unwatched' ? 'unwatched' : 'all');
       setFavorite(preset === 'favorite' ? 'favorites' : 'all');
       setWatchlist(preset === 'watchlist' ? 'watchlist' : 'all');
+      setEmptyFields([]);
       setFiltersOpen(false);
       setBulkMode(null);
       setSelectedIds(new Set());
@@ -168,6 +202,7 @@ export const MovieLibraryPage = () => {
       if (watched === 'unwatched' && movie.watched) return false;
       if (favorite === 'favorites' && !movie.favorite) return false;
       if (watchlist === 'watchlist' && !movie.watchlist) return false;
+      if (emptyFields.length && !emptyFields.some((field) => isMovieFieldEmpty(movie, field))) return false;
       return true;
     });
     const textValue = (movie: MovieItem) => {
@@ -188,7 +223,7 @@ export const MovieLibraryPage = () => {
       }
       return factor * textValue(left).localeCompare(textValue(right), 'es');
     });
-  }, [favorite, genreIds, moviesQuery.data, platformIds, search, searchScope, sortDirection, sortKey, type, watched, watchlist, years]);
+  }, [emptyFields, favorite, genreIds, moviesQuery.data, platformIds, search, searchScope, sortDirection, sortKey, type, watched, watchlist, years]);
 
   const selectedMovies = (moviesQuery.data || []).filter((movie) => selectedIds.has(movie.id));
   const refreshLibrary = () => {
@@ -217,6 +252,10 @@ export const MovieLibraryPage = () => {
     setBulkMode(mode);
     setSelectedIds(new Set());
     if (mode) setFiltersOpen(false);
+  };
+  const adjacentMovie = (movie: MovieItem, offset: -1 | 1) => {
+    const index = filteredMovies.findIndex((item) => item.id === movie.id);
+    return index >= 0 ? filteredMovies[index + offset] || null : null;
   };
   const gridClass = viewMode === 'small'
     ? 'grid grid-cols-2 gap-2 min-[520px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-9'
@@ -260,7 +299,10 @@ export const MovieLibraryPage = () => {
         onWatchlistChange={setWatchlist}
         years={years}
         onYearChange={setYears}
-        onClearFilters={() => { setGenreIds([]); setPlatformIds([]); setType('all'); setWatched('all'); setFavorite('all'); setWatchlist('all'); setYears([]); }}
+        onClearFilters={() => { setGenreIds([]); setPlatformIds([]); setType('all'); setWatched('all'); setFavorite('all'); setWatchlist('all'); setYears([]); setEmptyFields([]); }}
+        emptyFieldsCount={emptyFields.length}
+        onEmptyFieldsSearch={() => setEmptyFieldsOpen(true)}
+        onClearEmptyFields={() => setEmptyFields([])}
       />
 
       {bulkMode && (
@@ -287,8 +329,9 @@ export const MovieLibraryPage = () => {
           : <section className="overflow-hidden rounded-md">{filteredMovies.map((movie) => <MovieCard key={movie.id} movie={movie} mode={viewMode} onOpen={setDetailMovie} onPersonal={(item, field) => personalMutation.mutate({ movie: item, field })} onRating={(item, rating) => ratingMutation.mutate({ movie: item, rating })} onEdit={setEditingMovie} onDelete={(item) => { setSelectedIds(new Set([item.id])); setDeleteConfirmOpen(true); }} selectionMode={Boolean(bulkMode)} selected={selectedIds.has(movie.id)} onSelectionChange={toggleSelection} />)}</section>}
       </div>
 
-      {detailMovie && <MovieDetailModal movie={detailMovie} onClose={() => setDetailMovie(null)} onEdit={(movie) => { setDetailMovie(null); setEditingMovie(movie); }} onDelete={(movie) => { setSelectedIds(new Set([movie.id])); setDetailMovie(null); setDeleteConfirmOpen(true); }} onPersonal={(movie, field) => personalMutation.mutate({ movie, field })} onRating={(movie, rating) => ratingMutation.mutate({ movie, rating })} onCollections={(movie, collectionIds) => collectionsMutation.mutate({ movie, collectionIds })} />}
-      {editingMovie && <MovieEditModal movie={editingMovie} onClose={() => setEditingMovie(null)} onSaved={() => { refreshLibrary(); setEditingMovie(null); }} />}
+      {detailMovie && <MovieDetailModal movie={detailMovie} onClose={() => setDetailMovie(null)} onEdit={(movie) => { setDetailMovie(null); setEditingMovie(movie); }} onDelete={(movie) => { setSelectedIds(new Set([movie.id])); setDetailMovie(null); setDeleteConfirmOpen(true); }} onPersonal={(movie, field) => personalMutation.mutate({ movie, field })} onRating={(movie, rating) => ratingMutation.mutate({ movie, rating })} onCollections={(movie, collectionIds) => collectionsMutation.mutate({ movie, collectionIds })} onPrevious={adjacentMovie(detailMovie, -1) ? () => setDetailMovie(adjacentMovie(detailMovie, -1)) : undefined} onNext={adjacentMovie(detailMovie, 1) ? () => setDetailMovie(adjacentMovie(detailMovie, 1)) : undefined} />}
+      {editingMovie && <MovieEditModal key={editingMovie.id} movie={editingMovie} onClose={() => setEditingMovie(null)} onSaved={() => { refreshLibrary(); setEditingMovie(null); }} onPrevious={adjacentMovie(editingMovie, -1) ? () => setEditingMovie(adjacentMovie(editingMovie, -1)) : undefined} onNext={adjacentMovie(editingMovie, 1) ? () => setEditingMovie(adjacentMovie(editingMovie, 1)) : undefined} />}
+      {emptyFieldsOpen && <EmptyFieldsModal selected={emptyFields} onClose={() => setEmptyFieldsOpen(false)} onApply={(fields) => { setEmptyFields(fields); setEmptyFieldsOpen(false); }} />}
       {bulkEditOpen && <MovieBulkEditModal movies={selectedMovies} genres={metadataQuery.data?.genres || []} platforms={metadataQuery.data?.platforms || []} collections={collectionsQuery.data || []} onClose={() => setBulkEditOpen(false)} onSaved={() => { refreshLibrary(); setBulkEditOpen(false); setSelectedIds(new Set()); setBulkMode(null); }} />}
       {deleteConfirmOpen && (
         <div className="fixed inset-0 z-[70] grid place-items-center bg-ink/55 p-4" role="dialog" aria-modal="true" aria-labelledby="delete-movies-title">

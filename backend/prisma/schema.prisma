@@ -41,6 +41,7 @@ model MovieItem {
   watched            Boolean   @default(false)
   favorite           Boolean   @default(false)
   watchlist          Boolean   @default(false)
+  instagramRecommendation Boolean @default(false)
   personalRating     Float?
   imdbRating         Float?
   tmdbId             Int?

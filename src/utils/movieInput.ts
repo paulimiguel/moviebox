@@ -12,6 +12,7 @@ export const movieToInput = (movie: MovieItem): CreateMovieInput => ({
   watched: movie.watched,
   favorite: movie.favorite,
   watchlist: movie.watchlist,
+  instagramRecommendation: movie.instagramRecommendation,
   personalRating: movie.personalRating,
   imdbRating: movie.imdbRating,
   tmdbId: movie.tmdbId,

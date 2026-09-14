@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
+  ArrowRight,
   Bookmark,
   Check,
   Eye,
@@ -30,6 +31,7 @@ export const MovieDetailPage = () => {
     queryKey: ["movie", id],
     queryFn: () => api.movies.getOne(id),
   });
+  const moviesQuery = useQuery({ queryKey: ['movies'], queryFn: api.movies.getAll });
   const personal = useMutation({
     mutationFn: (data: {
       favorite?: boolean;
@@ -71,7 +73,11 @@ export const MovieDetailPage = () => {
       </main>
     );
   const movie = movieQuery.data;
-  const title = movie.spanishTitle || movie.originalTitle;
+  const title = movie.originalTitle;
+  const spanishTitle = movie.spanishTitle && movie.spanishTitle !== movie.originalTitle ? movie.spanishTitle : null;
+  const movieIndex = (moviesQuery.data || []).findIndex((item) => item.id === movie.id);
+  const previousMovie = movieIndex > 0 ? moviesQuery.data?.[movieIndex - 1] : undefined;
+  const nextMovie = movieIndex >= 0 ? moviesQuery.data?.[movieIndex + 1] : undefined;
   const mainImage = movie.images[selectedImage] || movie.images[0];
   const directors = movie.credits.filter(
     (credit) => credit.creditType === "director",
@@ -93,6 +99,8 @@ export const MovieDetailPage = () => {
           <Link to="/" className="icon-button" title="Volver">
             <ArrowLeft className="h-4 w-4" />
           </Link>
+          <button type="button" onClick={() => previousMovie && navigate(`/titulo/${previousMovie.id}`)} disabled={!previousMovie} className="icon-button" title="Título anterior" aria-label="Título anterior"><ArrowLeft className="h-4 w-4" /></button>
+          <button type="button" onClick={() => nextMovie && navigate(`/titulo/${nextMovie.id}`)} disabled={!nextMovie} className="icon-button" title="Título siguiente" aria-label="Título siguiente"><ArrowRight className="h-4 w-4" /></button>
           <div className="ml-auto flex gap-2">
             <button
               type="button"
@@ -186,10 +194,9 @@ export const MovieDetailPage = () => {
             <h1 className="text-3xl font-bold text-ink sm:text-4xl">
               {title}
             </h1>
-            {movie.spanishTitle &&
-              movie.spanishTitle !== movie.originalTitle && (
+            {spanishTitle && (
                 <p className="mt-1 text-lg text-slate-500">
-                  {movie.originalTitle}
+                  {spanishTitle}
                 </p>
               )}
             <p className="mt-3 text-sm text-slate-500">
@@ -259,15 +266,17 @@ export const MovieDetailPage = () => {
                   </dd>
                 </div>
               )}
-              {(movie.platforms.length > 0 || movie.trailerUrl) && (
-                <div>
+              <div>
                   <dt className="text-xs font-semibold uppercase text-slate-400">
                     Plataformas
                   </dt>
                   <dd className="mt-2"><PlatformLogos platforms={movie.platforms} large /></dd>
                   {movie.trailerUrl && <a href={movie.trailerUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-opacity hover:opacity-70"><img src="/youtube-play.png" alt="" className="h-4 w-[23px] object-contain" aria-hidden="true" />Ver trailer</a>}
-                </div>
-              )}
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase text-slate-400">Recomendación de Instagram</dt>
+                <dd className="mt-1 text-sm text-ink">{movie.instagramRecommendation ? 'Sí' : 'No'}</dd>
+              </div>
               {movie.type === "series" && (
                 <div>
                   <dt className="text-xs font-semibold uppercase text-slate-400">
@@ -328,7 +337,7 @@ export const MovieDetailPage = () => {
         </div>
       </div>
       {editing && (
-        <MovieEditModal
+        <MovieEditModal key={movie.id}
           movie={movie}
           onClose={() => setEditing(false)}
           onSaved={(saved) => {
@@ -336,6 +345,8 @@ export const MovieDetailPage = () => {
             queryClient.invalidateQueries({ queryKey: ["movies"] });
             setEditing(false);
           }}
+          onPrevious={previousMovie ? () => navigate(`/titulo/${previousMovie.id}`) : undefined}
+          onNext={nextMovie ? () => navigate(`/titulo/${nextMovie.id}`) : undefined}
         />
       )}
     </main>

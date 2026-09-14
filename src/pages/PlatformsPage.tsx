@@ -6,6 +6,7 @@ import { Header } from '@/components/Header';
 import { CatalogToolbar, catalogGridClass, type CatalogViewMode } from '@/components/CatalogToolbar';
 import { resolvePlatformLogoUrl } from '@/components/PlatformLogos';
 import { api } from '@/services/api';
+import { getPersistedSortDirection, persistSortDirection } from '@/utils/persistedSort';
 import type { PlatformCatalogItem, SortDirection } from '@/types/movie';
 
 export const PlatformsPage = () => {
@@ -24,7 +25,9 @@ export const PlatformsPage = () => {
   const [editError, setEditError] = useState('');
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<CatalogViewMode>('medium');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [sortDirection, setSortDirection] = useState<SortDirection>(() => getPersistedSortDirection('moviebox:platforms-sort'));
+
+  useEffect(() => persistSortDirection('moviebox:platforms-sort', sortDirection), [sortDirection]);
 
   const visiblePlatforms = useMemo(() => {
     const query = search.trim().toLocaleLowerCase('es');

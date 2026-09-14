@@ -127,6 +127,7 @@ export interface MovieItem {
   watched: boolean;
   favorite: boolean;
   watchlist: boolean;
+  instagramRecommendation: boolean;
   personalRating: number | null;
   imdbRating: number | null;
   tmdbId: number | null;
@@ -226,6 +227,7 @@ export interface CreateMovieInput {
   watched?: boolean;
   favorite?: boolean;
   watchlist?: boolean;
+  instagramRecommendation?: boolean;
   personalRating?: number | null;
   imdbRating?: number | null;
   tmdbId?: number | null;

@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { CatalogToolbar, catalogGridClass, type CatalogViewMode } from '@/components/CatalogToolbar';
 import { api, resolveMovieImageUrl } from '@/services/api';
+import { getPersistedSortDirection, persistSortDirection } from '@/utils/persistedSort';
 import type { GenreCatalogItem, SortDirection } from '@/types/movie';
 
 const resolveGenreImageUrl = (genre: Pick<GenreCatalogItem, 'imagePath'>) => {
@@ -30,7 +31,9 @@ export const GenresPage = () => {
   const [editError, setEditError] = useState('');
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<CatalogViewMode>('large');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [sortDirection, setSortDirection] = useState<SortDirection>(() => getPersistedSortDirection('moviebox:genres-sort'));
+
+  useEffect(() => persistSortDirection('moviebox:genres-sort', sortDirection), [sortDirection]);
 
   const visibleGenres = useMemo(() => {
     const query = search.trim().toLocaleLowerCase('es');

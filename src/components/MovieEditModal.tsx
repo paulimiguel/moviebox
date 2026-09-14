@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowDown, ArrowUp, Bookmark, Eye, Heart, ImagePlus, Loader2, Plus, Trash2, X } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Bookmark, Eye, Heart, ImagePlus, Loader2, Plus, Trash2, X } from 'lucide-react';
 import { api, resolveMovieImageUrl } from '@/services/api';
 import { StarRating } from '@/components/StarRating';
 import { movieToInput } from '@/utils/movieInput';
@@ -16,6 +16,7 @@ const AssociationPicker = ({ label, options, selected, onChange }: {
   selected: string[];
   onChange: (names: string[]) => void;
 }) => {
+  const [draft, setDraft] = useState('');
   const visibleOptions = useMemo(() => {
     const byName = new Map(options.map((option) => [option.name.toLocaleLowerCase('es'), option]));
     selected.forEach((name) => {
@@ -27,6 +28,14 @@ const AssociationPicker = ({ label, options, selected, onChange }: {
   const toggle = (name: string) => onChange(selected.includes(name)
     ? selected.filter((item) => item !== name)
     : [...selected, name]);
+  const addDraft = () => {
+    const name = draft.trim();
+    if (!name) return;
+    const existing = visibleOptions.find((option) => normalizeValue(option.name) === normalizeValue(name));
+    const value = existing?.name || name;
+    if (!selected.some((item) => normalizeValue(item) === normalizeValue(value))) onChange([...selected, value]);
+    setDraft('');
+  };
 
   return (
     <fieldset>
@@ -39,22 +48,28 @@ const AssociationPicker = ({ label, options, selected, onChange }: {
           </label>
         )) : <p className="px-2 py-3 text-sm text-slate-400">No hay opciones.</p>}
       </div>
+      <div className="mt-2 flex gap-2">
+        <input value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addDraft(); } }} className="control min-w-0 flex-1" placeholder={`Agregar ${label.toLocaleLowerCase('es')}`} />
+        <button type="button" onClick={addDraft} disabled={!draft.trim()} className="icon-button" title={`Agregar ${label.toLocaleLowerCase('es')}`} aria-label={`Agregar ${label.toLocaleLowerCase('es')}`}><Plus className="h-4 w-4" /></button>
+      </div>
     </fieldset>
   );
 };
 
-export const MovieEditModal = ({ movie, onClose, onSaved }: {
+export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: {
   movie: MovieItem;
   onClose: () => void;
   onSaved: (movie: MovieItem) => void;
+  onPrevious?: () => void;
+  onNext?: () => void;
 }) => {
   const queryClient = useQueryClient();
   const collections = useQuery({ queryKey: ['collections'], queryFn: api.collections.getAll });
   const metadata = useQuery({ queryKey: ['metadata'], queryFn: api.metadata.getAll });
-  const [editAdditionalFields, setEditAdditionalFields] = useState(false);
   const [watched, setWatched] = useState(movie.watched);
   const [favorite, setFavorite] = useState(movie.favorite);
   const [watchlist, setWatchlist] = useState(movie.watchlist);
+  const [instagramRecommendation, setInstagramRecommendation] = useState(movie.instagramRecommendation);
   const [genreNames, setGenreNames] = useState(movie.genres.map((genre) => genre.name));
   const [platformNames, setPlatformNames] = useState(movie.platforms.map((platform) => platform.name));
   const [collectionIds, setCollectionIds] = useState(movie.collections.map((collection) => collection.id));
@@ -113,12 +128,13 @@ export const MovieEditModal = ({ movie, onClose, onSaved }: {
   const save = useMutation({
     mutationFn: () => {
       const castNames = splitValues(cast);
-      if (editAdditionalFields && castNames.length > 6) throw new Error('El reparto principal admite hasta 6 personas');
+      if (castNames.length > 6) throw new Error('El reparto principal admite hasta 6 personas');
       return api.movies.update(movie.id, {
         ...movieToInput(movie),
         watched,
         favorite,
         watchlist,
+        instagramRecommendation,
         personalRating,
         collectionIds,
         genres: genreNames.map((name, order) => {
@@ -140,8 +156,7 @@ export const MovieEditModal = ({ movie, onClose, onSaved }: {
             altText: current?.altText,
           };
         }),
-        ...(editAdditionalFields ? {
-          type,
+        type,
           originalTitle: originalTitle.trim(),
           spanishTitle: spanishTitle.trim() || null,
           year: numberOrNull(year),
@@ -171,8 +186,7 @@ export const MovieEditModal = ({ movie, onClose, onSaved }: {
           imdbUrl: imdbUrl.trim() || null,
           tmdbUrl: tmdbUrl.trim() || null,
           justwatchUrl: justwatchUrl.trim() || null,
-          trailerUrl: trailerUrl.trim() || null,
-        } : {}),
+        trailerUrl: trailerUrl.trim() || null,
       });
     },
     onSuccess: onSaved,
@@ -230,11 +244,15 @@ export const MovieEditModal = ({ movie, onClose, onSaved }: {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/55 sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="movie-edit-title">
-      <form onSubmit={(event) => { event.preventDefault(); setError(''); save.mutate(); }} className={`max-h-[96vh] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl transition-[max-width] sm:rounded-md ${editAdditionalFields ? 'sm:max-w-5xl' : 'sm:max-w-3xl'}`}>
+      <form onSubmit={(event) => { event.preventDefault(); setError(''); save.mutate(); }} className="movie-detail-modal max-h-[96vh] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-5xl sm:rounded-md">
         <header className="flex h-16 items-center gap-3 border-b border-slate-200 bg-white px-4 sm:px-6">
+          <div className="flex shrink-0 gap-1">
+            <button type="button" onClick={onPrevious} disabled={!onPrevious} className="icon-button border-0 shadow-none" title="Título anterior" aria-label="Título anterior"><ArrowLeft className="h-5 w-5" /></button>
+            <button type="button" onClick={onNext} disabled={!onNext} className="icon-button border-0 shadow-none" title="Título siguiente" aria-label="Título siguiente"><ArrowRight className="h-5 w-5" /></button>
+          </div>
           <div className="min-w-0">
             <h2 id="movie-edit-title" className="truncate text-lg font-semibold text-ink">Editar {movie.originalTitle}</h2>
-            <p className="text-xs text-slate-500">{editAdditionalFields ? 'Todos los datos del título' : 'Datos personales del título'}</p>
+            <p className="text-xs text-slate-500">Todos los datos del título</p>
           </div>
           <button type="button" onClick={onClose} className="icon-button ml-auto border-0 shadow-none" title="Cerrar" aria-label="Cerrar"><X className="h-5 w-5" /></button>
         </header>
@@ -246,6 +264,13 @@ export const MovieEditModal = ({ movie, onClose, onSaved }: {
               <button type="button" aria-pressed={watched} onClick={() => setWatched((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${watched ? 'border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]' : ''}`}><Eye className="h-[18px] w-[18px]" />Watch</button>
               <button type="button" aria-pressed={favorite} onClick={() => setFavorite((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${favorite ? 'border-coral bg-red-50 text-coral' : ''}`}><Heart className={`h-4 w-4 ${favorite ? 'fill-current' : ''}`} />Like</button>
               <button type="button" aria-pressed={watchlist} onClick={() => setWatchlist((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${watchlist ? 'border-aqua bg-mist text-aqua' : ''}`}><Bookmark className={`h-4 w-4 ${watchlist ? 'fill-current' : ''}`} />Watchlist</button>
+            </div>
+            <div className="mt-3 flex items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2">
+              <span className="text-sm font-medium text-ink">Recomendación de Instagram</span>
+              <button type="button" role="switch" aria-checked={instagramRecommendation} onClick={() => setInstagramRecommendation((current) => !current)} className={`relative h-7 w-12 rounded-full transition-colors ${instagramRecommendation ? 'bg-coral' : 'bg-slate-300'}`}>
+                <span className={`absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${instagramRecommendation ? 'translate-x-5' : ''}`} />
+                <span className="sr-only">{instagramRecommendation ? 'Sí' : 'No'}</span>
+              </button>
             </div>
           </section>
 
@@ -281,7 +306,7 @@ export const MovieEditModal = ({ movie, onClose, onSaved }: {
             </div>
           </div>
 
-          {editAdditionalFields && <section className="order-last mt-5 flex flex-col rounded-md border border-slate-200 bg-white p-4">
+          <section className="order-last mt-5 flex flex-col rounded-md border border-slate-200 bg-white p-4">
             <h3 className="field-label mb-3">Otros campos</h3>
             <section className={`relative order-last mt-5 rounded-md border-2 border-dashed p-3 transition-colors ${isDraggingImages ? 'border-coral bg-red-50' : 'border-slate-200'}`}
               onDragEnter={(event) => { event.preventDefault(); setIsDraggingImages(true); }}
@@ -333,15 +358,14 @@ export const MovieEditModal = ({ movie, onClose, onSaved }: {
               <label><span className="field-label">Link JustWatch</span><input type="url" value={justwatchUrl} onChange={(event) => setJustwatchUrl(event.target.value)} className="control w-full" placeholder="https://..." /></label>
               <label><span className="field-label">Link del trailer</span><input type="url" value={trailerUrl} onChange={(event) => setTrailerUrl(event.target.value)} className="control w-full" placeholder="https://..." /></label>
             </div>
-          </section>}
+          </section>
 
           {error && <p className="order-last mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
         </div>
 
         <footer className="flex h-16 items-center justify-end gap-2 border-t border-slate-200 bg-white px-4 sm:px-6">
-          <button type="button" onClick={() => setEditAdditionalFields((current) => !current)} className="secondary-button">{editAdditionalFields ? 'Ocultar otros campos' : 'Editar otros campos'}</button>
           <button type="button" onClick={onClose} className="secondary-button">Cancelar</button>
-          <button type="submit" disabled={save.isPending || imageUpload.isPending || createCollection.isPending || (editAdditionalFields && !originalTitle.trim())} className="primary-button">{save.isPending && <Loader2 className="h-4 w-4 animate-spin" />}Guardar</button>
+          <button type="submit" disabled={save.isPending || imageUpload.isPending || createCollection.isPending || !originalTitle.trim()} className="primary-button">{save.isPending && <Loader2 className="h-4 w-4 animate-spin" />}Guardar</button>
         </footer>
       </form>
     </div>
