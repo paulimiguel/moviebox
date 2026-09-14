@@ -250,12 +250,10 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
             <h2 id="movie-edit-title" className="truncate text-lg font-semibold text-ink">Editar {movie.originalTitle}</h2>
             <p className="text-xs text-slate-500">Todos los datos del título</p>
           </div>
-          <div className="ml-auto flex shrink-0 items-center gap-1">
-            <div className="mr-2 flex overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
-              <button type="button" onClick={onPrevious} disabled={!onPrevious} className="icon-button rounded-none border-0 shadow-none" title="Título anterior" aria-label="Título anterior"><ArrowLeft className="h-5 w-5" /></button>
-              <button type="button" onClick={onNext} disabled={!onNext} className="icon-button rounded-none border-0 border-l border-slate-200 shadow-none" title="Título siguiente" aria-label="Título siguiente"><ArrowRight className="h-5 w-5" /></button>
-            </div>
-            <button type="button" onClick={onClose} className="icon-button border-0 shadow-none" title="Cerrar" aria-label="Cerrar"><X className="h-5 w-5" /></button>
+          <div className="ml-auto flex shrink-0 overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
+            <button type="button" onClick={onPrevious} disabled={!onPrevious} className="icon-button rounded-none border-0 shadow-none" title="Título anterior" aria-label="Título anterior"><ArrowLeft className="h-5 w-5" /></button>
+            <button type="button" onClick={onNext} disabled={!onNext} className="icon-button rounded-none border-0 border-l border-slate-200 shadow-none" title="Título siguiente" aria-label="Título siguiente"><ArrowRight className="h-5 w-5" /></button>
+            <button type="button" onClick={onClose} className="icon-button rounded-none border-0 border-l border-slate-200 shadow-none" title="Cerrar" aria-label="Cerrar"><X className="h-5 w-5" /></button>
           </div>
         </header>
 
