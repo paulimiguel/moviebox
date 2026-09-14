@@ -54,6 +54,9 @@ export const AddMoviesPage = () => {
     suggestionType === 'all' || candidate.type === suggestionType
   )), [suggestionType, suggestions.data]);
   const suggestionKey = (candidate: TmdbSuggestionCandidate) => `${candidate.type}-${candidate.tmdbId}-${candidate.imdbId}`;
+  const suggestionExternalUrl = (candidate: TmdbSuggestionCandidate) => candidate.imdbId
+    ? `https://www.imdb.com/title/${candidate.imdbId}/`
+    : `https://www.themoviedb.org/${candidate.type === 'movie' ? 'movie' : 'tv'}/${candidate.tmdbId}`;
   const addedMovieIdFor = (candidate: TmdbSuggestionCandidate) => addedMovieIds[suggestionKey(candidate)] || (library.data || []).find((movie) => (
     movie.tmdbId === candidate.tmdbId || movie.imdbId === candidate.imdbId
   ))?.id;
@@ -258,7 +261,9 @@ export const AddMoviesPage = () => {
               const added = Boolean(addedMovieId);
               const adding = importSuggestion.isPending && importSuggestion.variables?.tmdbId === candidate.tmdbId;
               const openAddedMovie = () => { if (addedMovieId) navigate(`/titulo/${addedMovieId}`); };
-              return <article key={`${candidate.type}-${candidate.tmdbId}`} role={added ? 'button' : undefined} tabIndex={added ? 0 : undefined} onClick={openAddedMovie} onKeyDown={(event) => { if (added && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openAddedMovie(); } }} className={`movie-card flex min-w-0 flex-col overflow-hidden rounded-md bg-white shadow-card ${added ? 'cursor-pointer transition-transform hover:-translate-y-0.5' : ''}`}>
+              const externalUrl = suggestionExternalUrl(candidate);
+              const openExternalResult = () => window.open(externalUrl, '_blank', 'noopener,noreferrer');
+              return <article key={`${candidate.type}-${candidate.tmdbId}`} role="link" tabIndex={0} onClick={openExternalResult} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openExternalResult(); } }} className="movie-card flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-md bg-white shadow-card transition-transform hover:-translate-y-0.5" title={`Abrir ${candidate.imdbId ? 'IMDb' : 'TMDB'} en una pestaña nueva`}>
                 <div className="relative aspect-[2/3] bg-mist">
                   {candidate.posterUrl ? <img src={candidate.posterUrl} alt={candidate.title} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-aqua/70">{candidate.type === 'movie' ? <Film className="h-12 w-12" /> : <Tv className="h-12 w-12" />}</div>}
                   <span className={`absolute left-2 top-2 rounded px-2 py-1 text-[9px] font-semibold uppercase text-white shadow-sm ${candidate.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>{candidate.type === 'movie' ? 'Película' : 'Serie'}</span>
@@ -315,15 +320,17 @@ export const AddMoviesPage = () => {
                     {group.candidates.slice(0, 5).map((candidate) => {
                       const selected = (selectedIds[groupIndex] || []).includes(candidate.imdbId);
                       return (
-                        <label key={`${candidate.type}-${candidate.imdbId}`} className={`flex cursor-pointer items-center gap-4 p-3 sm:px-4 ${selected ? 'bg-mist' : 'hover:bg-slate-50'}`}>
-                          <input type="checkbox" checked={selected} onChange={() => setSelectedIds((current) => { const groupIds = current[groupIndex] || []; return { ...current, [groupIndex]: selected ? groupIds.filter((imdbId) => imdbId !== candidate.imdbId) : [...groupIds, candidate.imdbId] }; })} className="h-4 w-4 shrink-0 rounded accent-aqua" />
-                          <PosterThumbnail candidate={candidate} />
-                          <span className="min-w-0 flex-1">
-                            <span className="block font-semibold text-ink">{candidate.title}</span>
-                            {candidate.originalTitle !== candidate.title && <span className="block truncate text-sm text-slate-500">{candidate.originalTitle}</span>}
-                            <span className="mt-1 block text-xs font-medium uppercase text-slate-400">{candidate.type === 'movie' ? 'Película' : 'Serie'}{candidate.year ? ` · ${candidate.year}` : ''}</span>
-                          </span>
-                        </label>
+                        <div key={`${candidate.type}-${candidate.imdbId}`} className={`flex items-center gap-4 p-3 sm:px-4 ${selected ? 'bg-mist' : 'hover:bg-slate-50'}`}>
+                          <input type="checkbox" checked={selected} onChange={() => setSelectedIds((current) => { const groupIds = current[groupIndex] || []; return { ...current, [groupIndex]: selected ? groupIds.filter((imdbId) => imdbId !== candidate.imdbId) : [...groupIds, candidate.imdbId] }; })} className="h-4 w-4 shrink-0 cursor-pointer rounded accent-aqua" aria-label={`Seleccionar ${candidate.title}`} />
+                          <a href={`https://www.imdb.com/title/${candidate.imdbId}/`} target="_blank" rel="noreferrer" className="flex min-w-0 flex-1 items-center gap-4" title="Abrir IMDb en una pestaña nueva">
+                            <PosterThumbnail candidate={candidate} />
+                            <span className="min-w-0 flex-1">
+                              <span className="block font-semibold text-ink">{candidate.title}</span>
+                              {candidate.originalTitle !== candidate.title && <span className="block truncate text-sm text-slate-500">{candidate.originalTitle}</span>}
+                              <span className="mt-1 block text-xs font-medium uppercase text-slate-400">{candidate.type === 'movie' ? 'Película' : 'Serie'}{candidate.year ? ` · ${candidate.year}` : ''}</span>
+                            </span>
+                          </a>
+                        </div>
                       );
                     })}
                   </div>
