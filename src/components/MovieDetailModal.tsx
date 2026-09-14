@@ -83,14 +83,14 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/55 sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="movie-detail-title">
       <div ref={modalRef} className="movie-detail-modal max-h-[96vh] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-5xl sm:rounded-md" style={{ transform: `translate3d(${modalOffset.x}px, ${modalOffset.y}px, 0)` }}>
         <header onPointerDown={startDragging} onPointerMove={dragModal} onPointerUp={stopDragging} onPointerCancel={stopDragging} className="flex min-h-16 touch-none select-none items-center gap-2 border-b border-slate-200 bg-white px-4 py-3 sm:cursor-move sm:px-6">
-          <div className="flex shrink-0 gap-1">
-            <button type="button" onClick={onPrevious} disabled={!onPrevious} className="icon-button border-0 shadow-none" title="Título anterior" aria-label="Título anterior"><ArrowLeft className="h-5 w-5" /></button>
-            <button type="button" onClick={onNext} disabled={!onNext} className="icon-button border-0 shadow-none" title="Título siguiente" aria-label="Título siguiente"><ArrowRight className="h-5 w-5" /></button>
-          </div>
           <div className="min-w-0">
             <h2 id="movie-detail-title" className="font-bebas truncate text-[24px] font-normal uppercase leading-7 text-ink">{title}</h2>
           </div>
           <div className="ml-auto flex shrink-0 gap-1">
+            <div className="mr-2 flex overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
+              <button type="button" onClick={onPrevious} disabled={!onPrevious} className="icon-button rounded-none border-0 shadow-none" title="Título anterior" aria-label="Título anterior"><ArrowLeft className="h-5 w-5" /></button>
+              <button type="button" onClick={onNext} disabled={!onNext} className="icon-button rounded-none border-0 border-l border-slate-200 shadow-none" title="Título siguiente" aria-label="Título siguiente"><ArrowRight className="h-5 w-5" /></button>
+            </div>
             {onEdit && <button type="button" onClick={() => onEdit(movie)} className="icon-button border-0 shadow-none" title="Editar" aria-label="Editar"><Pencil className="h-4 w-4" /></button>}
             {onDelete && <button type="button" onClick={() => onDelete(movie)} className="icon-button border-0 text-red-600 shadow-none" title="Eliminar" aria-label="Eliminar"><Trash2 className="h-4 w-4" /></button>}
             <button type="button" onClick={onClose} className="icon-button border-0 shadow-none" title="Cerrar" aria-label="Cerrar"><X className="h-5 w-5" /></button>

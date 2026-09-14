@@ -246,30 +246,29 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/55 sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="movie-edit-title">
       <form onSubmit={(event) => { event.preventDefault(); setError(''); save.mutate(); }} className="movie-detail-modal max-h-[96vh] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-5xl sm:rounded-md">
         <header className="flex h-16 items-center gap-3 border-b border-slate-200 bg-white px-4 sm:px-6">
-          <div className="flex shrink-0 gap-1">
-            <button type="button" onClick={onPrevious} disabled={!onPrevious} className="icon-button border-0 shadow-none" title="Título anterior" aria-label="Título anterior"><ArrowLeft className="h-5 w-5" /></button>
-            <button type="button" onClick={onNext} disabled={!onNext} className="icon-button border-0 shadow-none" title="Título siguiente" aria-label="Título siguiente"><ArrowRight className="h-5 w-5" /></button>
-          </div>
           <div className="min-w-0">
             <h2 id="movie-edit-title" className="truncate text-lg font-semibold text-ink">Editar {movie.originalTitle}</h2>
             <p className="text-xs text-slate-500">Todos los datos del título</p>
           </div>
-          <button type="button" onClick={onClose} className="icon-button ml-auto border-0 shadow-none" title="Cerrar" aria-label="Cerrar"><X className="h-5 w-5" /></button>
+          <div className="ml-auto flex shrink-0 items-center gap-1">
+            <div className="mr-2 flex overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
+              <button type="button" onClick={onPrevious} disabled={!onPrevious} className="icon-button rounded-none border-0 shadow-none" title="Título anterior" aria-label="Título anterior"><ArrowLeft className="h-5 w-5" /></button>
+              <button type="button" onClick={onNext} disabled={!onNext} className="icon-button rounded-none border-0 border-l border-slate-200 shadow-none" title="Título siguiente" aria-label="Título siguiente"><ArrowRight className="h-5 w-5" /></button>
+            </div>
+            <button type="button" onClick={onClose} className="icon-button border-0 shadow-none" title="Cerrar" aria-label="Cerrar"><X className="h-5 w-5" /></button>
+          </div>
         </header>
 
         <div className="flex max-h-[calc(96vh-128px)] flex-col overflow-y-auto p-4 sm:p-6">
           <section>
             <h3 className="field-label">Estado</h3>
-            <div className="grid gap-2 sm:grid-cols-3">
+            <div className="grid gap-2 sm:grid-cols-4">
               <button type="button" aria-pressed={watched} onClick={() => setWatched((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${watched ? 'border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]' : ''}`}><Eye className="h-[18px] w-[18px]" />Watch</button>
               <button type="button" aria-pressed={favorite} onClick={() => setFavorite((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${favorite ? 'border-coral bg-red-50 text-coral' : ''}`}><Heart className={`h-4 w-4 ${favorite ? 'fill-current' : ''}`} />Like</button>
               <button type="button" aria-pressed={watchlist} onClick={() => setWatchlist((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${watchlist ? 'border-aqua bg-mist text-aqua' : ''}`}><Bookmark className={`h-4 w-4 ${watchlist ? 'fill-current' : ''}`} />Watchlist</button>
-            </div>
-            <div className="mt-3 flex items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2">
-              <span className="text-sm font-medium text-ink">Recomendación de Instagram</span>
-              <button type="button" role="switch" aria-checked={instagramRecommendation} onClick={() => setInstagramRecommendation((current) => !current)} className={`relative h-7 w-12 rounded-full transition-colors ${instagramRecommendation ? 'bg-coral' : 'bg-slate-300'}`}>
-                <span className={`absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${instagramRecommendation ? 'translate-x-5' : ''}`} />
-                <span className="sr-only">{instagramRecommendation ? 'Sí' : 'No'}</span>
+              <button type="button" role="switch" aria-checked={instagramRecommendation} onClick={() => setInstagramRecommendation((current) => !current)} className="secondary-button min-w-0 gap-2 px-2 text-xs uppercase">
+                <span className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${instagramRecommendation ? 'bg-coral' : 'bg-slate-300'}`}><span className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${instagramRecommendation ? 'translate-x-4' : ''}`} /></span>
+                Instagram
               </button>
             </div>
           </section>

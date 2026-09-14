@@ -99,9 +99,11 @@ export const MovieDetailPage = () => {
           <Link to="/" className="icon-button" title="Volver">
             <ArrowLeft className="h-4 w-4" />
           </Link>
-          <button type="button" onClick={() => previousMovie && navigate(`/titulo/${previousMovie.id}`)} disabled={!previousMovie} className="icon-button" title="Título anterior" aria-label="Título anterior"><ArrowLeft className="h-4 w-4" /></button>
-          <button type="button" onClick={() => nextMovie && navigate(`/titulo/${nextMovie.id}`)} disabled={!nextMovie} className="icon-button" title="Título siguiente" aria-label="Título siguiente"><ArrowRight className="h-4 w-4" /></button>
-          <div className="ml-auto flex gap-2">
+          <div className="ml-auto flex items-center gap-2">
+            <div className="flex overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
+              <button type="button" onClick={() => previousMovie && navigate(`/titulo/${previousMovie.id}`)} disabled={!previousMovie} className="icon-button rounded-none border-0 shadow-none" title="Título anterior" aria-label="Título anterior"><ArrowLeft className="h-5 w-5" /></button>
+              <button type="button" onClick={() => nextMovie && navigate(`/titulo/${nextMovie.id}`)} disabled={!nextMovie} className="icon-button rounded-none border-0 border-l border-slate-200 shadow-none" title="Título siguiente" aria-label="Título siguiente"><ArrowRight className="h-5 w-5" /></button>
+            </div>
             <button
               type="button"
               onClick={() => setEditing(true)}
