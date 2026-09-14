@@ -18,7 +18,7 @@ interface MovieCardProps {
   onDelete?: (movie: MovieItem) => void;
   selectionMode?: boolean;
   selected?: boolean;
-  onSelectionChange?: (movie: MovieItem) => void;
+  onSelectionChange?: (movie: MovieItem, rangeSelection?: boolean) => void;
 }
 
 export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, onDelete, selectionMode = false, selected = false, onSelectionChange }: MovieCardProps) => {
@@ -38,7 +38,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
   const tmdbUrl = movie.tmdbUrl || (movie.tmdbId ? `https://www.themoviedb.org/${movie.type === 'movie' ? 'movie' : 'tv'}/${movie.tmdbId}` : null);
   const justWatchUrl = movie.justwatchUrl || `https://www.justwatch.com/ar/buscar?q=${encodeURIComponent([spanishTitle || title, movie.year].filter(Boolean).join(' '))}`;
   const imdbLabel = movie.imdbRating != null ? `IMDb ${movie.imdbRating}` : 'IMDb';
-  const activate = () => selectionMode ? onSelectionChange?.(movie) : onOpen(movie);
+  const activate = (rangeSelection = false) => selectionMode ? onSelectionChange?.(movie, rangeSelection) : onOpen(movie);
   const interactive = (event: React.MouseEvent) => event.stopPropagation();
   const selectionMark = (compact = false) => selectionMode ? (
     <span className={`absolute right-2 top-2 z-10 grid place-items-center rounded-md border-2 ${compact ? 'h-5 w-5' : 'h-6 w-6'} ${selected ? 'border-coral bg-coral text-white' : 'border-white bg-white/90 text-transparent shadow-sm'}`}>
@@ -111,7 +111,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
 
   if (mode === 'list') {
     return (
-      <article role="button" tabIndex={0} onClick={activate} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(); }} className={`movie-card relative grid min-h-[140px] cursor-pointer grid-cols-[92px_minmax(0,1fr)] items-stretch gap-x-4 gap-y-3 border-b border-slate-200 bg-white p-3 transition-colors hover:bg-slate-50 lg:grid-cols-[100px_minmax(240px,1fr)_minmax(230px,auto)] lg:items-center ${menuOpen ? 'z-40' : ''} ${selected ? 'bg-red-50' : ''}`}>
+      <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card relative grid min-h-[140px] cursor-pointer grid-cols-[92px_minmax(0,1fr)] items-stretch gap-x-4 gap-y-3 border-b border-slate-200 bg-white p-3 transition-colors hover:bg-slate-50 lg:grid-cols-[100px_minmax(240px,1fr)_minmax(230px,auto)] lg:items-center ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40' : ''} ${selected ? 'bg-red-50' : ''}`}>
         <div className="relative row-span-2 min-h-[140px] overflow-hidden bg-slate-100 lg:row-span-1 lg:h-full">
           {selectionMark(true)}
           {poster('h-full w-full object-cover')}
@@ -144,7 +144,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
 
   if (mode === 'details') {
     return (
-      <article role="button" tabIndex={0} onClick={activate} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(); }} className={`movie-card relative grid cursor-pointer gap-5 border-b border-slate-200 bg-white p-4 transition-colors hover:bg-slate-50 sm:grid-cols-[200px_minmax(0,1fr)] lg:grid-cols-[220px_minmax(190px,0.65fr)_minmax(300px,1.35fr)] ${menuOpen ? 'z-40' : ''} ${selected ? 'bg-red-50' : ''}`}>
+      <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card relative grid cursor-pointer gap-5 border-b border-slate-200 bg-white p-4 transition-colors hover:bg-slate-50 sm:grid-cols-[200px_minmax(0,1fr)] lg:grid-cols-[220px_minmax(190px,0.65fr)_minmax(300px,1.35fr)] ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40' : ''} ${selected ? 'bg-red-50' : ''}`}>
         <div className="group/poster relative mx-auto aspect-[2/3] w-full max-w-[220px] overflow-hidden bg-slate-100">{selectionMark()}{poster('h-full w-full object-cover transition-transform duration-300 ease-out group-hover/poster:scale-105')}</div>
 
         <div className="flex min-w-0 flex-col self-stretch">
@@ -195,7 +195,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
   if (mode === 'medium' || mode === 'mediumIcons') {
     const mediumIcons = mode === 'mediumIcons';
     return (
-      <article role="button" tabIndex={0} onClick={activate} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(); }} className={`movie-card group relative flex h-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-md bg-white shadow-card transition-transform hover:-translate-y-0.5 ${menuOpen ? 'z-40 overflow-visible' : ''} ${selected ? 'ring-2 ring-coral ring-offset-2' : ''}`}>
+      <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card group relative flex h-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-md bg-white shadow-card transition-transform hover:-translate-y-0.5 ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40 overflow-visible' : ''} ${selected ? 'ring-2 ring-coral ring-offset-2' : ''}`}>
         <div className="relative aspect-[2/3]">
           {selectionMark()}
           <div className="h-full overflow-hidden rounded-t-md bg-slate-100">{poster('h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]')}</div>
@@ -227,7 +227,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
   }
 
   return (
-    <article role="button" tabIndex={0} onClick={activate} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(); }} className={`movie-card group relative min-w-0 cursor-pointer rounded-md border bg-white shadow-card transition-transform hover:-translate-y-0.5 ${menuOpen ? 'z-40' : ''} ${selected ? 'border-coral ring-2 ring-coral/20' : 'border-slate-200'}`}>
+    <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card group relative min-w-0 cursor-pointer rounded-md border bg-white shadow-card transition-transform hover:-translate-y-0.5 ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40' : ''} ${selected ? 'border-coral ring-2 ring-coral/20' : 'border-slate-200'}`}>
       {selectionMark()}
       <div className="relative aspect-[2/3]">
         <div className="h-full overflow-hidden rounded-t-md bg-slate-100">{poster('h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]')}</div>

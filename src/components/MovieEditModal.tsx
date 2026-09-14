@@ -260,14 +260,10 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
         <div className="flex max-h-[calc(96vh-128px)] flex-col overflow-y-auto p-4 sm:p-6">
           <section>
             <h3 className="field-label">Estado</h3>
-            <div className="grid gap-2 sm:grid-cols-4">
+            <div className="grid gap-2 sm:grid-cols-3">
               <button type="button" aria-pressed={watched} onClick={() => setWatched((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${watched ? 'border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]' : ''}`}><Eye className="h-[18px] w-[18px]" />Watch</button>
               <button type="button" aria-pressed={favorite} onClick={() => setFavorite((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${favorite ? 'border-coral bg-red-50 text-coral' : ''}`}><Heart className={`h-4 w-4 ${favorite ? 'fill-current' : ''}`} />Like</button>
               <button type="button" aria-pressed={watchlist} onClick={() => setWatchlist((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${watchlist ? 'border-aqua bg-mist text-aqua' : ''}`}><Bookmark className={`h-4 w-4 ${watchlist ? 'fill-current' : ''}`} />Watchlist</button>
-              <button type="button" role="switch" aria-checked={instagramRecommendation} onClick={() => setInstagramRecommendation((current) => !current)} className="secondary-button min-w-0 gap-2 px-2 text-xs uppercase">
-                <span className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${instagramRecommendation ? 'bg-coral' : 'bg-slate-300'}`}><span className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${instagramRecommendation ? 'translate-x-4' : ''}`} /></span>
-                Instagram
-              </button>
             </div>
           </section>
 
@@ -296,10 +292,19 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
               </div>
             </fieldset>
 
-            <div>
-              <span className="field-label">Rate</span>
-              <StarRating value={personalRating} onChange={setPersonalRating} disabled={save.isPending} />
-              <p className="mt-1 text-xs text-slate-400">{personalRating ? `${personalRating} de 5` : 'Sin puntuación'}</p>
+            <div className="grid content-start gap-3 sm:grid-cols-2">
+              <div>
+                <span className="field-label">Rate</span>
+                <StarRating value={personalRating} onChange={setPersonalRating} disabled={save.isPending} />
+                <p className="mt-1 text-xs text-slate-400">{personalRating ? `${personalRating} de 5` : 'Sin puntuación'}</p>
+              </div>
+              <div>
+                <span className="field-label">Recomendación de Instagram</span>
+                <button type="button" role="switch" aria-checked={instagramRecommendation} onClick={() => setInstagramRecommendation((current) => !current)} className="secondary-button h-11 w-full min-w-0 gap-2 px-2 text-xs uppercase">
+                  <span className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${instagramRecommendation ? 'bg-coral' : 'bg-slate-300'}`}><span className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${instagramRecommendation ? 'translate-x-4' : ''}`} /></span>
+                  Instagram
+                </button>
+              </div>
             </div>
           </div>
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckSquare, Edit3, Film, Loader2, Printer, Square, Trash2, X } from 'lucide-react';
 import { Header } from '@/components/Header';
@@ -68,6 +68,7 @@ export const MovieLibraryPage = () => {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [bulkMode, setBulkMode] = useState<MovieBulkMode>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const selectionAnchorId = useRef<string | null>(null);
   const [detailMovie, setDetailMovie] = useState<MovieItem | null>(null);
   const [editingMovie, setEditingMovie] = useState<MovieItem | null>(null);
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
@@ -231,11 +232,21 @@ export const MovieLibraryPage = () => {
     queryClient.invalidateQueries({ queryKey: ['metadata'] });
     queryClient.invalidateQueries({ queryKey: ['collections'] });
   };
-  const toggleSelection = (movie: MovieItem) => setSelectedIds((current) => {
-    const next = new Set(current);
-    if (next.has(movie.id)) next.delete(movie.id); else next.add(movie.id);
-    return next;
-  });
+  const toggleSelection = (movie: MovieItem, rangeSelection = false) => {
+    const anchorId = selectionAnchorId.current;
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      const anchorIndex = anchorId ? filteredMovies.findIndex((item) => item.id === anchorId) : -1;
+      const currentIndex = filteredMovies.findIndex((item) => item.id === movie.id);
+      if (rangeSelection && anchorIndex >= 0 && currentIndex >= 0) {
+        const [start, end] = anchorIndex < currentIndex ? [anchorIndex, currentIndex] : [currentIndex, anchorIndex];
+        filteredMovies.slice(start, end + 1).forEach((item) => next.add(item.id));
+      } else if (next.has(movie.id)) next.delete(movie.id);
+      else next.add(movie.id);
+      return next;
+    });
+    if (!rangeSelection || !anchorId) selectionAnchorId.current = movie.id;
+  };
   const handleSortChange = (key: MovieLibrarySort) => {
     if (key === sortKey) setSortDirection((current) => current === 'asc' ? 'desc' : 'asc');
     else { setSortKey(key); setSortDirection('asc'); }
@@ -251,6 +262,7 @@ export const MovieLibraryPage = () => {
   const handleBulkModeChange = (mode: MovieBulkMode) => {
     setBulkMode(mode);
     setSelectedIds(new Set());
+    selectionAnchorId.current = null;
     if (mode) setFiltersOpen(false);
   };
   const adjacentMovie = (movie: MovieItem, offset: -1 | 1) => {
@@ -309,7 +321,7 @@ export const MovieLibraryPage = () => {
         <section className="sticky top-[72px] z-20 border-b border-slate-200 bg-white shadow-card">
           <div className="mx-auto flex min-h-16 max-w-[1500px] flex-wrap items-center gap-2 px-4 py-3 sm:px-6">
             <button type="button" onClick={() => setSelectedIds(new Set(filteredMovies.map((movie) => movie.id)))} className="secondary-button gap-2"><CheckSquare className="h-4 w-4" />Seleccionar todas</button>
-            <button type="button" onClick={() => setSelectedIds(new Set())} className="secondary-button gap-2"><Square className="h-4 w-4" />Quitar seleccion</button>
+            <button type="button" onClick={() => { setSelectedIds(new Set()); selectionAnchorId.current = null; }} className="secondary-button gap-2"><Square className="h-4 w-4" />Quitar seleccion</button>
             <span className="text-sm text-slate-500">{selectedMovies.length} seleccionadas</span>
             <div className="ml-auto flex flex-wrap gap-2">
               {bulkMode === 'edit' && <button type="button" onClick={() => setBulkEditOpen(true)} disabled={!selectedMovies.length} className="primary-button"><Edit3 className="h-4 w-4" />Editar campos comunes</button>}
