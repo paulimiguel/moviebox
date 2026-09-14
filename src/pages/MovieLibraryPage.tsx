@@ -69,6 +69,7 @@ export const MovieLibraryPage = () => {
   const [bulkMode, setBulkMode] = useState<MovieBulkMode>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const selectionAnchorId = useRef<string | null>(null);
+  const shiftPressed = useRef(false);
   const [detailMovie, setDetailMovie] = useState<MovieItem | null>(null);
   const [editingMovie, setEditingMovie] = useState<MovieItem | null>(null);
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
@@ -83,6 +84,19 @@ export const MovieLibraryPage = () => {
       // The selected order remains active for the current session.
     }
   }, [sortDirection, sortKey]);
+
+  useEffect(() => {
+    const updateShiftState = (event: KeyboardEvent) => { shiftPressed.current = event.shiftKey; };
+    const clearShiftState = () => { shiftPressed.current = false; };
+    window.addEventListener('keydown', updateShiftState);
+    window.addEventListener('keyup', updateShiftState);
+    window.addEventListener('blur', clearShiftState);
+    return () => {
+      window.removeEventListener('keydown', updateShiftState);
+      window.removeEventListener('keyup', updateShiftState);
+      window.removeEventListener('blur', clearShiftState);
+    };
+  }, []);
 
   useEffect(() => {
     const applyLibraryFilter = (preset: LibraryFilterPreset) => {
@@ -236,16 +250,18 @@ export const MovieLibraryPage = () => {
     const anchorId = selectionAnchorId.current;
     setSelectedIds((current) => {
       const next = new Set(current);
-      const anchorIndex = anchorId ? filteredMovies.findIndex((item) => item.id === anchorId) : -1;
+      const shouldSelectRange = rangeSelection || shiftPressed.current;
+      const resolvedAnchorId = anchorId || (shouldSelectRange ? filteredMovies.find((item) => current.has(item.id))?.id || null : null);
+      const anchorIndex = resolvedAnchorId ? filteredMovies.findIndex((item) => item.id === resolvedAnchorId) : -1;
       const currentIndex = filteredMovies.findIndex((item) => item.id === movie.id);
-      if (rangeSelection && anchorIndex >= 0 && currentIndex >= 0) {
+      if (shouldSelectRange && anchorIndex >= 0 && currentIndex >= 0) {
         const [start, end] = anchorIndex < currentIndex ? [anchorIndex, currentIndex] : [currentIndex, anchorIndex];
         filteredMovies.slice(start, end + 1).forEach((item) => next.add(item.id));
       } else if (next.has(movie.id)) next.delete(movie.id);
       else next.add(movie.id);
       return next;
     });
-    if (!rangeSelection || !anchorId) selectionAnchorId.current = movie.id;
+    if (!(rangeSelection || shiftPressed.current) || !anchorId) selectionAnchorId.current = movie.id;
   };
   const handleSortChange = (key: MovieLibrarySort) => {
     if (key === sortKey) setSortDirection((current) => current === 'asc' ? 'desc' : 'asc');

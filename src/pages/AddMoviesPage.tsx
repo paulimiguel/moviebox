@@ -39,6 +39,7 @@ export const AddMoviesPage = () => {
   const [suggestionSearch, setSuggestionSearch] = useState('');
   const [appliedSuggestionSearch, setAppliedSuggestionSearch] = useState('');
   const [suggestionType, setSuggestionType] = useState<MovieTypeFilter>('all');
+  const [addedMovieIds, setAddedMovieIds] = useState<Record<string, string>>({});
   const [bulkMenuOpen, setBulkMenuOpen] = useState(false);
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const txtInputRef = useRef<HTMLInputElement>(null);
@@ -52,9 +53,10 @@ export const AddMoviesPage = () => {
   const visibleSuggestions = useMemo(() => (suggestions.data || []).filter((candidate) => (
     suggestionType === 'all' || candidate.type === suggestionType
   )), [suggestionType, suggestions.data]);
-  const addedMovieFor = (candidate: TmdbSuggestionCandidate) => (library.data || []).find((movie) => (
+  const suggestionKey = (candidate: TmdbSuggestionCandidate) => `${candidate.type}-${candidate.tmdbId}-${candidate.imdbId}`;
+  const addedMovieIdFor = (candidate: TmdbSuggestionCandidate) => addedMovieIds[suggestionKey(candidate)] || (library.data || []).find((movie) => (
     movie.tmdbId === candidate.tmdbId || movie.imdbId === candidate.imdbId
-  ));
+  ))?.id;
 
   const names = useMemo(() => {
     const seen = new Set<string>();
@@ -138,7 +140,8 @@ export const AddMoviesPage = () => {
       const data = await api.imdb.import({ imdbId: candidate.imdbId, type: candidate.type });
       return api.movies.create({ ...data, favorite: false, watched: false, watchlist: false, personalRating: null, collectionIds: [] });
     },
-    onSuccess: (saved) => {
+    onSuccess: (saved, candidate) => {
+      setAddedMovieIds((current) => ({ ...current, [suggestionKey(candidate)]: saved.id }));
       queryClient.setQueryData<MovieItem[]>(['movies'], (current = []) => current.some((movie) => movie.id === saved.id) ? current : [saved, ...current]);
       queryClient.invalidateQueries({ queryKey: ['movies'] });
       queryClient.invalidateQueries({ queryKey: ['metadata'] });
@@ -251,15 +254,15 @@ export const AddMoviesPage = () => {
         {suggestions.isLoading ? <div className="grid min-h-[360px] place-items-center"><Loader2 className="h-8 w-8 animate-spin text-aqua" /></div> : suggestions.isError ? <div className="mt-4 rounded-md border border-red-100 bg-red-50 p-5 text-center"><p className="text-sm text-red-700">{appliedSuggestionSearch ? 'No se pudieron cargar los resultados de TMDB.' : 'No se pudieron cargar los títulos populares de JustWatch.'}</p><button type="button" onClick={() => suggestions.refetch()} className="secondary-button mt-3">Reintentar</button></div> : visibleSuggestions.length ? (
           <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">
             {visibleSuggestions.map((candidate) => {
-              const addedMovie = addedMovieFor(candidate);
-              const added = Boolean(addedMovie);
+              const addedMovieId = addedMovieIdFor(candidate);
+              const added = Boolean(addedMovieId);
               const adding = importSuggestion.isPending && importSuggestion.variables?.tmdbId === candidate.tmdbId;
-              const openAddedMovie = () => { if (addedMovie) navigate(`/titulo/${addedMovie.id}`); };
+              const openAddedMovie = () => { if (addedMovieId) navigate(`/titulo/${addedMovieId}`); };
               return <article key={`${candidate.type}-${candidate.tmdbId}`} role={added ? 'button' : undefined} tabIndex={added ? 0 : undefined} onClick={openAddedMovie} onKeyDown={(event) => { if (added && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); openAddedMovie(); } }} className={`movie-card flex min-w-0 flex-col overflow-hidden rounded-md bg-white shadow-card ${added ? 'cursor-pointer transition-transform hover:-translate-y-0.5' : ''}`}>
                 <div className="relative aspect-[2/3] bg-mist">
                   {candidate.posterUrl ? <img src={candidate.posterUrl} alt={candidate.title} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-aqua/70">{candidate.type === 'movie' ? <Film className="h-12 w-12" /> : <Tv className="h-12 w-12" />}</div>}
                   <span className={`absolute left-2 top-2 rounded px-2 py-1 text-[9px] font-semibold uppercase text-white shadow-sm ${candidate.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>{candidate.type === 'movie' ? 'Película' : 'Serie'}</span>
-                  <button type="button" onClick={(event) => { event.stopPropagation(); if (addedMovie) openAddedMovie(); else importSuggestion.mutate(candidate); }} disabled={!added && importSuggestion.isPending} className={`absolute bottom-2 right-2 grid h-8 w-8 place-items-center rounded-md text-white shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-70 ${added ? 'bg-[#2cbc63] hover:bg-[#249e53]' : 'bg-coral hover:bg-[#dc493a]'}`} title={added ? 'Abrir título agregado' : 'Agregar título'} aria-label={added ? `Abrir ${candidate.title}` : `Agregar ${candidate.title}`}>{adding ? <Loader2 className="h-4 w-4 animate-spin" /> : added ? <Check className="h-4 w-4" strokeWidth={3} /> : <Plus className="h-5 w-5" strokeWidth={4} />}</button>
+                  <button type="button" onClick={(event) => { event.stopPropagation(); if (addedMovieId) openAddedMovie(); else importSuggestion.mutate(candidate); }} disabled={!added && importSuggestion.isPending} className={`absolute bottom-2 right-2 grid h-8 w-8 place-items-center rounded-md text-white shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-70 ${added ? 'bg-[#2cbc63] hover:bg-[#249e53]' : 'bg-coral hover:bg-[#dc493a]'}`} title={added ? 'Abrir título agregado' : 'Agregar título'} aria-label={added ? `Abrir ${candidate.title}` : `Agregar ${candidate.title}`}>{adding ? <Loader2 className="h-4 w-4 animate-spin" /> : added ? <Check className="h-4 w-4" strokeWidth={3} /> : <Plus className="h-5 w-5" strokeWidth={4} />}</button>
                 </div>
                 <div className="flex flex-1 flex-col p-3">
                   <h2 className="font-bebas line-clamp-2 text-xl uppercase leading-6 text-ink">{candidate.title}</h2>
