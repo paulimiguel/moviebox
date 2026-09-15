@@ -6,8 +6,17 @@ import { Header } from '@/components/Header';
 import { api } from '@/services/api';
 import type { ImdbSearchCandidate, MovieItem, MovieTypeFilter, TmdbSuggestionCandidate } from '@/types/movie';
 
+
 const MAX_NAMES = 50;
 const SEARCH_BATCH_SIZE = 4;
+
+const PLATFORMS = [
+  { id: 'justwatch', name: 'JustWatch' },
+  { id: 'netflix', name: 'Netflix' },
+  { id: 'prime', name: 'Amazon Prime' },
+  { id: 'apple', name: 'Apple TV' }
+];
+
 
 interface SearchGroup {
   name: string;
@@ -38,6 +47,7 @@ export const AddMoviesPage = () => {
   const [error, setError] = useState('');
   const [suggestionSearch, setSuggestionSearch] = useState('');
   const [appliedSuggestionSearch, setAppliedSuggestionSearch] = useState('');
+  const [activePlatform, setActivePlatform] = useState('justwatch');
   const [suggestionType, setSuggestionType] = useState<MovieTypeFilter>('all');
   const [addedMovieIds, setAddedMovieIds] = useState<Record<string, string>>({});
   const [bulkMenuOpen, setBulkMenuOpen] = useState(false);
@@ -46,8 +56,14 @@ export const AddMoviesPage = () => {
   const spreadsheetInputRef = useRef<HTMLInputElement>(null);
 
   const suggestions = useQuery({
-    queryKey: ['tmdb-suggestions', appliedSuggestionSearch],
-    queryFn: () => api.tmdb.suggestions(appliedSuggestionSearch),
+    queryKey: ['tmdb-suggestions', appliedSuggestionSearch, activePlatform],
+    queryFn: async () => {
+      if (appliedSuggestionSearch || activePlatform === 'justwatch') {
+        return api.tmdb.suggestions(appliedSuggestionSearch);
+      }
+      const data = await api.tmdb.newReleases(activePlatform);
+      return [...data.movies, ...data.series];
+    },
   });
   const library = useQuery({ queryKey: ['movies'], queryFn: api.movies.getAll });
   const visibleSuggestions = useMemo(() => (suggestions.data || []).filter((candidate) => (
@@ -225,7 +241,7 @@ export const AddMoviesPage = () => {
         <div className="mx-auto grid max-w-[1500px] gap-3 px-4 py-3 sm:px-6 xl:grid-cols-[300px_minmax(280px,1fr)_auto] xl:items-center">
           <div className="min-w-0">
             <h1 className="font-bebas truncate text-xl font-normal uppercase text-ink sm:text-2xl">Agregar títulos</h1>
-            <p className="mt-0.5 truncate text-xs text-slate-500">{appliedSuggestionSearch ? `Mostrando ${visibleSuggestions.length} resultados de TMDB` : `Mostrando ${visibleSuggestions.length} títulos populares de JustWatch`}</p>
+            <p className="mt-0.5 truncate text-xs text-slate-500">{appliedSuggestionSearch ? `Mostrando ${visibleSuggestions.length} resultados de TMDB` : activePlatform === 'justwatch' ? `Mostrando ${visibleSuggestions.length} títulos populares de JustWatch` : `Mostrando ${visibleSuggestions.length} novedades de ${PLATFORMS.find(p => p.id === activePlatform)?.name}`}</p>
           </div>
           <form onSubmit={(event) => { event.preventDefault(); const next = suggestionSearch.trim(); if (next === appliedSuggestionSearch) void suggestions.refetch(); else setAppliedSuggestionSearch(next); }} className="flex min-w-0 items-center gap-2">
             <label className="relative min-w-0 flex-1">
@@ -253,6 +269,23 @@ export const AddMoviesPage = () => {
       </section>
 
       <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8">
+        {(!appliedSuggestionSearch && !suggestionSearch) && (
+          <div className="mb-6 flex flex-wrap gap-2">
+            {PLATFORMS.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setActivePlatform(p.id)}
+                className={`rounded-md px-4 py-2 text-sm font-semibold transition-colors ${
+                  activePlatform === p.id 
+                    ? 'bg-coral text-white' 
+                    : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+                }`}
+              >
+                {p.name}
+              </button>
+            ))}
+          </div>
+        )}
         {!appliedSuggestionSearch && <h2 className="add-suggestions-title font-bebas text-2xl uppercase text-ink">Sugerencias</h2>}
         {suggestions.isLoading ? <div className="grid min-h-[360px] place-items-center"><Loader2 className="h-8 w-8 animate-spin text-aqua" /></div> : suggestions.isError ? <div className="mt-4 rounded-md border border-red-100 bg-red-50 p-5 text-center"><p className="text-sm text-red-700">{appliedSuggestionSearch ? 'No se pudieron cargar los resultados de TMDB.' : 'No se pudieron cargar los títulos populares de JustWatch.'}</p><button type="button" onClick={() => suggestions.refetch()} className="secondary-button mt-3">Reintentar</button></div> : visibleSuggestions.length ? (
           <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7">

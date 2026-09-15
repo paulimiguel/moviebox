@@ -61,9 +61,9 @@ export const NewsPage = () => {
                         <span className="text-xs text-slate-400">Sin póster</span>
                       </div>
                     )}
-                    <div className="flex-1 min-w-0">
-                      <p className="truncate font-semibold text-sm text-ink" title={item.title}>{item.title}</p>
-                      <p className="text-xs text-slate-500">{item.year}</p>
+                    <div className="flex-1 min-w-0 p-1">
+                      <h2 className="font-bebas line-clamp-2 text-[28px] font-normal uppercase leading-8 text-ink" title={item.title}>{item.title}</h2>
+                      <div className="mt-1"><span className="text-base font-bold text-slate-500">{item.year}</span></div>
                     </div>
                   </div>
                 ))}
@@ -85,9 +85,9 @@ export const NewsPage = () => {
                         <span className="text-xs text-slate-400">Sin póster</span>
                       </div>
                     )}
-                    <div className="flex-1 min-w-0">
-                      <p className="truncate font-semibold text-sm text-ink" title={item.title}>{item.title}</p>
-                      <p className="text-xs text-slate-500">{item.year}</p>
+                    <div className="flex-1 min-w-0 p-1">
+                      <h2 className="font-bebas line-clamp-2 text-[28px] font-normal uppercase leading-8 text-ink" title={item.title}>{item.title}</h2>
+                      <div className="mt-1"><span className="text-base font-bold text-slate-500">{item.year}</span></div>
                     </div>
                   </div>
                 ))}
