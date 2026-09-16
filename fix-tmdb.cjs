@@ -62,3 +62,4 @@ content = content.substring(0, startIndex) + newHandler + content.substring(endI
 
 fs.writeFileSync(filePath, content);
 console.log('tmdb.ts updated successfully');
+

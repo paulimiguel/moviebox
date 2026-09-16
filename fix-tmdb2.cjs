@@ -63,3 +63,4 @@ content = content.replace(regex, newHandler);
 
 fs.writeFileSync(filePath, content);
 console.log('tmdb.ts updated successfully with fix 2');
+
