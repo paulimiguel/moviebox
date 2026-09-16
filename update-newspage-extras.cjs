@@ -35,3 +35,4 @@ if (toolbarStart > -1 && toolbarEnd > -1) {
 } else {
   console.log("Could not find insertion point");
 }
+

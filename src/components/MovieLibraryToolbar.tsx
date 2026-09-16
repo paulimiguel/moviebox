@@ -8,6 +8,7 @@ export type MovieBulkMode = 'edit' | 'print' | 'delete' | null;
 export type MovieSearchScope = 'name' | 'actor' | 'genre';
 
 interface ToolbarProps {
+  ownerName: string;
   title?: string;
   titleExtras?: React.ReactNode;
   ownerName?: string;
@@ -170,6 +171,8 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
     <section ref={toolbarRef} className="library-toolbar sticky top-[72px] z-30 border-b border-slate-200 bg-white shadow-sm">
       <div className="mx-auto grid max-w-[1500px] gap-3 px-4 py-3 sm:px-6 xl:grid-cols-[300px_minmax(280px,1fr)_auto] xl:items-start">
         <div className="min-w-0 self-center">
+          <h1 className="font-bebas truncate text-xl font-normal text-ink sm:text-2xl">Títulos de {props.ownerName}</h1>
+          <p className="mt-0.5 truncate text-xs text-slate-500">Mostrando {props.visibleCount} de {props.totalCount} movies</p>
           <h1 className="font-bebas truncate text-xl font-normal text-ink sm:text-2xl">{props.title || `Títulos de ${props.ownerName}`}</h1>
           <p className="mt-0.5 truncate text-xs text-slate-500">Mostrando {props.visibleCount} de {props.totalCount} títulos</p>
           {props.titleExtras}
