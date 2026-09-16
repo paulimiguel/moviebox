@@ -8,7 +8,6 @@ export type MovieBulkMode = 'edit' | 'print' | 'delete' | null;
 export type MovieSearchScope = 'name' | 'actor' | 'genre';
 
 interface ToolbarProps {
-  ownerName: string;
   title?: string;
   titleExtras?: React.ReactNode;
   ownerName?: string;
