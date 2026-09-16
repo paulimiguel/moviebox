@@ -9,6 +9,7 @@ export type MovieSearchScope = 'name' | 'actor' | 'genre';
 
 interface ToolbarProps {
   title?: string;
+  titleExtras?: React.ReactNode;
   ownerName?: string;
   visibleCount: number;
   totalCount: number;
@@ -171,6 +172,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
         <div className="min-w-0 self-center">
           <h1 className="font-bebas truncate text-xl font-normal text-ink sm:text-2xl">{props.title || `Títulos de ${props.ownerName}`}</h1>
           <p className="mt-0.5 truncate text-xs text-slate-500">Mostrando {props.visibleCount} de {props.totalCount} títulos</p>
+          {props.titleExtras}
           {(selectedGenreNames.length > 0 || selectedPlatformNames.length > 0 || props.years.length > 0 || props.type !== 'all' || props.watched !== 'all' || props.favorite !== 'all' || props.watchlist !== 'all' || props.emptyFieldsCount > 0) && (
             <div className="mt-2 flex flex-wrap gap-1">
               {selectedGenreNames.map((genre) => <button key={`active-genre-${genre.id}`} type="button" onClick={() => toggleGenre(genre.id)} className="inline-flex max-w-full items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar género ${genre.name}`}><span className="truncate">{genre.name}</span><X className="h-3 w-3 shrink-0" /></button>)}
