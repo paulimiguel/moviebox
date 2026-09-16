@@ -252,3 +252,4 @@ export const NewsPage = () => {
 
 fs.writeFileSync(filePath, content);
 console.log('NewsPage with Toolbar updated successfully');
+

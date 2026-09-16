@@ -5,6 +5,7 @@ import { api } from '@/services/api';
 import { Film, Tv, Plus, Check, Loader2, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MovieLibraryToolbar, MovieLibrarySort, MovieSearchScope } from '@/components/MovieLibraryToolbar';
+import type { MovieTypeFilter, SortDirection, MovieViewMode } from '@/types/movie';
 import type { MovieTypeFilter, SortDirection } from '@/types/movie';
 import type { MovieViewMode } from '@/components/MovieCard';
 
@@ -174,7 +175,7 @@ export const NewsPage = () => {
     <>
       <Header />
       <MovieLibraryToolbar
-        ownerName="Plataforma"
+        title="Novedades por Plataforma"
         visibleCount={sortedItems.length}
         totalCount={allItems.length}
         search={search}

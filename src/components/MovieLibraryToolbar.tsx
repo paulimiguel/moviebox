@@ -8,7 +8,8 @@ export type MovieBulkMode = 'edit' | 'print' | 'delete' | null;
 export type MovieSearchScope = 'name' | 'actor' | 'genre';
 
 interface ToolbarProps {
-  ownerName: string;
+  title?: string;
+  ownerName?: string;
   visibleCount: number;
   totalCount: number;
   search: string;
@@ -168,8 +169,8 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
     <section ref={toolbarRef} className="library-toolbar sticky top-[72px] z-30 border-b border-slate-200 bg-white shadow-sm">
       <div className="mx-auto grid max-w-[1500px] gap-3 px-4 py-3 sm:px-6 xl:grid-cols-[300px_minmax(280px,1fr)_auto] xl:items-start">
         <div className="min-w-0 self-center">
-          <h1 className="font-bebas truncate text-xl font-normal text-ink sm:text-2xl">Títulos de {props.ownerName}</h1>
-          <p className="mt-0.5 truncate text-xs text-slate-500">Mostrando {props.visibleCount} de {props.totalCount} movies</p>
+          <h1 className="font-bebas truncate text-xl font-normal text-ink sm:text-2xl">{props.title || `Títulos de ${props.ownerName}`}</h1>
+          <p className="mt-0.5 truncate text-xs text-slate-500">Mostrando {props.visibleCount} de {props.totalCount} títulos</p>
           {(selectedGenreNames.length > 0 || selectedPlatformNames.length > 0 || props.years.length > 0 || props.type !== 'all' || props.watched !== 'all' || props.favorite !== 'all' || props.watchlist !== 'all' || props.emptyFieldsCount > 0) && (
             <div className="mt-2 flex flex-wrap gap-1">
               {selectedGenreNames.map((genre) => <button key={`active-genre-${genre.id}`} type="button" onClick={() => toggleGenre(genre.id)} className="inline-flex max-w-full items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar género ${genre.name}`}><span className="truncate">{genre.name}</span><X className="h-3 w-3 shrink-0" /></button>)}
@@ -191,7 +192,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
             <input ref={searchInputRef} type="search" value={props.search} onChange={(event) => props.onSearchChange(event.target.value)} className={`control w-full pl-9 ${props.search ? '' : 'pr-16'}`} placeholder="Buscar" />
             {!props.search && <button type="button" onClick={() => void pasteSearch()} className="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-slate-100 px-2 py-1 text-[10px] font-semibold uppercase text-slate-600 transition-colors hover:bg-slate-200 hover:text-ink">Pegar</button>}
           </label>
-          <div className="search-scope-selector mt-2 inline-flex items-center rounded-lg border border-slate-200 bg-slate-100 p-1" role="radiogroup" aria-label="Campo de búsqueda">
+          <div className="search-scope-selector mt-1.5 inline-flex items-center rounded-md border border-slate-200 bg-slate-100 p-0.5" role="radiogroup" aria-label="Campo de búsqueda">
             {searchScopeOptions.map((option) => {
               const active = props.searchScope === option.value;
               return (
@@ -201,7 +202,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
                   role="radio"
                   aria-checked={active}
                   onClick={() => props.onSearchScopeChange(option.value)}
-                  className={`search-scope-option min-w-[76px] rounded-md px-3 py-1.5 text-xs font-semibold uppercase transition-all ${active ? 'search-scope-option-active bg-coral text-white shadow-sm' : 'text-slate-600 hover:bg-white hover:text-ink'}`}
+                  className={`search-scope-option min-w-[62px] rounded px-2 py-1 text-[10px] font-semibold uppercase transition-all ${active ? 'search-scope-option-active bg-coral text-white shadow-sm' : 'text-slate-600 hover:bg-white hover:text-ink'}`}
                 >
                   {option.label}
                 </button>
