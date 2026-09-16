@@ -136,3 +136,4 @@ export const NewsPage = () => {
 
 fs.writeFileSync(filePath, content);
 console.log('NewsPage.tsx updated successfully');
+

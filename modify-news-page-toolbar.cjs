@@ -1,12 +1,16 @@
-import { useState, useMemo } from 'react';
+const fs = require('fs');
+const path = require('path');
+
+const filePath = path.join(__dirname, 'src/pages/NewsPage.tsx');
+
+const content = `import { useState, useMemo } from 'react';
 import { Header } from '@/components/Header';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/services/api';
 import { Film, Tv, Plus, Check, Loader2, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MovieLibraryToolbar, MovieLibrarySort, MovieSearchScope } from '@/components/MovieLibraryToolbar';
-import type { MovieTypeFilter, SortDirection } from '@/types/movie';
-import type { MovieViewMode } from '@/components/MovieCard';
+import type { MovieTypeFilter, SortDirection, MovieViewMode } from '@/types/movie';
 
 const PLATFORMS = [
   { id: 'netflix', name: 'Netflix' },
@@ -109,15 +113,15 @@ export const NewsPage = () => {
     });
   }, [filteredItems, sortKey, sortDirection]);
 
-  const suggestionKey = (candidate: any) => `${candidate.type}-${candidate.tmdbId}-${candidate.imdbId}`;
+  const suggestionKey = (candidate: any) => \`\${candidate.type}-\${candidate.tmdbId}-\${candidate.imdbId}\`;
 
   const addedMovieIdFor = (candidate: any) => addedMovieIds[suggestionKey(candidate)] || (library.data || []).find((movie: any) => (
     movie.tmdbId === candidate.tmdbId || movie.imdbId === candidate.imdbId
   ))?.id;
 
   const suggestionExternalUrl = (candidate: any) => candidate.imdbId
-    ? `https://www.imdb.com/title/${candidate.imdbId}/`
-    : `https://www.themoviedb.org/${candidate.type === 'movie' ? 'movie' : 'tv'}/${candidate.tmdbId}`;
+    ? \`https://www.imdb.com/title/\${candidate.imdbId}/\`
+    : \`https://www.themoviedb.org/\${candidate.type === 'movie' ? 'movie' : 'tv'}/\${candidate.tmdbId}\`;
 
   const importSuggestion = useMutation({
     mutationFn: async (candidate: any) => {
@@ -137,7 +141,7 @@ export const NewsPage = () => {
     const addedMovieId = addedMovieIdFor(candidate);
     const added = Boolean(addedMovieId);
     const adding = importSuggestion.isPending && importSuggestion.variables?.tmdbId === candidate.tmdbId;
-    const openAddedMovie = () => { if (addedMovieId) navigate(`/titulo/${addedMovieId}`); };
+    const openAddedMovie = () => { if (addedMovieId) navigate(\`/titulo/\${addedMovieId}\`); };
     const externalUrl = suggestionExternalUrl(candidate);
     const openExternalResult = () => window.open(externalUrl, '_blank', 'noopener,noreferrer');
     
@@ -148,11 +152,11 @@ export const NewsPage = () => {
     }
 
     return (
-      <article key={`${candidate.type}-${candidate.tmdbId}`} role="link" tabIndex={0} onClick={openExternalResult} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openExternalResult(); } }} className={cardClass} title={`Abrir ${candidate.imdbId ? 'IMDb' : 'TMDB'} en una pestaña nueva`}>
-        <div className={`relative bg-mist ${viewMode === 'list' || viewMode === 'details' ? 'w-24 shrink-0' : 'aspect-[2/3]'}`}>
+      <article key={\`\${candidate.type}-\${candidate.tmdbId}\`} role="link" tabIndex={0} onClick={openExternalResult} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openExternalResult(); } }} className={cardClass} title={\`Abrir \${candidate.imdbId ? 'IMDb' : 'TMDB'} en una pestaña nueva\`}>
+        <div className={\`relative bg-mist \${viewMode === 'list' || viewMode === 'details' ? 'w-24 shrink-0' : 'aspect-[2/3]'}\`}>
           {candidate.posterUrl ? <img src={candidate.posterUrl} alt={candidate.title} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-aqua/70">{candidate.type === 'movie' ? <Film className="h-12 w-12" /> : <Tv className="h-12 w-12" />}</div>}
-          <span className={`absolute left-2 top-2 rounded px-2 py-1 text-[9px] font-semibold uppercase text-white shadow-sm ${candidate.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>{candidate.type === 'movie' ? 'Película' : 'Serie'}</span>
-          <button type="button" onClick={(event) => { event.stopPropagation(); if (addedMovieId) openAddedMovie(); else importSuggestion.mutate(candidate); }} disabled={!added && importSuggestion.isPending} className={`absolute bottom-2 right-2 grid h-8 w-8 place-items-center rounded-md text-white shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-70 ${added ? 'bg-[#2cbc63] hover:bg-[#249e53]' : 'bg-coral hover:bg-[#dc493a]'}`} title={added ? 'Abrir título agregado' : 'Agregar título'} aria-label={added ? `Abrir ${candidate.title}` : `Agregar ${candidate.title}`}>{adding ? <Loader2 className="h-4 w-4 animate-spin" /> : added ? <Check className="h-4 w-4" strokeWidth={3} /> : <Plus className="h-5 w-5" strokeWidth={4} />}</button>
+          <span className={\`absolute left-2 top-2 rounded px-2 py-1 text-[9px] font-semibold uppercase text-white shadow-sm \${candidate.type === 'series' ? 'bg-aqua' : 'bg-coral'}\`}>{candidate.type === 'movie' ? 'Película' : 'Serie'}</span>
+          <button type="button" onClick={(event) => { event.stopPropagation(); if (addedMovieId) openAddedMovie(); else importSuggestion.mutate(candidate); }} disabled={!added && importSuggestion.isPending} className={\`absolute bottom-2 right-2 grid h-8 w-8 place-items-center rounded-md text-white shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-70 \${added ? 'bg-[#2cbc63] hover:bg-[#249e53]' : 'bg-coral hover:bg-[#dc493a]'}\`} title={added ? 'Abrir título agregado' : 'Agregar título'} aria-label={added ? \`Abrir \${candidate.title}\` : \`Agregar \${candidate.title}\`}>{adding ? <Loader2 className="h-4 w-4 animate-spin" /> : added ? <Check className="h-4 w-4" strokeWidth={3} /> : <Plus className="h-5 w-5" strokeWidth={4} />}</button>
         </div>
         <div className="flex flex-1 flex-col p-3">
           <h2 className="font-bebas line-clamp-2 text-xl uppercase leading-6 text-ink">{candidate.title}</h2>
@@ -244,3 +248,7 @@ export const NewsPage = () => {
     </>
   );
 };
+`;
+
+fs.writeFileSync(filePath, content);
+console.log('NewsPage with Toolbar updated successfully');
