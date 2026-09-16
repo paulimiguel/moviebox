@@ -19,3 +19,4 @@ content = content.replace(searchString, replaceString);
 
 fs.writeFileSync(filePath, content);
 console.log('Header.tsx fixed successfully');
+
