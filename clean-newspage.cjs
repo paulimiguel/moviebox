@@ -23,3 +23,4 @@ content = content.replace(badBlock2.replace(/\r\n/g, '\n'), goodBlock2.replace(/
 
 fs.writeFileSync(newsPagePath, content, 'utf-8');
 console.log("NewsPage cleaned");
+

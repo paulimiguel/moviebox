@@ -177,20 +177,20 @@ export const NewsPage = () => {
         ownerName="Plataforma"
         title="Novedades por Plataforma"
         titleExtras={
-          <div className="mt-4 flex items-center gap-2 overflow-x-auto pb-1 -mb-1 no-scrollbar">
+          <div className="mt-4 flex items-center gap-1.5">
             {PLATFORMS.map((p) => {
               const active = platformIds.includes(p.id);
               return (
                 <button
                   key={p.id}
                   onClick={() => setPlatformIds([p.id])}
-                  className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-colors ${
+                  className={`inline-flex shrink-0 items-center justify-center rounded-md border px-2 py-1 text-[11px] font-semibold whitespace-nowrap transition-colors ${
                     active
-                      ? 'border-coral bg-red-50 text-coral'
-                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
+                      ? 'border-coral bg-coral text-white'
+                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                   }`}
                 >
-                  {p.name}
+                  {p.name === 'Amazon Prime' ? 'Prime' : p.name}
                 </button>
               );
             })}
