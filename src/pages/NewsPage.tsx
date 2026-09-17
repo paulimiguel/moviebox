@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/services/api';
 import { Film, Tv, Plus, Check, Loader2, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { MovieDetailModal } from '@/components/MovieDetailModal';
 import { MovieLibraryToolbar, MovieLibrarySort, MovieSearchScope } from '@/components/MovieLibraryToolbar';
 import type { MovieTypeFilter, SortDirection } from '@/types/movie';
 import type { MovieViewMode } from '@/components/MovieCard';
@@ -155,7 +156,7 @@ export const NewsPage = () => {
           <button type="button" onClick={(event) => { event.stopPropagation(); if (addedMovieId) openAddedMovie(); else importSuggestion.mutate(candidate); }} disabled={!added && importSuggestion.isPending} className={`absolute bottom-2 right-2 grid h-8 w-8 place-items-center rounded-md text-white shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-70 ${added ? 'bg-[#2cbc63] hover:bg-[#249e53]' : 'bg-coral hover:bg-[#dc493a]'}`} title={added ? 'Abrir título agregado' : 'Agregar título'} aria-label={added ? `Abrir ${candidate.title}` : `Agregar ${candidate.title}`}>{adding ? <Loader2 className="h-4 w-4 animate-spin" /> : added ? <Check className="h-4 w-4" strokeWidth={3} /> : <Plus className="h-5 w-5" strokeWidth={4} />}</button>
         </div>
         <div className="flex flex-1 flex-col p-3">
-          <h2 className="font-bebas line-clamp-2 text-xl uppercase leading-6 text-ink">{candidate.title}</h2>
+          <h2 role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); setSelectedCandidate(candidate); }} onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); setSelectedCandidate(candidate); } }} className="font-bebas line-clamp-2 text-xl uppercase leading-6 text-ink hover:text-coral hover:underline">{candidate.title}</h2>
           <div className="mt-1 flex items-center gap-3 text-xs text-slate-500">{candidate.year && <span className="font-semibold">{candidate.year}</span>}{candidate.rating != null && candidate.rating > 0 && <span className="inline-flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />{candidate.rating.toFixed(1)}</span>}</div>
           <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-500">{(candidate.genres || []).join(', ') || 'Sin género'}</p>
         </div>
@@ -177,23 +178,25 @@ export const NewsPage = () => {
         ownerName="Plataforma"
         title="Novedades por Plataforma"
         titleExtras={
-          <div className="mt-4 flex items-center gap-1.5">
-            {PLATFORMS.map((p) => {
-              const active = platformIds.includes(p.id);
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => setPlatformIds([p.id])}
-                  className={`inline-flex shrink-0 items-center justify-center rounded-md border px-2 py-1 text-[11px] font-semibold whitespace-nowrap transition-colors ${
-                    active
-                      ? 'border-coral bg-coral text-white'
-                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                  }`}
-                >
-                  {p.name === 'Amazon Prime' ? 'Prime' : p.name}
-                </button>
-              );
-            })}
+          <div className="mx-auto max-w-[1500px] px-4 pb-3 sm:px-6">
+            <div className="mt-1 flex items-center gap-2 overflow-x-auto no-scrollbar">
+              {PLATFORMS.map((p) => {
+                const active = platformIds.includes(p.id);
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => setPlatformIds([p.id])}
+                    className={`inline-flex shrink-0 items-center justify-center rounded-md border px-4 py-2 text-[13px] font-semibold transition-colors ${
+                      active
+                        ? 'border-coral bg-coral text-white'
+                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    {p.name}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         }
         visibleCount={sortedItems.length}
@@ -242,6 +245,42 @@ export const NewsPage = () => {
         onEmptyFieldsSearch={() => {}}
         onClearEmptyFields={() => {}}
       />
+      {selectedCandidate && (
+        <MovieDetailModal
+          movie={{
+            id: 'preview-' + selectedCandidate.tmdbId,
+            title: selectedCandidate.title,
+            originalTitle: selectedCandidate.title,
+            type: selectedCandidate.type,
+            year: selectedCandidate.year || null,
+            runtime: null,
+            synopsis: selectedCandidate.overview || 'Sin descripción disponible.',
+            imdbId: selectedCandidate.imdbId || null,
+            tmdbId: selectedCandidate.tmdbId || null,
+            imdbRating: selectedCandidate.rating || null,
+            trailerUrl: null,
+            favorite: false,
+            watched: false,
+            watchlist: false,
+            personalRating: null,
+            instagramRecommendation: false,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            images: selectedCandidate.posterUrl ? [{ id: '1', url: selectedCandidate.posterUrl, localPath: null, tmdbFilePath: null, order: 0, isPrimary: true, altText: null }] : [],
+            genres: (selectedCandidate.genres || []).map((g, i) => ({ id: String(i), name: g, normalizedName: g, order: i })),
+            platforms: [],
+            keywords: [],
+            director: [],
+            cast: [],
+            countries: [],
+            collectionIds: [],
+          } as any}
+          onClose={() => setSelectedCandidate(null)}
+          onPersonal={() => {}}
+          onRating={() => {}}
+          onCollections={() => {}}
+        />
+      )}
       <main className="mx-auto max-w-[1500px] p-4 sm:p-6 pb-20">
         {isLoading ? (
           <div className="mt-12 grid place-items-center">
