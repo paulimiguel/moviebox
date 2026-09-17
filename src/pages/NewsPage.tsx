@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Header } from '@/components/Header';
-import { useQueries } from '@tanstack/react-query';
+import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/services/api';
 import { useNavigate } from 'react-router-dom';
 import { resolvePlatformLogoUrl } from '@/components/PlatformLogos';
+import { MovieDetailModal } from '@/components/MovieDetailModal';
 import { Loader2, Film, Tv, ChevronLeft, ChevronRight } from 'lucide-react';
-import type { TmdbSuggestionCandidate } from '@/types/movie';
+import type { MovieItem, TmdbSuggestionCandidate } from '@/types/movie';
 
 const PLATFORMS = [
   { id: 'netflix', name: 'Netflix' },
@@ -27,13 +28,27 @@ const getTop10 = (data: any): TmdbSuggestionCandidate[] => {
   return candidates.slice(0, 10);
 };
 
-const Top10Item = ({ item, rank }: { item: TmdbSuggestionCandidate; rank: number }) => {
+const Top10Item = ({
+  item,
+  rank,
+  onSelect,
+}: {
+  item: TmdbSuggestionCandidate;
+  rank: number;
+  onSelect: (item: TmdbSuggestionCandidate) => void;
+}) => {
   return (
-    <article className="flex items-center gap-3">
+    <article className="flex items-center gap-3 group/item">
       <div className="news-ranking-number relative flex shrink-0 items-center justify-center w-[52px] font-black text-[42px] tracking-tighter text-slate-400">
         {rank}
       </div>
-      <div className="h-[84px] w-[58px] shrink-0 overflow-hidden rounded bg-mist relative">
+      <button
+        type="button"
+        onClick={() => onSelect(item)}
+        className="h-[84px] w-[58px] shrink-0 overflow-hidden rounded bg-mist relative text-left transition-transform group-hover/item:scale-105 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-coral"
+        title={`Ver características de ${item.title}`}
+        aria-label={`Ver características de ${item.title}`}
+      >
         {item.posterUrl ? (
           <img src={item.posterUrl} alt={item.title} className="h-full w-full object-cover" />
         ) : (
@@ -41,9 +56,18 @@ const Top10Item = ({ item, rank }: { item: TmdbSuggestionCandidate; rank: number
             {item.type === 'movie' ? <Film className="h-5 w-5" /> : <Tv className="h-5 w-5" />}
           </div>
         )}
-      </div>
+      </button>
       <div className="flex-1 min-w-0">
-        <h4 className="font-bebas text-xl uppercase leading-5 text-ink line-clamp-2">{item.title}</h4>
+        <button
+          type="button"
+          onClick={() => onSelect(item)}
+          className="text-left group/title focus:outline-none block w-full"
+          title={`Ver características de ${item.title}`}
+        >
+          <h4 className="font-bebas text-xl uppercase leading-5 text-ink line-clamp-2 transition-colors group-hover/item:text-coral group-hover/title:text-coral">
+            {item.title}
+          </h4>
+        </button>
         <p className="truncate text-xs text-slate-500 mt-0.5">{item.year || ''}</p>
       </div>
     </article>
@@ -52,10 +76,14 @@ const Top10Item = ({ item, rank }: { item: TmdbSuggestionCandidate; rank: number
 
 export const NewsPage = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const headerScrollRef = useRef<HTMLDivElement>(null);
   const contentScrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const [selectedCandidate, setSelectedCandidate] = useState<TmdbSuggestionCandidate | null>(null);
+
+  const library = useQuery({ queryKey: ['movies'], queryFn: api.movies.getAll });
 
   const queries = useQueries({
     queries: PLATFORMS.map((platform) => ({
@@ -63,6 +91,155 @@ export const NewsPage = () => {
       queryFn: () => api.tmdb.newReleases(platform.id),
       staleTime: 1000 * 60 * 5,
     })),
+  });
+
+  const existingMovie = useMemo(() => {
+    if (!selectedCandidate || !library.data) return null;
+    return library.data.find(
+      (m) => (selectedCandidate.tmdbId && m.tmdbId === selectedCandidate.tmdbId) ||
+             (selectedCandidate.imdbId && m.imdbId === selectedCandidate.imdbId)
+    ) || null;
+  }, [selectedCandidate, library.data]);
+
+  const candidateDetails = useQuery({
+    queryKey: ['candidateDetails', selectedCandidate?.imdbId],
+    queryFn: () => (selectedCandidate?.imdbId ? api.imdb.import({ imdbId: selectedCandidate.imdbId, type: selectedCandidate.type }) : null),
+    enabled: Boolean(selectedCandidate?.imdbId && !existingMovie),
+    staleTime: 1000 * 60 * 30,
+  });
+
+  const activeMovie: MovieItem | null = useMemo(() => {
+    if (!selectedCandidate) return null;
+    if (existingMovie) return existingMovie;
+
+    const details = candidateDetails.data;
+    return {
+      id: 'preview-' + selectedCandidate.tmdbId,
+      userId: 'preview',
+      type: selectedCandidate.type,
+      originalTitle: details?.originalTitle || selectedCandidate.title,
+      spanishTitle: details?.spanishTitle || selectedCandidate.title,
+      year: details?.year || selectedCandidate.year || null,
+      synopsis: details?.synopsis || selectedCandidate.overview || 'Sin descripción disponible.',
+      durationMinutes: details?.durationMinutes ?? null,
+      seasons: details?.seasons ?? null,
+      totalEpisodes: details?.totalEpisodes ?? null,
+      watched: false,
+      favorite: false,
+      watchlist: false,
+      instagramRecommendation: false,
+      personalRating: null,
+      imdbRating: details?.imdbRating || selectedCandidate.rating || null,
+      tmdbId: selectedCandidate.tmdbId || null,
+      imdbId: selectedCandidate.imdbId || null,
+      imdbUrl: selectedCandidate.imdbId ? `https://www.imdb.com/title/${selectedCandidate.imdbId}` : null,
+      tmdbUrl: selectedCandidate.tmdbId ? `https://www.themoviedb.org/${selectedCandidate.type === 'movie' ? 'movie' : 'tv'}/${selectedCandidate.tmdbId}` : null,
+      justwatchUrl: null,
+      trailerUrl: details?.trailerUrl || null,
+      tmdbCollectionId: details?.tmdbCollectionId ?? null,
+      tmdbCollectionName: details?.tmdbCollectionName ?? null,
+      tmdbImportedAt: null,
+      tmdbLastSyncedAt: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      images: details?.images?.length
+        ? details.images.map((img, i) => ({ id: String(i), url: img.url, localPath: null, tmdbFilePath: null, order: i, isPrimary: i === 0, altText: null }))
+        : selectedCandidate.posterUrl
+          ? [{ id: '1', url: selectedCandidate.posterUrl, localPath: null, tmdbFilePath: null, order: 0, isPrimary: true, altText: null }]
+          : [],
+      genres: (details?.genres || (selectedCandidate.genres || []).map((g) => ({ name: g }))).map((g, i) => ({
+        id: String(i),
+        name: typeof g === 'string' ? g : g.name,
+        normalizedName: (typeof g === 'string' ? g : g.name).toLowerCase(),
+        tmdbGenreId: null,
+        tmdbMediaType: selectedCandidate.type,
+        imagePath: null,
+        order: i,
+      })),
+      platforms: [],
+      keywords: [],
+      credits: (details?.credits || []).map((cr, i) => ({
+        id: String(i),
+        name: cr.name,
+        creditType: cr.creditType,
+        order: cr.order ?? i,
+        characterName: cr.characterName ?? null,
+        tmdbPersonId: cr.tmdbPersonId ?? null,
+        profilePath: cr.profilePath ?? null,
+        tmdbCreditId: null,
+      })),
+      countries: (details?.countries || []).map((c, i) => ({
+        id: String(i),
+        name: typeof c === 'string' ? c : c.name,
+        normalizedName: (typeof c === 'string' ? c : c.name).toLowerCase(),
+        isoCode: typeof c === 'string' ? null : ((c as any).isoCode ?? null),
+        order: i,
+      })),
+      collections: [],
+    };
+  }, [selectedCandidate, existingMovie, candidateDetails.data]);
+
+  const allCandidatesInActivePlatform = useMemo(() => {
+    if (!selectedCandidate) return [];
+    for (const q of queries) {
+      const list = getTop10(q.data);
+      if (list.some((c) => c.tmdbId === selectedCandidate.tmdbId)) {
+        return list;
+      }
+    }
+    return [];
+  }, [selectedCandidate, queries]);
+
+  const activeIndex = useMemo(() => {
+    if (!selectedCandidate || !allCandidatesInActivePlatform.length) return -1;
+    return allCandidatesInActivePlatform.findIndex((c) => c.tmdbId === selectedCandidate.tmdbId);
+  }, [selectedCandidate, allCandidatesInActivePlatform]);
+
+  const handlePrevious = activeIndex > 0 ? () => setSelectedCandidate(allCandidatesInActivePlatform[activeIndex - 1]) : undefined;
+  const handleNext = activeIndex >= 0 && activeIndex < allCandidatesInActivePlatform.length - 1 ? () => setSelectedCandidate(allCandidatesInActivePlatform[activeIndex + 1]) : undefined;
+
+  const importMutation = useMutation({
+    mutationFn: async (candidate: TmdbSuggestionCandidate) => {
+      const data = candidateDetails.data || await api.imdb.import({ imdbId: candidate.imdbId, type: candidate.type });
+      return api.movies.create({
+        ...data,
+        favorite: false,
+        watched: false,
+        watchlist: false,
+        personalRating: null,
+        collectionIds: [],
+      });
+    },
+    onSuccess: (saved) => {
+      queryClient.setQueryData<MovieItem[]>(['movies'], (current = []) =>
+        current.some((m) => m.id === saved.id) ? current : [saved, ...current]
+      );
+      queryClient.invalidateQueries({ queryKey: ['movies'] });
+      queryClient.invalidateQueries({ queryKey: ['metadata'] });
+      queryClient.invalidateQueries({ queryKey: ['collections'] });
+    },
+  });
+
+  const updatePersonal = useMutation({
+    mutationFn: ({ movie, field }: { movie: MovieItem; field: 'favorite' | 'watched' | 'watchlist' }) =>
+      api.movies.updatePersonal(movie.id, { [field]: !movie[field] }),
+    onSuccess: (updated) => {
+      queryClient.setQueryData<MovieItem[]>(['movies'], (current = []) =>
+        current.map((item) => (item.id === updated.id ? updated : item))
+      );
+      queryClient.invalidateQueries({ queryKey: ['movies'] });
+    },
+  });
+
+  const updateRating = useMutation({
+    mutationFn: ({ movie, rating }: { movie: MovieItem; rating: number | null }) =>
+      api.movies.updatePersonal(movie.id, { personalRating: rating }),
+    onSuccess: (updated) => {
+      queryClient.setQueryData<MovieItem[]>(['movies'], (current = []) =>
+        current.map((item) => (item.id === updated.id ? updated : item))
+      );
+      queryClient.invalidateQueries({ queryKey: ['movies'] });
+    },
   });
 
   const updateScrollState = () => {
@@ -174,7 +351,12 @@ export const NewsPage = () => {
                   ) : (
                     <div className="flex flex-col gap-3">
                       {top10.map((item, itemIndex) => (
-                        <Top10Item key={`${item.type}-${item.tmdbId}`} item={item} rank={itemIndex + 1} />
+                        <Top10Item
+                          key={`${item.type}-${item.tmdbId}`}
+                          item={item}
+                          rank={itemIndex + 1}
+                          onSelect={setSelectedCandidate}
+                        />
                       ))}
                     </div>
                   )}
@@ -194,6 +376,20 @@ export const NewsPage = () => {
           </button>
         </div>
       </section>
+
+      {/* Modal con las características completas de la película */}
+      {activeMovie && (
+        <MovieDetailModal
+          movie={activeMovie}
+          onClose={() => setSelectedCandidate(null)}
+          onPrevious={handlePrevious}
+          onNext={handleNext}
+          onAdd={!existingMovie ? () => selectedCandidate && importMutation.mutate(selectedCandidate) : undefined}
+          onPersonal={(movie, field) => updatePersonal.mutate({ movie, field })}
+          onRating={(movie, rating) => updateRating.mutate({ movie, rating })}
+          onCollections={() => {}}
+        />
+      )}
     </main>
   );
 };

@@ -88,6 +88,17 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
             <h2 id="movie-detail-title" className="font-bebas truncate text-[24px] font-normal uppercase leading-7 text-ink">{title}</h2>
           </div>
           <div className="flex shrink-0 overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
+            {onAdd && (
+              <button
+                type="button"
+                onClick={() => onAdd(movie)}
+                className="icon-button rounded-none border-0 text-coral shadow-none hover:bg-red-50"
+                title="Agregar a la biblioteca"
+                aria-label="Agregar a la biblioteca"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            )}
             {onEdit && <button type="button" onClick={() => onEdit(movie)} className="icon-button rounded-none border-0 shadow-none" title="Editar" aria-label="Editar"><Pencil className="h-4 w-4" /></button>}
             {onDelete && <button type="button" onClick={() => onDelete(movie)} className="icon-button rounded-none border-0 border-l border-slate-200 text-red-600 shadow-none" title="Eliminar" aria-label="Eliminar"><Trash2 className="h-4 w-4" /></button>}
             <button type="button" onClick={onPrevious} disabled={!onPrevious} className="icon-button rounded-none border-0 border-l border-slate-200 shadow-none" title="Título anterior" aria-label="Título anterior"><ArrowLeft className="h-5 w-5" /></button>
@@ -103,7 +114,19 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                 {image ? <img src={resolveMovieImageUrl(image.url)} alt={title} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center"><Film className="h-16 w-16 text-aqua" /></div>}
                 <span className={`absolute left-2 top-2 rounded px-2 py-1 text-[10px] font-semibold uppercase text-white shadow-sm ${movie.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>{movie.type === 'movie' ? 'Película' : 'Serie'}</span>
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-2">
+              {onAdd ? (
+                <div className="mt-3">
+                  <button
+                    type="button"
+                    onClick={() => onAdd(movie)}
+                    className="primary-button flex w-full items-center justify-center gap-2 py-2.5 text-sm font-semibold"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Agregar a la biblioteca
+                  </button>
+                </div>
+              ) : (
+                <div className="mt-3 grid grid-cols-2 gap-2">
                 <button type="button" aria-pressed={movie.watched} onClick={() => onPersonal(movie, 'watched')} className={`moviebox-translucent-action secondary-button min-w-0 gap-2 px-2 text-xs uppercase ${movie.watched ? 'border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]' : ''}`}><Eye className="h-[18px] w-[18px]" />Watch</button>
                 <button type="button" aria-pressed={movie.favorite} onClick={() => onPersonal(movie, 'favorite')} className={`moviebox-translucent-action secondary-button min-w-0 gap-2 px-2 text-xs uppercase ${movie.favorite ? 'border-coral bg-red-50 text-coral' : ''}`}><Heart className={`h-4 w-4 ${movie.favorite ? 'fill-current' : ''}`} />Like</button>
                 <button type="button" aria-pressed={movie.watchlist} onClick={() => onPersonal(movie, 'watchlist')} className={`moviebox-translucent-action secondary-button h-12 min-w-0 gap-1.5 px-1.5 py-1 text-[11px] uppercase ${movie.watchlist ? 'border-aqua bg-mist text-aqua' : ''}`}><Bookmark className={`h-3.5 w-3.5 ${movie.watchlist ? 'fill-current' : ''}`} />Watchlist</button>
@@ -125,6 +148,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                   </div>}
                 </div>
               </div>
+            )}
             </div>
             <section className="min-w-0">
               <h1 className="font-bebas text-[28px] font-normal uppercase leading-8 text-ink">{title}</h1>
