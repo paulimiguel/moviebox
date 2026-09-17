@@ -61,3 +61,4 @@ if (content.includes(searchStr)) {
 
 fs.writeFileSync(path, content, 'utf-8');
 console.log('Platform logos integrated');
+

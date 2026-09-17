@@ -13,7 +13,8 @@ const PLATFORMS = [
   { id: 'netflix', name: 'Netflix' },
   { id: 'prime', name: 'Prime Video' },
   { id: 'apple', name: 'Apple TV' },
-  { id: 'justwatch', name: 'JustWatch' }
+  { id: 'justwatch', name: 'JustWatch' },
+    { id: 'disney', name: 'Disney+' }
 ];
 
 export const NewsPage = () => {
@@ -153,7 +154,7 @@ export const NewsPage = () => {
       <article key={`${candidate.type}-${candidate.tmdbId}`} role="link" tabIndex={0} onClick={openExternalResult} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openExternalResult(); } }} className={cardClass} title={`Abrir ${candidate.imdbId ? 'IMDb' : 'TMDB'} en una pestaña nueva`}>
         <div className={`relative bg-mist ${viewMode === 'list' || viewMode === 'details' ? 'w-24 shrink-0' : 'aspect-[2/3]'}`}>
           {candidate.posterUrl ? <img src={candidate.posterUrl} alt={candidate.title} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-aqua/70">{candidate.type === 'movie' ? <Film className="h-12 w-12" /> : <Tv className="h-12 w-12" />}</div>}
-          <span className={`absolute left-2 top-2 rounded px-2 py-1 text-[9px] font-semibold uppercase text-white shadow-sm ${candidate.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>{candidate.type === 'movie' ? 'Película' : 'Serie'}</span>
+          <span className={`absolute left-2 top-2 rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase text-white shadow-sm ${candidate.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>{candidate.type === 'movie' ? 'Película' : 'Serie'}</span>
           <button type="button" onClick={(event) => { event.stopPropagation(); if (addedMovieId) openAddedMovie(); else importSuggestion.mutate(candidate); }} disabled={!added && importSuggestion.isPending} className={`absolute bottom-2 right-2 grid h-8 w-8 place-items-center rounded-md text-white shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-70 ${added ? 'bg-[#2cbc63] hover:bg-[#249e53]' : 'bg-coral hover:bg-[#dc493a]'}`} title={added ? 'Abrir título agregado' : 'Agregar título'} aria-label={added ? `Abrir ${candidate.title}` : `Agregar ${candidate.title}`}>{adding ? <Loader2 className="h-4 w-4 animate-spin" /> : added ? <Check className="h-4 w-4" strokeWidth={3} /> : <Plus className="h-5 w-5" strokeWidth={4} />}</button>
         </div>
         <div className="flex flex-1 flex-col p-3">

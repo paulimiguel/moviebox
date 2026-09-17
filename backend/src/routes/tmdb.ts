@@ -146,7 +146,7 @@ router.get('/suggestions', async (req, res) => {
 router.get('/new-releases', async (req, res) => {
   if (!token) return res.status(503).json({ error: 'TMDB todavia no esta configurado' });
   const platform = String(req.query.platform || 'netflix');
-  const providerId = platform === 'prime' ? 119 : platform === 'apple' ? 350 : 8;
+  const providerId = platform === 'prime' ? 119 : platform === 'apple' ? 350 : platform === 'disney' ? 337 : 8;
   try {
     const [moviesP1, moviesP2, seriesP1, seriesP2, movieGenresReq, seriesGenresReq] = await Promise.all([
       tmdbRequest<{ results?: any[] }>(`/discover/movie?language=es-AR&sort_by=primary_release_date.desc&with_watch_providers=${providerId}&watch_region=AR&vote_count.gte=5&page=1`),

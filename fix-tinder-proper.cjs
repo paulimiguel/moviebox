@@ -4,3 +4,4 @@ c = c.split('\\`').join('`');
 c = c.split('\\$').join('$');
 fs.writeFileSync('src/components/TinderSuggestions.tsx', c);
 console.log('Fixed syntax properly');
+
