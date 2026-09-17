@@ -1,10 +1,10 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Header } from '@/components/Header';
 import { useQueries } from '@tanstack/react-query';
 import { api } from '@/services/api';
 import { useNavigate } from 'react-router-dom';
 import { resolvePlatformLogoUrl } from '@/components/PlatformLogos';
-import { Loader2, Film, Tv, ChevronRight } from 'lucide-react';
+import { Loader2, Film, Tv, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { TmdbSuggestionCandidate } from '@/types/movie';
 
 const PLATFORMS = [
@@ -17,7 +17,7 @@ const PLATFORMS = [
   { id: 'flow', name: 'Flow' },
   { id: 'paramount', name: 'Paramount+' },
   { id: 'stremio', name: 'Stremio' },
-  { id: 'claro', name: 'Claro Video' }
+  { id: 'claro', name: 'Claro Video' },
 ];
 
 const Top10Item = ({ item, rank }: { item: TmdbSuggestionCandidate; rank: number }) => {
@@ -55,8 +55,8 @@ const Top10Column = ({ platform, data, isLoading, onClick }: { platform: any; da
 
   return (
     <div className="w-[280px] shrink-0 snap-start flex flex-col">
-      <button 
-        type="button" 
+      <button
+        type="button"
         onClick={onClick}
         className="flex items-center gap-3 mb-4 hover:opacity-80 transition-opacity text-left"
       >
@@ -82,6 +82,8 @@ const Top10Column = ({ platform, data, isLoading, onClick }: { platform: any; da
 export const NewsPage = () => {
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
 
   const queries = useQueries({
     queries: PLATFORMS.map((platform) => ({
@@ -91,9 +93,38 @@ export const NewsPage = () => {
     })),
   });
 
+  const updateScrollState = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 20);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 20);
+  };
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    updateScrollState();
+    el.addEventListener('scroll', updateScrollState, { passive: true });
+    window.addEventListener('resize', updateScrollState);
+    return () => {
+      el.removeEventListener('scroll', updateScrollState);
+      window.removeEventListener('resize', updateScrollState);
+    };
+  }, []);
+
+  useEffect(() => {
+    updateScrollState();
+  }, [queries]);
+
+  const scrollLeft = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: -320, behavior: 'smooth' });
+    }
+  };
+
   const scrollRight = () => {
     if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+      scrollRef.current.scrollBy({ left: 320, behavior: 'smooth' });
     }
   };
 
@@ -104,34 +135,49 @@ export const NewsPage = () => {
         <h1 className="font-bebas text-3xl font-normal text-ink uppercase flex items-center gap-2">
           Novedades por plataforma
         </h1>
-        
+
         <div className="relative mt-8 group">
-          <div 
+          {canScrollLeft && (
+            <button
+              type="button"
+              onClick={scrollLeft}
+              className="news-scroll-panel absolute left-0 top-12 bottom-6 z-20 flex w-8 sm:w-9 items-center justify-center rounded-r-md border border-l-0 border-white/20 bg-slate-950/50 hover:bg-slate-950/80 text-white backdrop-blur-md transition-all shadow-lg cursor-pointer"
+              title="Plataformas anteriores"
+              aria-label="Plataformas anteriores"
+            >
+              <ChevronLeft className="h-6 w-6 text-white drop-shadow" />
+            </button>
+          )}
+
+          <div
             ref={scrollRef}
             className="flex gap-8 overflow-x-auto pb-6 snap-x snap-mandatory hide-scrollbar relative"
           >
             {PLATFORMS.map((platform, index) => {
               const query = queries[index];
               return (
-                <Top10Column 
-                  key={platform.id} 
-                  platform={platform} 
-                  data={query.data} 
-                  isLoading={query.isLoading} 
+                <Top10Column
+                  key={platform.id}
+                  platform={platform}
+                  data={query.data}
+                  isLoading={query.isLoading}
                   onClick={() => navigate(`/novedades/${platform.id}`)}
                 />
               );
             })}
           </div>
-          
-          <button 
-            type="button"
-            onClick={scrollRight}
-            className="news-scroll-arrow absolute right-0 top-[10%] bottom-6 z-10 flex w-16 items-center justify-center bg-gradient-to-l from-canvas via-canvas/80 to-transparent text-ink opacity-80 hover:opacity-100 transition-opacity"
-            title="Siguientes plataformas"
-          >
-            <ChevronRight className="h-10 w-10 drop-shadow-md" />
-          </button>
+
+          {canScrollRight && (
+            <button
+              type="button"
+              onClick={scrollRight}
+              className="news-scroll-panel absolute right-0 top-12 bottom-6 z-20 flex w-8 sm:w-9 items-center justify-center rounded-l-md border border-r-0 border-white/20 bg-slate-950/50 hover:bg-slate-950/80 text-white backdrop-blur-md transition-all shadow-lg cursor-pointer"
+              title="Siguientes plataformas"
+              aria-label="Siguientes plataformas"
+            >
+              <ChevronRight className="h-6 w-6 text-white drop-shadow" />
+            </button>
+          )}
         </div>
       </section>
     </main>
