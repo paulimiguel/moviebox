@@ -292,6 +292,25 @@ body {
   color: #fff;
 }
 
+:root[data-theme="dark"] .news-page {
+  background-color: #34373e;
+}
+
+:root[data-theme="dark"] .news-page h1,
+:root[data-theme="dark"] .news-page h3,
+:root[data-theme="dark"] .news-page h4 {
+  color: #fff;
+}
+
+:root[data-theme="dark"] .news-ranking-number {
+  color: #fff;
+}
+
+:root[data-theme="dark"] .news-scroll-arrow {
+  color: #fff;
+  background-image: linear-gradient(to left, #34373e, rgb(52 55 62 / 0.8), transparent);
+}
+
 :root[data-theme="dark"] .movie-library-page {
   background-color: #34373e;
 }

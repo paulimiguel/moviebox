@@ -23,7 +23,7 @@ const PLATFORMS = [
 const Top10Item = ({ item, rank }: { item: TmdbSuggestionCandidate; rank: number }) => {
   return (
     <article className="flex items-center gap-3">
-      <div className="relative flex shrink-0 items-center justify-center w-[52px] font-black text-[42px] tracking-tighter text-white">
+      <div className="news-ranking-number relative flex shrink-0 items-center justify-center w-[52px] font-black text-[42px] tracking-tighter text-slate-400">
         {rank}
       </div>
       <div className="h-[84px] w-[58px] shrink-0 overflow-hidden rounded bg-mist relative">
@@ -36,8 +36,8 @@ const Top10Item = ({ item, rank }: { item: TmdbSuggestionCandidate; rank: number
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <h4 className="font-bebas text-xl uppercase leading-5 text-white line-clamp-2">{item.title}</h4>
-        <p className="truncate text-xs text-slate-400 mt-0.5">{item.year || ''}</p>
+        <h4 className="font-bebas text-xl uppercase leading-5 text-ink line-clamp-2">{item.title}</h4>
+        <p className="truncate text-xs text-slate-500 mt-0.5">{item.year || ''}</p>
       </div>
     </article>
   );
@@ -61,7 +61,7 @@ const Top10Column = ({ platform, data, isLoading, onClick }: { platform: any; da
         className="flex items-center gap-3 mb-4 hover:opacity-80 transition-opacity text-left"
       >
         {logoUrl && <img src={logoUrl} alt={platform.name} className="h-11 w-auto rounded object-contain" />}
-        <h3 className="font-bebas text-[28px] leading-none text-white tracking-wide">{platform.name}</h3>
+        <h3 className="font-bebas text-[28px] leading-none text-ink tracking-wide">{platform.name}</h3>
       </button>
 
       {isLoading ? (
@@ -98,10 +98,10 @@ export const NewsPage = () => {
   };
 
   return (
-    <main className="min-h-screen bg-ink pb-20">
+    <main className="news-page min-h-screen bg-canvas pb-20">
       <Header />
       <section className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8">
-        <h1 className="font-bebas text-3xl font-normal text-white uppercase flex items-center gap-2">
+        <h1 className="font-bebas text-3xl font-normal text-ink uppercase flex items-center gap-2">
           Novedades por plataforma
         </h1>
         
@@ -127,7 +127,7 @@ export const NewsPage = () => {
           <button 
             type="button"
             onClick={scrollRight}
-            className="absolute right-0 top-[10%] bottom-6 z-10 flex w-16 items-center justify-center bg-gradient-to-l from-ink via-ink/80 to-transparent text-white opacity-80 hover:opacity-100 transition-opacity"
+            className="news-scroll-arrow absolute right-0 top-[10%] bottom-6 z-10 flex w-16 items-center justify-center bg-gradient-to-l from-canvas via-canvas/80 to-transparent text-ink opacity-80 hover:opacity-100 transition-opacity"
             title="Siguientes plataformas"
           >
             <ChevronRight className="h-10 w-10 drop-shadow-md" />
