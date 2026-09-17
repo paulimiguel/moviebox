@@ -116,7 +116,7 @@ export const NewsPage = () => {
           Novedades por plataforma
         </h1>
 
-        {/* Barra superior pegajosa (Sticky header) con logos y títulos */}
+        {/* Barra superior pegajosa (Sticky header) con logos y títulos centrados en cada columna */}
         <div className="news-sticky-header sticky top-[72px] z-30 bg-canvas/95 backdrop-blur-md pt-3 pb-3 border-b border-slate-200/50 -mx-4 px-4 sm:-mx-6 sm:px-6 shadow-sm">
           <div
             ref={headerScrollRef}
@@ -127,14 +127,14 @@ export const NewsPage = () => {
               return (
                 <div
                   key={`header-${platform.id}`}
-                  className="w-[calc(100%-32px)] sm:w-[calc((100%-24px)/2)] lg:w-[calc((100%-72px)/4)] min-w-[260px] shrink-0"
+                  className="w-[calc(100%-32px)] sm:w-[calc((100%-24px)/2)] lg:w-[calc((100%-72px)/4)] min-w-[260px] shrink-0 flex items-center justify-center px-2"
                 >
                   <button
                     type="button"
                     onClick={() => navigate(`/novedades/${platform.id}`)}
-                    className="flex items-center gap-3 hover:opacity-80 transition-opacity text-left w-full py-1"
+                    className="flex items-center justify-center gap-3 hover:opacity-80 transition-opacity text-center w-full py-1 group/btn"
                   >
-                    {logoUrl && <img src={logoUrl} alt={platform.name} className="h-10 w-auto rounded object-contain shrink-0" />}
+                    {logoUrl && <img src={logoUrl} alt={platform.name} className="h-10 w-auto rounded object-contain shrink-0 transition-transform group-hover/btn:scale-105" />}
                     <h3 className="font-bebas text-2xl sm:text-[28px] leading-none text-ink tracking-wide truncate">{platform.name}</h3>
                   </button>
                 </div>
