@@ -36,3 +36,4 @@ newsContent = newsContent.replace(searchBadge, replaceBadge);
 
 fs.writeFileSync(newsPath, newsContent, 'utf-8');
 console.log('Patched NewsPage.tsx');
+

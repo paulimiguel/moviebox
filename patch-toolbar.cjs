@@ -26,3 +26,4 @@ if (!content.includes('hideActiveFilters?: boolean;')) {
   fs.writeFileSync(path, content, 'utf-8');
   console.log('Patched MovieLibraryToolbar');
 }
+
