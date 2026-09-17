@@ -49,3 +49,4 @@ content = content.slice(0, startIndex) + replacement + content.slice(endIndex + 
 
 fs.writeFileSync(pagePath, content, 'utf-8');
 console.log('Successfully replaced grid with Tinder UI');
+

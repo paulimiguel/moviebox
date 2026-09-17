@@ -9,6 +9,7 @@ import { AddMoviesPage } from '@/pages/AddMoviesPage';
 import { PlatformsPage } from '@/pages/PlatformsPage';
 import { GenresPage } from '@/pages/GenresPage';
 import { NewsPage } from '@/pages/NewsPage';
+import { PlatformNewsPage } from '@/pages/PlatformNewsPage';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 
 const AppContent = () => {
@@ -32,6 +33,7 @@ const AppContent = () => {
       <Route path="/plataformas" element={<PlatformsPage />} />
       <Route path="/generos" element={<GenresPage />} />
       <Route path="/novedades" element={<NewsPage />} />
+      <Route path="/novedades/:platformId" element={<PlatformNewsPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   ) : <AuthPage />;
