@@ -96,8 +96,8 @@ export const NewsPage = () => {
   const updateScrollState = () => {
     const el = scrollRef.current;
     if (!el) return;
-    setCanScrollLeft(el.scrollLeft > 20);
-    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 20);
+    setCanScrollLeft(el.scrollLeft > 5);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 5);
   };
 
   useEffect(() => {
@@ -119,12 +119,15 @@ export const NewsPage = () => {
   const scrollLeft = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollBy({ left: -320, behavior: 'smooth' });
+      setTimeout(updateScrollState, 350);
     }
   };
 
   const scrollRight = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollBy({ left: 320, behavior: 'smooth' });
+      setCanScrollLeft(true);
+      setTimeout(updateScrollState, 350);
     }
   };
 
@@ -137,17 +140,15 @@ export const NewsPage = () => {
         </h1>
 
         <div className="relative mt-8 group">
-          {canScrollLeft && (
-            <button
-              type="button"
-              onClick={scrollLeft}
-              className="news-scroll-panel absolute left-0 top-12 bottom-6 z-20 flex w-8 sm:w-9 items-center justify-center rounded-r-md border border-l-0 border-white/20 bg-slate-950/50 hover:bg-slate-950/80 text-white backdrop-blur-md transition-all shadow-lg cursor-pointer"
-              title="Plataformas anteriores"
-              aria-label="Plataformas anteriores"
-            >
-              <ChevronLeft className="h-6 w-6 text-white drop-shadow" />
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={scrollLeft}
+            className={`news-scroll-panel absolute left-0 top-14 bottom-6 z-20 flex w-8 sm:w-9 items-center justify-center rounded-r-md border border-l-0 border-white/20 bg-slate-950/50 hover:bg-slate-950/80 text-white backdrop-blur-md shadow-lg transition-all duration-300 ${canScrollLeft ? 'opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'}`}
+            title="Plataformas anteriores"
+            aria-label="Plataformas anteriores"
+          >
+            <ChevronLeft className="h-6 w-6 text-white drop-shadow" />
+          </button>
 
           <div
             ref={scrollRef}
@@ -167,17 +168,15 @@ export const NewsPage = () => {
             })}
           </div>
 
-          {canScrollRight && (
-            <button
-              type="button"
-              onClick={scrollRight}
-              className="news-scroll-panel absolute right-0 top-12 bottom-6 z-20 flex w-8 sm:w-9 items-center justify-center rounded-l-md border border-r-0 border-white/20 bg-slate-950/50 hover:bg-slate-950/80 text-white backdrop-blur-md transition-all shadow-lg cursor-pointer"
-              title="Siguientes plataformas"
-              aria-label="Siguientes plataformas"
-            >
-              <ChevronRight className="h-6 w-6 text-white drop-shadow" />
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={scrollRight}
+            className={`news-scroll-panel absolute right-0 top-14 bottom-6 z-20 flex w-8 sm:w-9 items-center justify-center rounded-l-md border border-r-0 border-white/20 bg-slate-950/50 hover:bg-slate-950/80 text-white backdrop-blur-md shadow-lg transition-all duration-300 ${canScrollRight ? 'opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'}`}
+            title="Siguientes plataformas"
+            aria-label="Siguientes plataformas"
+          >
+            <ChevronRight className="h-6 w-6 text-white drop-shadow" />
+          </button>
         </div>
       </section>
     </main>
