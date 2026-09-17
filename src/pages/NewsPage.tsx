@@ -11,7 +11,7 @@ import type { MovieViewMode } from '@/components/MovieCard';
 
 const PLATFORMS = [
   { id: 'netflix', name: 'Netflix' },
-  { id: 'prime', name: 'Amazon Prime' },
+  { id: 'prime', name: 'Prime Video' },
   { id: 'apple', name: 'Apple TV' },
   { id: 'justwatch', name: 'JustWatch' }
 ];

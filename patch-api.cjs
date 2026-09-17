@@ -13,3 +13,4 @@ const replacement = `    tmdb: {
 content = content.replace(/tmdb: \{[\s\S]*?newReleases:[^\n]*\n\s*\},/, replacement);
 fs.writeFileSync(frontendPath, content, 'utf-8');
 console.log('API patched');
+

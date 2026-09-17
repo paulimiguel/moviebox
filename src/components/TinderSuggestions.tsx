@@ -77,17 +77,17 @@ export const TinderSuggestions = ({
 
     return (
       <div 
-        className={`absolute top-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out ${
+        className={\`absolute top-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out \${
           isCurrent 
             ? 'z-20 left-1/2 -translate-x-1/2 scale-100 opacity-100' 
             : position === 'prev' 
               ? 'z-10 left-0 md:left-[10%] -translate-x-1/2 scale-75 opacity-40 blur-[1px]' 
               : 'z-10 left-full md:left-[90%] -translate-x-1/2 scale-75 opacity-40 blur-[1px]'
-        }`}
+        }\`}
       >
         <div 
           onClick={() => isCurrent && setPreviewCandidate(candidate)}
-          className={`movie-card flex flex-col overflow-hidden rounded-xl bg-white shadow-card ${isCurrent ? 'cursor-pointer w-64 md:w-72 hover:-translate-y-1' : 'w-56'} transition-transform`}
+          className={\`movie-card flex flex-col overflow-hidden rounded-xl bg-white shadow-card \${isCurrent ? 'cursor-pointer w-64 md:w-72 hover:-translate-y-1' : 'w-56'} transition-transform\`}
         >
           <div className="relative aspect-[2/3] bg-mist">
             {candidate.posterUrl ? (
@@ -97,7 +97,7 @@ export const TinderSuggestions = ({
                 {candidate.type === 'movie' ? <Film className="h-16 w-16" /> : <Tv className="h-16 w-16" />}
               </div>
             )}
-            <span className={`absolute left-3 top-3 rounded-md px-2.5 py-1 text-[11px] font-semibold uppercase text-white shadow-sm ${candidate.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>
+            <span className={\`absolute left-3 top-3 rounded-md px-2.5 py-1 text-[11px] font-semibold uppercase text-white shadow-sm \${candidate.type === 'series' ? 'bg-aqua' : 'bg-coral'}\`}>
               {candidate.type === 'movie' ? 'Película' : 'Serie'}
             </span>
             {isCurrent && candidate.rating != null && candidate.rating > 0 && (
@@ -212,3 +212,4 @@ export const TinderSuggestions = ({
     </section>
   );
 };
+

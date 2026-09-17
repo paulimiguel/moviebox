@@ -4,3 +4,4 @@ c = c.replace(/\\`/g, '`');
 c = c.replace(/\\\$/g, '$');
 fs.writeFileSync('src/components/TinderSuggestions.tsx', c);
 console.log('Fixed TinderSuggestions');
+

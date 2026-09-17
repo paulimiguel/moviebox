@@ -36,3 +36,4 @@ content = content.replace(/ml-auto flex shrink-0/g, 'flex shrink-0');
 
 fs.writeFileSync(modalPath, content, 'utf-8');
 console.log('MovieDetailModal patched with onAdd');
+

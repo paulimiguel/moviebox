@@ -45,3 +45,4 @@ content = content.replace(searchRegex, replacement + '\n        ');
 
 fs.writeFileSync(pagePath, content, 'utf-8');
 console.log('AddMoviesPage updated');
+

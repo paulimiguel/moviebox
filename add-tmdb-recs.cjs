@@ -49,3 +49,4 @@ content = content.replace('export default router;', newRoute);
 
 fs.writeFileSync(backendPath, content, 'utf-8');
 console.log('TMDB recommendations route added');
+
