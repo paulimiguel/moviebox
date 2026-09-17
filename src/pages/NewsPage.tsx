@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { Header } from '@/components/Header';
 import { useQueries } from '@tanstack/react-query';
 import { api } from '@/services/api';
@@ -11,13 +11,19 @@ const PLATFORMS = [
   { id: 'netflix', name: 'Netflix' },
   { id: 'prime', name: 'Prime Video' },
   { id: 'apple', name: 'Apple TV' },
-  { id: 'disney', name: 'Disney+' }
+  { id: 'disney', name: 'Disney+' },
+  { id: 'justwatch', name: 'JustWatch' },
+  { id: 'max', name: 'HBO Max' },
+  { id: 'flow', name: 'Flow' },
+  { id: 'paramount', name: 'Paramount+' },
+  { id: 'stremio', name: 'Stremio' },
+  { id: 'claro', name: 'Claro Video' }
 ];
 
 const Top10Item = ({ item, rank }: { item: TmdbSuggestionCandidate; rank: number }) => {
   return (
     <article className="flex items-center gap-3">
-      <div className="relative flex shrink-0 items-center justify-center w-[52px] font-black italic text-[56px] tracking-tighter text-white opacity-100" style={{ textShadow: '2px 2px 0 rgba(255,255,255,0.05)' }}>
+      <div className="relative flex shrink-0 items-center justify-center w-[52px] font-black text-[42px] tracking-tighter text-white opacity-100" style={{ textShadow: '2px 2px 0 rgba(255,255,255,0.05)' }}>
         {rank}
       </div>
       <div className="h-[84px] w-[58px] shrink-0 overflow-hidden rounded bg-mist relative">
@@ -30,8 +36,8 @@ const Top10Item = ({ item, rank }: { item: TmdbSuggestionCandidate; rank: number
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <h4 className="truncate text-[13px] font-bold text-ink">{item.title}</h4>
-        <p className="truncate text-[11px] text-slate-400">{item.year || ''}</p>
+        <h4 className="font-bebas text-xl uppercase leading-5 text-white line-clamp-2">{item.title}</h4>
+        <p className="truncate text-xs text-slate-400 mt-0.5">{item.year || ''}</p>
       </div>
     </article>
   );
@@ -52,10 +58,10 @@ const Top10Column = ({ platform, data, isLoading, onClick }: { platform: any; da
       <button 
         type="button" 
         onClick={onClick}
-        className="flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity"
+        className="flex items-center gap-3 mb-4 hover:opacity-80 transition-opacity"
       >
         {logoUrl && <img src={logoUrl} alt={platform.name} className="h-11 w-auto rounded object-contain" />}
-        <h3 className="font-bebas text-[28px] leading-none text-ink tracking-wide">{platform.name}</h3>
+        <h3 className="font-bebas text-[28px] leading-none text-white tracking-wide">{platform.name}</h3>
       </button>
 
       {isLoading ? (
@@ -75,6 +81,7 @@ const Top10Column = ({ platform, data, isLoading, onClick }: { platform: any; da
 
 export const NewsPage = () => {
   const navigate = useNavigate();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const queries = useQueries({
     queries: PLATFORMS.map((platform) => ({
@@ -84,16 +91,25 @@ export const NewsPage = () => {
     })),
   });
 
+  const scrollRight = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+    }
+  };
+
   return (
-    <main className="min-h-screen bg-canvas pb-20">
+    <main className="min-h-screen bg-ink pb-20">
       <Header />
       <section className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8">
-        <h1 className="font-bebas text-3xl font-normal text-ink uppercase flex items-center gap-2">
+        <h1 className="font-bebas text-3xl font-normal text-white uppercase flex items-center gap-2">
           Novedades por plataforma
         </h1>
         
-        <div className="relative mt-8">
-          <div className="flex gap-8 overflow-x-auto pb-6 snap-x snap-mandatory hide-scrollbar">
+        <div className="relative mt-8 group">
+          <div 
+            ref={scrollRef}
+            className="flex gap-8 overflow-x-auto pb-6 snap-x snap-mandatory hide-scrollbar relative"
+          >
             {PLATFORMS.map((platform, index) => {
               const query = queries[index];
               return (
@@ -106,11 +122,16 @@ export const NewsPage = () => {
                 />
               );
             })}
-            
-            <div className="w-12 shrink-0 snap-end flex items-center justify-center">
-               <ChevronRight className="w-10 h-10 text-ink/20" />
-            </div>
           </div>
+          
+          <button 
+            type="button"
+            onClick={scrollRight}
+            className="absolute right-0 top-[10%] bottom-6 z-10 flex w-16 items-center justify-center bg-gradient-to-l from-ink via-ink/80 to-transparent text-white opacity-100 hover:opacity-100 transition-opacity"
+            title="Siguientes plataformas"
+          >
+            <ChevronRight className="h-10 w-10 drop-shadow-md" />
+          </button>
         </div>
       </section>
     </main>

@@ -146,13 +146,24 @@ router.get('/suggestions', async (req, res) => {
 router.get('/new-releases', async (req, res) => {
   if (!token) return res.status(503).json({ error: 'TMDB todavia no esta configurado' });
   const platform = String(req.query.platform || 'netflix');
-  const providerId = platform === 'prime' ? 119 : platform === 'apple' ? 350 : platform === 'disney' ? 337 : 8;
+  
+    let providerId = 8;
+    if (platform === 'prime') providerId = 119;
+    else if (platform === 'apple') providerId = 350;
+    else if (platform === 'disney') providerId = 337;
+    else if (platform === 'max') providerId = 1899;
+    else if (platform === 'paramount') providerId = 531;
+    else if (platform === 'claro') providerId = 167;
+    else if (platform === 'flow') providerId = 339; // Movistar fallback
+    
+    const providerQuery = (platform === 'justwatch' || platform === 'stremio') ? '' : `&with_watch_providers=${providerId}&watch_region=AR`;
+
   try {
     const [moviesP1, moviesP2, seriesP1, seriesP2, movieGenresReq, seriesGenresReq] = await Promise.all([
-      tmdbRequest<{ results?: any[] }>(`/discover/movie?language=es-AR&sort_by=primary_release_date.desc&with_watch_providers=${providerId}&watch_region=AR&vote_count.gte=5&page=1`),
-      tmdbRequest<{ results?: any[] }>(`/discover/movie?language=es-AR&sort_by=primary_release_date.desc&with_watch_providers=${providerId}&watch_region=AR&vote_count.gte=5&page=2`),
-      tmdbRequest<{ results?: any[] }>(`/discover/tv?language=es-AR&sort_by=first_air_date.desc&with_watch_providers=${providerId}&watch_region=AR&vote_count.gte=5&page=1`),
-      tmdbRequest<{ results?: any[] }>(`/discover/tv?language=es-AR&sort_by=first_air_date.desc&with_watch_providers=${providerId}&watch_region=AR&vote_count.gte=5&page=2`),
+      tmdbRequest<{ results?: any[] }>(`/discover/movie?language=es-AR&sort_by=primary_release_date.desc${providerQuery}&vote_count.gte=5&page=1`),
+      tmdbRequest<{ results?: any[] }>(`/discover/movie?language=es-AR&sort_by=primary_release_date.desc${providerQuery}&vote_count.gte=5&page=2`),
+      tmdbRequest<{ results?: any[] }>(`/discover/tv?language=es-AR&sort_by=first_air_date.desc${providerQuery}&vote_count.gte=5&page=1`),
+      tmdbRequest<{ results?: any[] }>(`/discover/tv?language=es-AR&sort_by=first_air_date.desc${providerQuery}&vote_count.gte=5&page=2`),
       tmdbRequest<{ genres?: Array<{ id: number; name: string }> }>('/genre/movie/list?language=es-AR'),
       tmdbRequest<{ genres?: Array<{ id: number; name: string }> }>('/genre/tv/list?language=es-AR'),
     ]);
