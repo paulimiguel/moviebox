@@ -184,7 +184,6 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
               {props.emptyFieldsCount > 0 && <button type="button" onClick={props.onClearEmptyFields} className="inline-flex items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title="Quitar búsqueda de campos vacíos">Campos vacíos: {props.emptyFieldsCount}<X className="h-3 w-3" /></button>}
               <button type="button" onClick={() => { props.onClearFilters(); setGenreSearch(''); setPlatformSearch(''); setYearDraft(''); setOpenMenu(null); }} className="ml-1 px-1 py-0.5 text-[11px] font-semibold uppercase text-coral hover:underline">Limpiar</button>
             </div>
-      {props.titleExtras}
           )}
         </div>
 
@@ -305,6 +304,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
           </div>
         </div>
       )}
+      {props.titleExtras}
     </section>
   );
 };
