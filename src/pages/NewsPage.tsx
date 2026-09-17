@@ -120,7 +120,7 @@ export const NewsPage = () => {
         <div className="news-sticky-header sticky top-[72px] z-30 bg-canvas/95 backdrop-blur-md pt-3 pb-3 border-b border-slate-200/50 -mx-4 px-4 sm:-mx-6 sm:px-6 shadow-sm">
           <div
             ref={headerScrollRef}
-            className="flex gap-6 overflow-x-hidden hide-scrollbar"
+            className="flex gap-6 overflow-x-hidden hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           >
             {PLATFORMS.map((platform) => {
               const logoUrl = resolvePlatformLogoUrl({ name: platform.name, logoPath: null });
@@ -157,7 +157,7 @@ export const NewsPage = () => {
 
           <div
             ref={contentScrollRef}
-            className="flex gap-6 overflow-x-auto pt-6 pb-8 snap-x snap-mandatory hide-scrollbar relative"
+            className="flex gap-6 overflow-x-auto pt-6 pb-8 snap-x snap-mandatory hide-scrollbar relative [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           >
             {PLATFORMS.map((platform, index) => {
               const query = queries[index];
