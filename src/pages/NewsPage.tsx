@@ -286,8 +286,30 @@ export const NewsPage = () => {
   };
 
   return (
-    <main className="news-page min-h-screen bg-canvas pb-20">
+    <main className="news-page min-h-screen bg-canvas pb-20 relative">
       <Header />
+
+      {/* Barras de desplazamiento laterales en los extremos de la ventana */}
+      <button
+        type="button"
+        onClick={scrollLeft}
+        className={`news-scroll-panel fixed left-0 top-[72px] bottom-0 z-[35] flex w-7 sm:w-9 items-center justify-center rounded-r-md border-r border-y border-l-0 transition-all duration-300 ${canScrollLeft ? 'opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'}`}
+        title="Plataformas anteriores"
+        aria-label="Plataformas anteriores"
+      >
+        <ChevronLeft className="h-6 w-6 sm:h-7 sm:w-7 drop-shadow-sm" />
+      </button>
+
+      <button
+        type="button"
+        onClick={scrollRight}
+        className={`news-scroll-panel fixed right-0 top-[72px] bottom-0 z-[35] flex w-7 sm:w-9 items-center justify-center rounded-l-md border-l border-y border-r-0 transition-all duration-300 ${canScrollRight ? 'opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'}`}
+        title="Siguientes plataformas"
+        aria-label="Siguientes plataformas"
+      >
+        <ChevronRight className="h-6 w-6 sm:h-7 sm:w-7 drop-shadow-sm" />
+      </button>
+
       <section className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8">
         <h1 className="font-bebas text-3xl font-normal text-ink uppercase flex items-center gap-2 mb-4">
           Novedades por plataforma
@@ -321,17 +343,7 @@ export const NewsPage = () => {
         </div>
 
         {/* Carrusel de contenido: 4 columnas por página en desktop */}
-        <div className="relative group">
-          <button
-            type="button"
-            onClick={scrollLeft}
-            className={`news-scroll-panel absolute left-0 top-6 bottom-8 z-20 flex w-7 sm:w-8 items-center justify-center rounded-r-md border border-l-0 text-white transition-all duration-300 ${canScrollLeft ? 'opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'}`}
-            title="Plataformas anteriores"
-            aria-label="Plataformas anteriores"
-          >
-            <ChevronLeft className="h-6 w-6 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" />
-          </button>
-
+        <div className="relative">
           <div
             ref={contentScrollRef}
             className="flex gap-6 overflow-x-auto pt-6 pb-8 snap-x snap-mandatory hide-scrollbar relative [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
@@ -364,16 +376,6 @@ export const NewsPage = () => {
               );
             })}
           </div>
-
-          <button
-            type="button"
-            onClick={scrollRight}
-            className={`news-scroll-panel absolute right-0 top-6 bottom-8 z-20 flex w-7 sm:w-8 items-center justify-center rounded-l-md border border-r-0 text-white transition-all duration-300 ${canScrollRight ? 'opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'}`}
-            title="Siguientes plataformas"
-            aria-label="Siguientes plataformas"
-          >
-            <ChevronRight className="h-6 w-6 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" />
-          </button>
         </div>
       </section>
 
