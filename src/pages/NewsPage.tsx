@@ -34,6 +34,7 @@ export const NewsPage = () => {
   const [genreIds, setGenreIds] = useState<string[]>([]);
   const [years, setYears] = useState<string[]>([]);
   const [type, setType] = useState<MovieTypeFilter>('all');
+  const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
 
   const activePlatform = platformIds.length > 0 ? platformIds[0] : 'netflix';
 
