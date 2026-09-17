@@ -32,3 +32,4 @@ if (toolbarContent.includes(search2)) {
 fs.writeFileSync(toolbarPath, toolbarContent, 'utf-8');
 console.log("MovieLibraryToolbar.tsx fixed");
 
+

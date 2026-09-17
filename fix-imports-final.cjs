@@ -20,3 +20,4 @@ if (content.includes(search)) {
         console.log("Could not find the target string");
     }
 }
+

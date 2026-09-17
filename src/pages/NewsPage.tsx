@@ -5,6 +5,7 @@ import { api } from '@/services/api';
 import { Film, Tv, Plus, Check, Loader2, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MovieLibraryToolbar, MovieLibrarySort, MovieSearchScope } from '@/components/MovieLibraryToolbar';
+import type { MovieTypeFilter, SortDirection, MovieViewMode } from '@/types/movie';
 import type { MovieTypeFilter, SortDirection } from '@/types/movie';
 import type { MovieViewMode } from '@/components/MovieCard';
 
@@ -177,6 +178,7 @@ export const NewsPage = () => {
         ownerName="Plataforma"
         title="Novedades por Plataforma"
         titleExtras={
+          <div className="mt-4 flex flex-wrap gap-2">
           <div className="mt-4 flex items-center gap-2 overflow-x-auto pb-1 -mb-1 no-scrollbar">
             {PLATFORMS.map((p) => {
               const active = platformIds.includes(p.id);
@@ -184,6 +186,7 @@ export const NewsPage = () => {
                 <button
                   key={p.id}
                   onClick={() => setPlatformIds([p.id])}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
                   className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-colors ${
                     active
                       ? 'border-coral bg-red-50 text-coral'
