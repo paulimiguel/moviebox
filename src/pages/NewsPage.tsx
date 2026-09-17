@@ -23,7 +23,7 @@ const PLATFORMS = [
 const Top10Item = ({ item, rank }: { item: TmdbSuggestionCandidate; rank: number }) => {
   return (
     <article className="flex items-center gap-3">
-      <div className="relative flex shrink-0 items-center justify-center w-[52px] font-black text-[42px] tracking-tighter text-white opacity-100" style={{ textShadow: '2px 2px 0 rgba(255,255,255,0.05)' }}>
+      <div className="relative flex shrink-0 items-center justify-center w-[52px] font-black text-[42px] tracking-tighter text-white">
         {rank}
       </div>
       <div className="h-[84px] w-[58px] shrink-0 overflow-hidden rounded bg-mist relative">
@@ -58,7 +58,7 @@ const Top10Column = ({ platform, data, isLoading, onClick }: { platform: any; da
       <button 
         type="button" 
         onClick={onClick}
-        className="flex items-center gap-3 mb-4 hover:opacity-80 transition-opacity"
+        className="flex items-center gap-3 mb-4 hover:opacity-80 transition-opacity text-left"
       >
         {logoUrl && <img src={logoUrl} alt={platform.name} className="h-11 w-auto rounded object-contain" />}
         <h3 className="font-bebas text-[28px] leading-none text-white tracking-wide">{platform.name}</h3>
@@ -118,7 +118,7 @@ export const NewsPage = () => {
                   platform={platform} 
                   data={query.data} 
                   isLoading={query.isLoading} 
-                  onClick={() => navigate(`/novedades/\${platform.id}`)}
+                  onClick={() => navigate(`/novedades/${platform.id}`)}
                 />
               );
             })}
@@ -127,7 +127,7 @@ export const NewsPage = () => {
           <button 
             type="button"
             onClick={scrollRight}
-            className="absolute right-0 top-[10%] bottom-6 z-10 flex w-16 items-center justify-center bg-gradient-to-l from-ink via-ink/80 to-transparent text-white opacity-100 hover:opacity-100 transition-opacity"
+            className="absolute right-0 top-[10%] bottom-6 z-10 flex w-16 items-center justify-center bg-gradient-to-l from-ink via-ink/80 to-transparent text-white opacity-80 hover:opacity-100 transition-opacity"
             title="Siguientes plataformas"
           >
             <ChevronRight className="h-10 w-10 drop-shadow-md" />

@@ -23,3 +23,4 @@ content = content.replace(/&with_watch_providers=\${providerId}&watch_region=AR/
 
 fs.writeFileSync(path, content, 'utf-8');
 console.log('Patched tmdb.ts providers');
+
