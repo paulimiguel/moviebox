@@ -268,7 +268,7 @@ export const NewsPage = () => {
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             images: selectedCandidate.posterUrl ? [{ id: '1', url: selectedCandidate.posterUrl, localPath: null, tmdbFilePath: null, order: 0, isPrimary: true, altText: null }] : [],
-            genres: (selectedCandidate.genres || []).map((g, i) => ({ id: String(i), name: g, normalizedName: g, order: i })),
+            genres: (selectedCandidate.genres || []).map((g: string, i: number) => ({ id: String(i), name: g, normalizedName: g, order: i })),
             platforms: [],
             keywords: [],
             director: [],
