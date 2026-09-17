@@ -20,6 +20,13 @@ const PLATFORMS = [
   { id: 'claro', name: 'Claro Video' },
 ];
 
+const getTop10 = (data: any): TmdbSuggestionCandidate[] => {
+  if (!data) return [];
+  const candidates: TmdbSuggestionCandidate[] = [...(data.movies || []), ...(data.series || [])];
+  candidates.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+  return candidates.slice(0, 10);
+};
+
 const Top10Item = ({ item, rank }: { item: TmdbSuggestionCandidate; rank: number }) => {
   return (
     <article className="flex items-center gap-3">
@@ -43,45 +50,10 @@ const Top10Item = ({ item, rank }: { item: TmdbSuggestionCandidate; rank: number
   );
 };
 
-const Top10Column = ({ platform, data, isLoading, onClick }: { platform: any; data: any; isLoading: boolean; onClick: () => void }) => {
-  const top10 = useMemo(() => {
-    if (!data) return [];
-    const candidates = [...(data.movies || []), ...(data.series || [])];
-    candidates.sort((a, b) => b.popularity - a.popularity);
-    return candidates.slice(0, 10);
-  }, [data]);
-
-  const logoUrl = resolvePlatformLogoUrl(platform);
-
-  return (
-    <div className="w-[280px] shrink-0 snap-start flex flex-col">
-      <button
-        type="button"
-        onClick={onClick}
-        className="flex items-center gap-3 mb-4 hover:opacity-80 transition-opacity text-left"
-      >
-        {logoUrl && <img src={logoUrl} alt={platform.name} className="h-11 w-auto rounded object-contain" />}
-        <h3 className="font-bebas text-[28px] leading-none text-ink tracking-wide">{platform.name}</h3>
-      </button>
-
-      {isLoading ? (
-        <div className="grid h-64 place-items-center">
-          <Loader2 className="h-8 w-8 animate-spin text-aqua" />
-        </div>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {top10.map((item, index) => (
-            <Top10Item key={`${item.type}-${item.tmdbId}`} item={item} rank={index + 1} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
-
 export const NewsPage = () => {
   const navigate = useNavigate();
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const headerScrollRef = useRef<HTMLDivElement>(null);
+  const contentScrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
@@ -94,14 +66,17 @@ export const NewsPage = () => {
   });
 
   const updateScrollState = () => {
-    const el = scrollRef.current;
+    const el = contentScrollRef.current;
     if (!el) return;
+    if (headerScrollRef.current) {
+      headerScrollRef.current.scrollLeft = el.scrollLeft;
+    }
     setCanScrollLeft(el.scrollLeft > 5);
     setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 5);
   };
 
   useEffect(() => {
-    const el = scrollRef.current;
+    const el = contentScrollRef.current;
     if (!el) return;
     updateScrollState();
     el.addEventListener('scroll', updateScrollState, { passive: true });
@@ -117,33 +92,63 @@ export const NewsPage = () => {
   }, [queries]);
 
   const scrollLeft = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: -320, behavior: 'smooth' });
-      setTimeout(updateScrollState, 350);
-    }
+    const el = contentScrollRef.current;
+    if (!el) return;
+    const amount = el.clientWidth;
+    el.scrollBy({ left: -amount, behavior: 'smooth' });
+    setTimeout(updateScrollState, 400);
   };
 
   const scrollRight = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: 320, behavior: 'smooth' });
-      setCanScrollLeft(true);
-      setTimeout(updateScrollState, 350);
-    }
+    const el = contentScrollRef.current;
+    if (!el) return;
+    const amount = el.clientWidth;
+    el.scrollBy({ left: amount, behavior: 'smooth' });
+    setCanScrollLeft(true);
+    setTimeout(updateScrollState, 400);
   };
 
   return (
     <main className="news-page min-h-screen bg-canvas pb-20">
       <Header />
       <section className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8">
-        <h1 className="font-bebas text-3xl font-normal text-ink uppercase flex items-center gap-2">
+        <h1 className="font-bebas text-3xl font-normal text-ink uppercase flex items-center gap-2 mb-4">
           Novedades por plataforma
         </h1>
 
-        <div className="relative mt-8 group">
+        {/* Barra superior pegajosa (Sticky header) con logos y títulos */}
+        <div className="news-sticky-header sticky top-[72px] z-30 bg-canvas/95 backdrop-blur-md pt-3 pb-3 border-b border-slate-200/50 -mx-4 px-4 sm:-mx-6 sm:px-6 shadow-sm">
+          <div
+            ref={headerScrollRef}
+            className="flex gap-6 overflow-x-hidden hide-scrollbar"
+          >
+            {PLATFORMS.map((platform) => {
+              const logoUrl = resolvePlatformLogoUrl({ name: platform.name, logoPath: null });
+              return (
+                <div
+                  key={`header-${platform.id}`}
+                  className="w-[calc(100%-32px)] sm:w-[calc((100%-24px)/2)] lg:w-[calc((100%-72px)/4)] min-w-[260px] shrink-0"
+                >
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/novedades/${platform.id}`)}
+                    className="flex items-center gap-3 hover:opacity-80 transition-opacity text-left w-full py-1"
+                  >
+                    {logoUrl && <img src={logoUrl} alt={platform.name} className="h-10 w-auto rounded object-contain shrink-0" />}
+                    <h3 className="font-bebas text-2xl sm:text-[28px] leading-none text-ink tracking-wide truncate">{platform.name}</h3>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Carrusel de contenido: 4 columnas por página en desktop */}
+        <div className="relative group">
           <button
             type="button"
             onClick={scrollLeft}
-            className={`news-scroll-panel absolute left-0 top-14 bottom-6 z-20 flex w-8 sm:w-9 items-center justify-center rounded-r-md border border-l-0 border-white/20 bg-slate-950/50 hover:bg-slate-950/80 text-white backdrop-blur-md shadow-lg transition-all duration-300 ${canScrollLeft ? 'opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'}`}
+            className={`news-scroll-panel absolute left-0 top-6 bottom-8 z-20 flex w-8 sm:w-9 items-center justify-center rounded-r-md border border-l-0 border-white/20 bg-slate-950/50 hover:bg-slate-950/80 text-white backdrop-blur-md shadow-lg transition-all duration-300 ${canScrollLeft ? 'opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'}`}
             title="Plataformas anteriores"
             aria-label="Plataformas anteriores"
           >
@@ -151,19 +156,29 @@ export const NewsPage = () => {
           </button>
 
           <div
-            ref={scrollRef}
-            className="flex gap-8 overflow-x-auto pb-6 snap-x snap-mandatory hide-scrollbar relative"
+            ref={contentScrollRef}
+            className="flex gap-6 overflow-x-auto pt-6 pb-8 snap-x snap-mandatory hide-scrollbar relative"
           >
             {PLATFORMS.map((platform, index) => {
               const query = queries[index];
+              const top10 = getTop10(query.data);
               return (
-                <Top10Column
-                  key={platform.id}
-                  platform={platform}
-                  data={query.data}
-                  isLoading={query.isLoading}
-                  onClick={() => navigate(`/novedades/${platform.id}`)}
-                />
+                <div
+                  key={`content-${platform.id}`}
+                  className="w-[calc(100%-32px)] sm:w-[calc((100%-24px)/2)] lg:w-[calc((100%-72px)/4)] min-w-[260px] shrink-0 snap-start flex flex-col"
+                >
+                  {query.isLoading ? (
+                    <div className="grid h-64 place-items-center">
+                      <Loader2 className="h-8 w-8 animate-spin text-aqua" />
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      {top10.map((item, itemIndex) => (
+                        <Top10Item key={`${item.type}-${item.tmdbId}`} item={item} rank={itemIndex + 1} />
+                      ))}
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -171,7 +186,7 @@ export const NewsPage = () => {
           <button
             type="button"
             onClick={scrollRight}
-            className={`news-scroll-panel absolute right-0 top-14 bottom-6 z-20 flex w-8 sm:w-9 items-center justify-center rounded-l-md border border-r-0 border-white/20 bg-slate-950/50 hover:bg-slate-950/80 text-white backdrop-blur-md shadow-lg transition-all duration-300 ${canScrollRight ? 'opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'}`}
+            className={`news-scroll-panel absolute right-0 top-6 bottom-8 z-20 flex w-8 sm:w-9 items-center justify-center rounded-l-md border border-r-0 border-white/20 bg-slate-950/50 hover:bg-slate-950/80 text-white backdrop-blur-md shadow-lg transition-all duration-300 ${canScrollRight ? 'opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'}`}
             title="Siguientes plataformas"
             aria-label="Siguientes plataformas"
           >
