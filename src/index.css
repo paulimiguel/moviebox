@@ -312,12 +312,12 @@ body {
 }
 
 :root[data-theme="dark"] .news-scroll-panel {
-  background-color: rgb(18 20 23 / 0.75);
-  border-color: rgb(255 255 255 / 0.15);
+  background-color: rgb(0 0 0 / 0.12);
+  border-color: rgb(255 255 255 / 0.08);
   color: #fff;
 }
 :root[data-theme="dark"] .news-scroll-panel:hover {
-  background-color: rgb(18 20 23 / 0.95);
+  background-color: rgb(0 0 0 / 0.32);
 }
 
 :root[data-theme="dark"] .movie-library-page {

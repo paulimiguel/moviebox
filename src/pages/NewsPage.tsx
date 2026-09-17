@@ -116,7 +116,7 @@ export const NewsPage = () => {
           Novedades por plataforma
         </h1>
 
-        {/* Barra superior pegajosa (Sticky header) con logos y títulos centrados en cada columna */}
+        {/* Barra superior pegajosa (Sticky header) con logos y títulos centrados */}
         <div className="news-sticky-header sticky top-[72px] z-30 bg-canvas/95 backdrop-blur-md pt-3 pb-3 border-b border-slate-200/50 -mx-4 px-4 sm:-mx-6 sm:px-6 shadow-sm">
           <div
             ref={headerScrollRef}
@@ -148,11 +148,11 @@ export const NewsPage = () => {
           <button
             type="button"
             onClick={scrollLeft}
-            className={`news-scroll-panel absolute left-0 top-6 bottom-8 z-20 flex w-8 sm:w-9 items-center justify-center rounded-r-md border border-l-0 border-white/20 bg-slate-950/50 hover:bg-slate-950/80 text-white backdrop-blur-md shadow-lg transition-all duration-300 ${canScrollLeft ? 'opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'}`}
+            className={`news-scroll-panel absolute left-0 top-6 bottom-8 z-20 flex w-7 sm:w-8 items-center justify-center rounded-r-md border border-l-0 text-white transition-all duration-300 ${canScrollLeft ? 'opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'}`}
             title="Plataformas anteriores"
             aria-label="Plataformas anteriores"
           >
-            <ChevronLeft className="h-6 w-6 text-white drop-shadow" />
+            <ChevronLeft className="h-6 w-6 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" />
           </button>
 
           <div
@@ -186,11 +186,11 @@ export const NewsPage = () => {
           <button
             type="button"
             onClick={scrollRight}
-            className={`news-scroll-panel absolute right-0 top-6 bottom-8 z-20 flex w-8 sm:w-9 items-center justify-center rounded-l-md border border-r-0 border-white/20 bg-slate-950/50 hover:bg-slate-950/80 text-white backdrop-blur-md shadow-lg transition-all duration-300 ${canScrollRight ? 'opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'}`}
+            className={`news-scroll-panel absolute right-0 top-6 bottom-8 z-20 flex w-7 sm:w-8 items-center justify-center rounded-l-md border border-r-0 text-white transition-all duration-300 ${canScrollRight ? 'opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'}`}
             title="Siguientes plataformas"
             aria-label="Siguientes plataformas"
           >
-            <ChevronRight className="h-6 w-6 text-white drop-shadow" />
+            <ChevronRight className="h-6 w-6 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" />
           </button>
         </div>
       </section>
