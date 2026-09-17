@@ -17,3 +17,4 @@ content = content.replace(btnRegex, '</div>');
 
 fs.writeFileSync(path, content, 'utf-8');
 console.log('Updated PlatformNewsPage');
+

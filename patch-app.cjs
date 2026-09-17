@@ -17,3 +17,4 @@ content = content.replace(
 
 fs.writeFileSync(path, content, 'utf-8');
 console.log('Patched App.tsx');
+

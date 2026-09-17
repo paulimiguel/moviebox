@@ -17,10 +17,10 @@ const PLATFORMS = [
 const Top10Item = ({ item, rank }: { item: TmdbSuggestionCandidate; rank: number }) => {
   return (
     <article className="flex items-center gap-3">
-      <div className="relative flex shrink-0 items-center justify-center w-12 font-black italic text-5xl tracking-tighter text-slate-200 opacity-60" style={{ textShadow: '2px 2px 0 rgba(255,255,255,0.05)' }}>
+      <div className="relative flex shrink-0 items-center justify-center w-[52px] font-black italic text-[56px] tracking-tighter text-white opacity-100" style={{ textShadow: '2px 2px 0 rgba(255,255,255,0.05)' }}>
         {rank}
       </div>
-      <div className="h-16 w-11 shrink-0 overflow-hidden rounded bg-mist relative">
+      <div className="h-[84px] w-[58px] shrink-0 overflow-hidden rounded bg-mist relative">
         {item.posterUrl ? (
           <img src={item.posterUrl} alt={item.title} className="h-full w-full object-cover" />
         ) : (
@@ -54,8 +54,8 @@ const Top10Column = ({ platform, data, isLoading, onClick }: { platform: any; da
         onClick={onClick}
         className="flex items-center gap-2 mb-4 hover:opacity-80 transition-opacity"
       >
-        {logoUrl && <img src={logoUrl} alt={platform.name} className="h-8 w-auto rounded object-contain" />}
-        <h3 className="font-bebas text-xl text-ink tracking-wide">{platform.name}</h3>
+        {logoUrl && <img src={logoUrl} alt={platform.name} className="h-11 w-auto rounded object-contain" />}
+        <h3 className="font-bebas text-[28px] leading-none text-ink tracking-wide">{platform.name}</h3>
       </button>
 
       {isLoading ? (
