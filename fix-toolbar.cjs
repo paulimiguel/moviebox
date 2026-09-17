@@ -13,3 +13,4 @@ if (!content.includes('{props.titleExtras}')) {
 } else {
     console.log("titleExtras already in Toolbar");
 }
+

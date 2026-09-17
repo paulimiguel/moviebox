@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, Bookmark, Check, ChevronDown, ExternalLink, Eye, Film, Heart, Pencil, Star, Trash2, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bookmark, Check, ChevronDown, ExternalLink, Eye, Film, Heart, Pencil, Star, Trash2, X, Plus } from 'lucide-react';
 import { PlatformLogos } from '@/components/PlatformLogos';
 import { StarRating } from '@/components/StarRating';
 import { api, resolveMovieImageUrl } from '@/services/api';
 import type { MovieItem } from '@/types/movie';
 
-export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal, onRating, onCollections, onPrevious, onNext }: {
+export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal, onRating, onCollections, onPrevious, onNext, onAdd }: {
   movie: MovieItem;
   onClose: () => void;
   onEdit?: (movie: MovieItem) => void;
@@ -16,6 +16,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
   onCollections: (movie: MovieItem, collectionIds: string[]) => void;
   onPrevious?: () => void;
   onNext?: () => void;
+  onAdd?: (movie: MovieItem) => void;
 }) => {
   const collections = useQuery({ queryKey: ['collections'], queryFn: api.collections.getAll });
   const [collectionMenuOpen, setCollectionMenuOpen] = useState(false);
@@ -86,7 +87,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
           <div className="min-w-0">
             <h2 id="movie-detail-title" className="font-bebas truncate text-[24px] font-normal uppercase leading-7 text-ink">{title}</h2>
           </div>
-          <div className="ml-auto flex shrink-0 overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
+          <div className="flex shrink-0 overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
             {onEdit && <button type="button" onClick={() => onEdit(movie)} className="icon-button rounded-none border-0 shadow-none" title="Editar" aria-label="Editar"><Pencil className="h-4 w-4" /></button>}
             {onDelete && <button type="button" onClick={() => onDelete(movie)} className="icon-button rounded-none border-0 border-l border-slate-200 text-red-600 shadow-none" title="Eliminar" aria-label="Eliminar"><Trash2 className="h-4 w-4" /></button>}
             <button type="button" onClick={onPrevious} disabled={!onPrevious} className="icon-button rounded-none border-0 border-l border-slate-200 shadow-none" title="Título anterior" aria-label="Título anterior"><ArrowLeft className="h-5 w-5" /></button>

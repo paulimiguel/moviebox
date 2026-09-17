@@ -26,3 +26,4 @@ if (!content.includes(insertTitleExtras)) {
 
 fs.writeFileSync(filePath, content, 'utf-8');
 console.log('Fixed MovieLibraryToolbar');
+

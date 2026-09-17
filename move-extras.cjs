@@ -8,13 +8,11 @@ let toolbarContent = fs.readFileSync(toolbarPath, 'utf-8');
 toolbarContent = toolbarContent.replace('          {props.titleExtras}\r\n', '');
 toolbarContent = toolbarContent.replace('          {props.titleExtras}\n', '');
 
-// Add it outside the grid
-const gridEnd = '      </div>';
-const newGridEnd = `      </div>\n      {props.titleExtras}`;
-toolbarContent = toolbarContent.replace(gridEnd, newGridEnd);
+// Add it right before </section>
+toolbarContent = toolbarContent.replace('    </section>', '      {props.titleExtras}\n    </section>');
 
 fs.writeFileSync(toolbarPath, toolbarContent, 'utf-8');
-console.log('Toolbar updated');
+console.log('Toolbar updated properly');
 
 // 2. Modify NewsPage.tsx
 const newsPagePath = 'src/pages/NewsPage.tsx';

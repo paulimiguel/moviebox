@@ -109,11 +109,12 @@ export const api = {
   uploads: {
     images: (files: File[]) => { const body = new FormData(); files.forEach((file) => body.append('images', file)); return request<{ images: { url: string; localPath: string; order: number }[] }>('/uploads', { method: 'POST', body }); },
   },
-  tmdb: {
-    status: () => request<{ configured: boolean; protectedFields: string[] }>('/tmdb/status'),
-    suggestions: (query = '') => request<TmdbSuggestionCandidate[]>(`/tmdb/suggestions${query ? `?query=${encodeURIComponent(query)}` : ''}`),
-    newReleases: (platform: string) => request<{ movies: any[], series: any[] }>(`/tmdb/new-releases?platform=${platform}`),
-  },
+      tmdb: {
+      status: () => request<{ configured: boolean; protectedFields: string[] }>('/tmdb/status'),
+      suggestions: (query = '') => request<TmdbSuggestionCandidate[]>(`/tmdb/suggestions${query ? `?query=${encodeURIComponent(query)}` : ''}`),
+      newReleases: (platform: string) => request<{ movies: any[], series: any[] }>(`/tmdb/new-releases?platform=${platform}`),
+      recommendations: (type: 'movie' | 'series', id: number) => request<TmdbSuggestionCandidate[]>(`/tmdb/recommendations?type=${type}&id=${id}`),
+    },
 };
 
 export const resolveMovieImageUrl = (url: string) => {

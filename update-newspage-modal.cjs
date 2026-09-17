@@ -12,14 +12,18 @@ if (!content.includes('MovieDetailModal')) {
 const stateInsert = `
   const [emptyFieldsCount, setEmptyFieldsCount] = useState(0);
   const [selectedCandidate, setSelectedCandidate] = useState<any>(null);`;
-content = content.replace('  const [emptyFieldsCount, setEmptyFieldsCount] = useState(0);', stateInsert);
+if (!content.includes('const [selectedCandidate')) {
+    content = content.replace('  const [emptyFieldsCount, setEmptyFieldsCount] = useState(0);', stateInsert);
+}
 
 // 3. Make title clickable
 const titleSearch = `<h2 className="font-bebas line-clamp-2 text-xl uppercase leading-6 text-ink">{candidate.title}</h2>`;
 const titleReplace = `<h2 role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); setSelectedCandidate(candidate); }} onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); setSelectedCandidate(candidate); } }} className="font-bebas line-clamp-2 text-xl uppercase leading-6 text-ink hover:text-coral hover:underline">{candidate.title}</h2>`;
-content = content.replace(titleSearch, titleReplace);
-// Also support LF replacement if needed
-content = content.replace(titleSearch.replace(/\r\n/g, '\n'), titleReplace.replace(/\r\n/g, '\n'));
+if (content.includes(titleSearch)) {
+    content = content.replace(titleSearch, titleReplace);
+} else if (content.includes(titleSearch.replace(/\r\n/g, '\n'))) {
+    content = content.replace(titleSearch.replace(/\r\n/g, '\n'), titleReplace.replace(/\r\n/g, '\n'));
+}
 
 // 4. Render MovieDetailModal
 const modalRender = `      <main className="mx-auto max-w-[1500px] p-4 sm:p-6 pb-20">`;
@@ -60,7 +64,10 @@ const modalInsert = `      {selectedCandidate && (
         />
       )}
       <main className="mx-auto max-w-[1500px] p-4 sm:p-6 pb-20">`;
-content = content.replace(modalRender, modalInsert);
+if (content.includes(modalRender)) {
+    content = content.replace(modalRender, modalInsert);
+}
 
 fs.writeFileSync(newsPagePath, content, 'utf-8');
 console.log("NewsPage modal integrated");
+

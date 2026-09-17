@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, ChevronDown, Download, FileSpreadsheet, FileText, Film, Loader2, Plus, RefreshCw, Search, Star, Tv, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
+import { TinderSuggestions } from '@/components/TinderSuggestions';
 import { api } from '@/services/api';
 import type { ImdbSearchCandidate, MovieItem, MovieTypeFilter, TmdbSuggestionCandidate } from '@/types/movie';
 

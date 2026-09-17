@@ -13,3 +13,4 @@ if (!content.includes('const [selectedCandidate, setSelectedCandidate] = useStat
 } else {
     console.log("State already present");
 }
+
