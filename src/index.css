@@ -320,6 +320,14 @@ body {
   color: #fff;
 }
 
+.justwatch-rank-number {
+  color: rgb(203 213 225 / 0.85);
+}
+
+:root[data-theme="dark"] .justwatch-rank-number {
+  color: rgb(30 41 59 / 0.85);
+}
+
 .news-scroll-panel {
   background-color: rgb(0 0 0 / 0.08);
   border-color: rgb(0 0 0 / 0.08);

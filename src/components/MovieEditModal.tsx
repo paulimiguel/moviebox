@@ -246,7 +246,7 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/55 sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="movie-edit-title">
       <form onSubmit={(event) => { event.preventDefault(); setError(''); save.mutate(); }} className="movie-detail-modal max-h-[96vh] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-5xl sm:rounded-md">
         <header className="flex h-16 items-center gap-3 border-b border-slate-200 bg-white px-4 sm:px-6">
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h2 id="movie-edit-title" className="truncate text-lg font-semibold text-ink">Editar {movie.originalTitle}</h2>
             <p className="text-xs text-slate-500">Todos los datos del título</p>
           </div>

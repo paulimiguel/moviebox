@@ -423,7 +423,7 @@ export const MovieFormModal = ({
         className="movie-detail-modal max-h-[96vh] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-4xl sm:rounded-md"
       >
         <header className="flex h-16 items-center border-b border-slate-200 bg-white px-4 sm:px-6">
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h2 className="truncate text-lg font-semibold text-ink">
               {movie ? `Editar ${movie.originalTitle}` : "Agregar titulo"}
             </h2>

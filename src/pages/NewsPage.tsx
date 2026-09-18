@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { resolvePlatformLogoUrl } from '@/components/PlatformLogos';
 import { MovieDetailModal } from '@/components/MovieDetailModal';
 import { Loader2, Film, Tv, ChevronLeft, ChevronRight } from 'lucide-react';
-import type { MovieItem, TmdbSuggestionCandidate } from '@/types/movie';
+import type { JustWatchTop10Item, MovieItem, TmdbSuggestionCandidate } from '@/types/movie';
 
 const PLATFORMS = [
   { id: 'netflix', name: 'Netflix' },
@@ -84,6 +84,11 @@ export const NewsPage = () => {
   const [selectedCandidate, setSelectedCandidate] = useState<TmdbSuggestionCandidate | null>(null);
 
   const library = useQuery({ queryKey: ['movies'], queryFn: api.movies.getAll });
+  const justwatchTop10Query = useQuery({
+    queryKey: ['justwatchTop10'],
+    queryFn: api.tmdb.justwatchTop10,
+    staleTime: 1000 * 60 * 30,
+  });
 
   const queries = useQueries({
     queries: PLATFORMS.map((platform) => ({
@@ -181,6 +186,9 @@ export const NewsPage = () => {
 
   const allCandidatesInActivePlatform = useMemo(() => {
     if (!selectedCandidate) return [];
+    if (justwatchTop10Query.data?.some((c) => c.tmdbId === selectedCandidate.tmdbId)) {
+      return justwatchTop10Query.data;
+    }
     for (const q of queries) {
       const list = getTop10(q.data);
       if (list.some((c) => c.tmdbId === selectedCandidate.tmdbId)) {
@@ -188,7 +196,7 @@ export const NewsPage = () => {
       }
     }
     return [];
-  }, [selectedCandidate, queries]);
+  }, [selectedCandidate, queries, justwatchTop10Query.data]);
 
   const activeIndex = useMemo(() => {
     if (!selectedCandidate || !allCandidatesInActivePlatform.length) return -1;
@@ -289,11 +297,11 @@ export const NewsPage = () => {
     <main className="news-page min-h-screen bg-canvas pb-20 relative">
       <Header />
 
-      {/* Barras de desplazamiento laterales en los extremos de la ventana */}
+      {/* Barras de desplazamiento laterales en los extremos de la ventana (visibles solo en hover) */}
       <button
         type="button"
         onClick={scrollLeft}
-        className={`news-scroll-panel fixed left-0 top-[72px] bottom-0 z-[35] flex w-7 sm:w-9 items-center justify-center rounded-r-md border-r border-y border-l-0 transition-all duration-300 ${canScrollLeft ? 'opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'}`}
+        className={`news-scroll-panel fixed left-0 top-[72px] bottom-0 z-[35] flex w-8 sm:w-10 items-center justify-center rounded-r-md border-r border-y border-l-0 transition-opacity duration-300 ${canScrollLeft ? 'opacity-0 hover:opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'}`}
         title="Plataformas anteriores"
         aria-label="Plataformas anteriores"
       >
@@ -303,7 +311,7 @@ export const NewsPage = () => {
       <button
         type="button"
         onClick={scrollRight}
-        className={`news-scroll-panel fixed right-0 top-[72px] bottom-0 z-[35] flex w-7 sm:w-9 items-center justify-center rounded-l-md border-l border-y border-r-0 transition-all duration-300 ${canScrollRight ? 'opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'}`}
+        className={`news-scroll-panel fixed right-0 top-[72px] bottom-0 z-[35] flex w-8 sm:w-10 items-center justify-center rounded-l-md border-l border-y border-r-0 transition-opacity duration-300 ${canScrollRight ? 'opacity-0 hover:opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'}`}
         title="Siguientes plataformas"
         aria-label="Siguientes plataformas"
       >
@@ -376,6 +384,79 @@ export const NewsPage = () => {
               );
             })}
           </div>
+        </div>
+
+        {/* Sección: Top 10 en AR hoy (JustWatch) */}
+        <div className="mt-14 border-t border-slate-200/40 pt-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-bebas text-2xl sm:text-3xl font-normal text-ink uppercase tracking-wide flex items-center gap-2">
+              Top 10 en AR hoy
+            </h2>
+            <span className="text-xs text-slate-400 font-medium">JustWatch</span>
+          </div>
+
+          {justwatchTop10Query.isLoading ? (
+            <div className="grid h-48 place-items-center">
+              <Loader2 className="h-8 w-8 animate-spin text-aqua" />
+            </div>
+          ) : justwatchTop10Query.data?.length ? (
+            <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 pt-2 hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+              {justwatchTop10Query.data.map((item) => (
+                <div
+                  key={`jw-${item.rank}-${item.tmdbId}`}
+                  onClick={() => setSelectedCandidate(item)}
+                  className="relative flex items-end shrink-0 select-none group/jw cursor-pointer focus:outline-none"
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setSelectedCandidate(item);
+                    }
+                  }}
+                  title={`Ver características de ${item.title}`}
+                  aria-label={`Ver características de ${item.title}`}
+                >
+                  {/* Número gigante de ranking que queda parcialmente detrás del póster */}
+                  <span className="justwatch-rank-number font-bebas text-[115px] sm:text-[140px] font-black leading-none select-none -mr-4 sm:-mr-6 z-0 transition-transform group-hover/jw:scale-105 pointer-events-none">
+                    {item.rank}
+                  </span>
+
+                  {/* Tarjeta de póster */}
+                  <div className="relative z-10 w-[135px] sm:w-[160px] aspect-[2/3] overflow-hidden rounded-lg bg-mist shadow-md transition-all duration-200 group-hover/jw:scale-105 group-hover/jw:shadow-xl ring-1 ring-black/5 dark:ring-white/10">
+                    {item.posterUrl ? (
+                      <img src={item.posterUrl} alt={item.title} className="h-full w-full object-cover" loading="lazy" />
+                    ) : (
+                      <div className="grid h-full place-items-center text-aqua/50">
+                        {item.type === 'movie' ? <Film className="h-8 w-8" /> : <Tv className="h-8 w-8" />}
+                      </div>
+                    )}
+
+                    {/* Cinta / Bookmark superior izquierda */}
+                    <div className="absolute top-0 left-2 z-20 pointer-events-none drop-shadow-sm opacity-80 group-hover/jw:opacity-100 transition-opacity">
+                      <svg viewBox="0 0 24 32" className="w-4 h-6 sm:w-5 sm:h-7 fill-black/45 text-white/90">
+                        <path d="M0 0h24v32l-12-7-12 7z" />
+                      </svg>
+                    </div>
+
+                    {/* Badges inferiores derechos */}
+                    <div className="absolute bottom-2 right-2 z-20 flex flex-col items-end gap-1 pointer-events-none">
+                      {item.subBadge && (
+                        <span className="bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-tight shadow">
+                          {item.subBadge}
+                        </span>
+                      )}
+                      <span className="bg-black/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-tight shadow">
+                        {item.badge || (item.type === 'series' ? 'TV' : 'PELÍCULA')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-400 py-6">No se pudieron cargar los datos de JustWatch.</p>
+          )}
         </div>
       </section>
 

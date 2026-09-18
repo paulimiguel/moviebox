@@ -344,6 +344,14 @@ export interface TmdbSuggestionCandidate {
   popularity: number;
 }
 
+export interface JustWatchTop10Item extends TmdbSuggestionCandidate {
+  rank: number;
+  jwId: string;
+  badge?: string | null;
+  subBadge?: string | null;
+  justwatchUrl?: string | null;
+}
+
 export type TmdbImportedMovieData = Omit<
   CreateMovieInput,
   "favorite" | "watched" | "watchlist" | "personalRating" | "collectionIds"

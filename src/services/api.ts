@@ -1,4 +1,4 @@
-import type { CreateMovieCollectionInput, CreateMovieInput, GenreCatalogItem, ImdbImportedMovieData, ImdbImportRequest, ImdbSearchCandidate, MovieCollection, MovieItem, MoviePersonalUpdate, PlatformCatalogItem, TmdbSuggestionCandidate } from '@/types/movie';
+import type { CreateMovieCollectionInput, CreateMovieInput, GenreCatalogItem, ImdbImportedMovieData, ImdbImportRequest, ImdbSearchCandidate, JustWatchTop10Item, MovieCollection, MovieItem, MoviePersonalUpdate, PlatformCatalogItem, TmdbSuggestionCandidate } from '@/types/movie';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:3003/api');
 const TOKEN_KEY = 'moviebox_auth_token';
@@ -109,11 +109,12 @@ export const api = {
   uploads: {
     images: (files: File[]) => { const body = new FormData(); files.forEach((file) => body.append('images', file)); return request<{ images: { url: string; localPath: string; order: number }[] }>('/uploads', { method: 'POST', body }); },
   },
-      tmdb: {
+    tmdb: {
       status: () => request<{ configured: boolean; protectedFields: string[] }>('/tmdb/status'),
       suggestions: (query = '') => request<TmdbSuggestionCandidate[]>(`/tmdb/suggestions${query ? `?query=${encodeURIComponent(query)}` : ''}`),
       newReleases: (platform: string) => request<{ movies: any[], series: any[] }>(`/tmdb/new-releases?platform=${platform}`),
       recommendations: (type: 'movie' | 'series', id: number) => request<TmdbSuggestionCandidate[]>(`/tmdb/recommendations?type=${type}&id=${id}`),
+      justwatchTop10: () => request<JustWatchTop10Item[]>('/tmdb/justwatch-top10'),
     },
 };
 
