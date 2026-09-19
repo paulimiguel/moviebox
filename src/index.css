@@ -321,11 +321,11 @@ body {
 }
 
 .justwatch-rank-number {
-  color: rgb(203 213 225 / 0.85);
+  color: rgb(148 163 184 / 0.6);
 }
 
 :root[data-theme="dark"] .justwatch-rank-number {
-  color: rgb(30 41 59 / 0.85);
+  color: rgb(44 55 72);
 }
 
 .news-scroll-panel {

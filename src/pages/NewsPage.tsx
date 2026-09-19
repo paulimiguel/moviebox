@@ -400,7 +400,7 @@ export const NewsPage = () => {
               <Loader2 className="h-8 w-8 animate-spin text-aqua" />
             </div>
           ) : justwatchTop10Query.data?.length ? (
-            <div className="flex gap-4 sm:gap-6 overflow-x-auto pb-6 pt-2 hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex gap-6 sm:gap-10 overflow-x-auto pb-6 pt-2 hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               {justwatchTop10Query.data.map((item) => (
                 <div
                   key={`jw-${item.rank}-${item.tmdbId}`}
@@ -417,8 +417,8 @@ export const NewsPage = () => {
                   title={`Ver características de ${item.title}`}
                   aria-label={`Ver características de ${item.title}`}
                 >
-                  {/* Número gigante de ranking que queda parcialmente detrás del póster */}
-                  <span className="justwatch-rank-number font-bebas text-[115px] sm:text-[140px] font-black leading-none select-none -mr-4 sm:-mr-6 z-0 transition-transform group-hover/jw:scale-105 pointer-events-none">
+                  {/* Número de ranking amplio y visible a la izquierda con sutil solapamiento */}
+                  <span className="justwatch-rank-number font-sans font-black text-[130px] sm:text-[165px] leading-[0.8] tracking-tighter select-none -mr-2 sm:-mr-3 z-0 transition-transform group-hover/jw:scale-105 pointer-events-none">
                     {item.rank}
                   </span>
 
