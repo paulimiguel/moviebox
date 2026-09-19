@@ -120,13 +120,12 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
         <div className="min-w-0 self-center">
           <h2 className="font-bebas line-clamp-2 text-[28px] font-normal uppercase leading-8 text-ink">{title}</h2>
           {spanishTitle && <p className="mt-0.5 text-sm font-medium text-slate-600">{spanishTitle}</p>}
-          {(movie.year || movie.imdbRating != null || trailerLink) && (
+          {(movie.year || movie.imdbRating != null) && (
             <div className="mt-1 flex items-center justify-between gap-2 text-slate-500">
               <div className="flex flex-wrap items-center gap-3">
                 {movie.year && <span className="text-base font-bold">{movie.year}</span>}
                 {movie.imdbRating != null && <span className="inline-flex items-center gap-1 text-sm font-semibold"><Star className="h-4 w-4 fill-amber-400 text-amber-400" />{movie.imdbRating}</span>}
               </div>
-              {trailerLink && <span className="ml-auto shrink-0 text-xs [&_img]:h-3 [&_img]:w-[18px]">{trailerLink}</span>}
             </div>
           )}
           {genres && <p className="mt-2 text-sm leading-5 text-slate-500">{genres}</p>}
@@ -139,6 +138,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
           <PlatformLogos platforms={movie.platforms} limit={3} />
           <div className="mt-2">{catalogLinks(true, true)}</div>
           <div className="mt-3">{actionControls(false, true)}</div>
+          {trailerLink && <div className="mt-3 shrink-0 text-xs [&_img]:h-3 [&_img]:w-[18px]">{trailerLink}</div>}
         </div>
       </article>
     );
@@ -155,13 +155,12 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
             {actionControls(false, true)}
           </div>
           {spanishTitle && <p className="mt-0.5 text-sm font-medium text-slate-600">{spanishTitle}</p>}
-          {(movie.year || movie.imdbRating != null || trailerLink) && (
+          {(movie.year || movie.imdbRating != null) && (
             <div className="mt-2 flex items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-3 text-slate-500">
                 <span className="text-base font-bold">{movie.year || 'Año desconocido'}</span>
                 {movie.imdbRating != null && <span className="inline-flex items-center gap-1 text-sm font-semibold"><Star className="h-4 w-4 fill-amber-400 text-amber-400" />{movie.imdbRating}</span>}
               </div>
-              {trailerLink && <div className="ml-auto shrink-0 text-xs [&_img]:h-3 [&_img]:w-[18px]">{trailerLink}</div>}
             </div>
           )}
           <p className="mt-1 text-sm text-slate-500">{movie.durationMinutes ? `${movie.durationMinutes} minutos` : 'Duracion desconocida'}</p>
@@ -181,6 +180,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
               <span className={typeBadgeStyle}>{typeLabel}</span>
               {primaryGenre && <span className="rounded bg-mist px-2 py-1 text-[11px] font-semibold text-ink">{primaryGenre}</span>}
             </div>
+            {trailerLink && <div className="shrink-0 text-xs [&_img]:h-3 [&_img]:w-[18px]">{trailerLink}</div>}
           </div>
         </div>
 
@@ -217,13 +217,12 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
         <div className={`flex flex-1 flex-col ${mediumIcons ? 'p-2.5' : 'p-3'}`}>
           <h2 className={`font-bebas line-clamp-2 font-normal uppercase text-ink ${mediumIcons ? 'text-[23px] leading-6' : 'text-[28px] leading-8'}`}>{title}</h2>
           {spanishTitle && <p className={`mt-0.5 line-clamp-2 font-medium text-slate-600 ${mediumIcons ? 'text-xs' : 'text-sm'}`}>{spanishTitle}</p>}
-          {(movie.year || movie.imdbRating != null || trailerLink) && (
+          {(movie.year || movie.imdbRating != null) && (
             <div className="mt-1 flex items-center justify-between gap-1.5">
               <div className="flex flex-wrap items-center gap-2 text-slate-500">
                 {movie.year && <span className="text-base font-bold text-slate-500">{movie.year}</span>}
                 {movie.imdbRating != null && <span className="inline-flex items-center gap-1 text-sm font-semibold text-slate-500"><Star className="h-4 w-4 fill-amber-400 text-amber-400" />{movie.imdbRating}</span>}
               </div>
-              {trailerLink && <div className="ml-auto shrink-0 text-xs [&_img]:h-3 [&_img]:w-[18px]">{trailerLink}</div>}
             </div>
           )}
           <p className={`${mediumIcons ? 'mt-1.5 text-xs' : 'mt-2 text-sm'} text-slate-500`}>{movie.durationMinutes ? `${movie.durationMinutes} minutos` : 'Duracion desconocida'}</p>
@@ -231,6 +230,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
           <div className="mt-2">
             <PlatformLogos platforms={movie.platforms} limit={4} />
           </div>
+          {trailerLink && <div className="mt-auto pt-2 text-xs [&_img]:h-3 [&_img]:w-[18px]">{trailerLink}</div>}
         </div>
       </article>
     );
