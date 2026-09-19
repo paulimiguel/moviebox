@@ -192,10 +192,6 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                   <dd className="mt-1"><PlatformLogos platforms={movie.platforms} large /></dd>
                 </div>
                 <div>
-                  <dt className="field-label">Recomendación de Instagram</dt>
-                  <dd className="text-sm text-ink">{movie.instagramRecommendation ? 'Sí' : 'No'}</dd>
-                </div>
-                <div>
                   <dt className="field-label">Links</dt>
                   <dd className="mt-1 flex flex-wrap items-center gap-2">{links.filter((item) => item.label !== 'Trailer').map((item) => <a key={item.label} href={item.url!} target="_blank" rel="noreferrer" aria-label={item.label} className="inline-flex items-center transition-opacity hover:opacity-70">{item.label === 'IMDb' ? <img src="/imdb-logo.png" alt="IMDb" className="h-6 w-[50px] object-contain" /> : item.label === 'TMDB' ? <img src="/tmdb.png" alt="TMDB" className="h-5 w-[96px] object-contain" /> : item.label === 'JustWatch' ? <img src="/justwatch.png" alt="JustWatch" className="h-5 w-[85px] object-contain" /> : <>{item.label}<ExternalLink className="h-4 w-4" /></>}</a>)}</dd>
                 </div>

@@ -66,6 +66,7 @@ export const MovieBulkEditModal = ({ movies, genres, platforms, collections, onC
           {error && <p className="rounded-md bg-red-50 p-3 text-sm text-red-700 sm:col-span-2">{error}</p>}
         </div>
         <footer className="flex h-16 items-center justify-end gap-2 border-t border-slate-200 bg-white px-4 sm:px-6"><button type="button" onClick={onClose} className="secondary-button">Cancelar</button><button type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending || !validYear || (!type && !year && !genre && !platform && !collectionId && !markWatched && !markFavorite && !markWatchlist && !instagramRecommendation)} className="primary-button">{mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}Aplicar cambios</button></footer>
+        <footer className="flex h-16 items-center justify-end gap-2 border-t border-slate-200 bg-white px-4 sm:px-6"><button type="button" onClick={onClose} className="secondary-button">Cancelar</button><button type="button" onClick={() => mutation.mutate()} disabled={mutation.isPending || !validYear || (!type && !year && !genre && !platform && !collectionId && !markWatched && !markFavorite && !markWatchlist)} className="primary-button">{mutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}Aplicar cambios</button></footer>
       </div>
     </div>
   );

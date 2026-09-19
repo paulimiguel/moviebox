@@ -292,19 +292,10 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
               </div>
             </fieldset>
 
-            <div className="grid content-start gap-3 sm:grid-cols-2">
-              <div>
-                <span className="field-label">Rate</span>
-                <StarRating value={personalRating} onChange={setPersonalRating} disabled={save.isPending} />
-                <p className="mt-1 text-xs text-slate-400">{personalRating ? `${personalRating} de 5` : 'Sin puntuación'}</p>
-              </div>
-              <div>
-                <span className="field-label">Recomendación de Instagram</span>
-                <button type="button" role="switch" aria-checked={instagramRecommendation} onClick={() => setInstagramRecommendation((current) => !current)} className="secondary-button h-11 w-full min-w-0 gap-2 px-2 text-xs uppercase">
-                  <span className={`relative h-5 w-9 shrink-0 rounded-full transition-colors ${instagramRecommendation ? 'bg-coral' : 'bg-slate-300'}`}><span className={`absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform ${instagramRecommendation ? 'translate-x-4' : ''}`} /></span>
-                  Instagram
-                </button>
-              </div>
+            <div>
+              <span className="field-label">Rate</span>
+              <StarRating value={personalRating} onChange={setPersonalRating} disabled={save.isPending} />
+              <p className="mt-1 text-xs text-slate-400">{personalRating ? `${personalRating} de 5` : 'Sin puntuación'}</p>
             </div>
           </div>
 

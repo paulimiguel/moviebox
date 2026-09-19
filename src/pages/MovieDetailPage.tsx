@@ -275,10 +275,6 @@ export const MovieDetailPage = () => {
                   <dd className="mt-2"><PlatformLogos platforms={movie.platforms} large /></dd>
                   {movie.trailerUrl && <a href={movie.trailerUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-opacity hover:opacity-70"><img src="/youtube-play.png" alt="" className="h-4 w-[23px] object-contain" aria-hidden="true" />Ver trailer</a>}
               </div>
-              <div>
-                <dt className="text-xs font-semibold uppercase text-slate-400">Recomendación de Instagram</dt>
-                <dd className="mt-1 text-sm text-ink">{movie.instagramRecommendation ? 'Sí' : 'No'}</dd>
-              </div>
               {movie.type === "series" && (
                 <div>
                   <dt className="text-xs font-semibold uppercase text-slate-400">
