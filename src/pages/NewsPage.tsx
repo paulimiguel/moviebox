@@ -418,7 +418,7 @@ export const NewsPage = () => {
                   aria-label={`Ver características de ${item.title}`}
                 >
                   {/* Número de ranking amplio y visible a la izquierda con sutil solapamiento */}
-                  <span className="justwatch-rank-number font-sans font-black text-[130px] sm:text-[165px] leading-[0.8] tracking-tighter select-none -mr-2 sm:-mr-3 z-0 transition-transform group-hover/jw:scale-105 pointer-events-none">
+                  <span className="justwatch-rank-number font-sans font-black text-[130px] sm:text-[165px] leading-[0.8] tracking-tighter select-none -mr-2 sm:-mr-3 z-0 transition-all duration-200 group-hover/jw:scale-105 pointer-events-none">
                     {item.rank}
                   </span>
 

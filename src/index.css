@@ -325,7 +325,11 @@ body {
 }
 
 :root[data-theme="dark"] .justwatch-rank-number {
-  color: rgb(44 55 72);
+  color: rgb(255 255 255 / 0.2);
+}
+
+:root[data-theme="dark"] .group\/jw:hover .justwatch-rank-number {
+  color: rgb(255 255 255 / 0.35);
 }
 
 .news-scroll-panel {
