@@ -134,11 +134,11 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
           </div>
         </div>
 
-        <div className="flex min-w-0 flex-col items-start self-center text-xs lg:items-end">
+        <div className="flex min-w-0 flex-col items-start self-center gap-2.5 text-xs lg:items-end">
           <PlatformLogos platforms={movie.platforms} limit={3} />
-          <div className="mt-2">{catalogLinks(true, true)}</div>
-          <div className="mt-3">{actionControls(false, true)}</div>
-          {trailerLink && <div className="mt-3 shrink-0 text-xs [&_img]:h-3 [&_img]:w-[18px]">{trailerLink}</div>}
+          {catalogLinks(true, true)}
+          {actionControls(false, true)}
+          {trailerLink && <div className="shrink-0 text-xs [&_img]:h-3 [&_img]:w-[18px]">{trailerLink}</div>}
         </div>
       </article>
     );
