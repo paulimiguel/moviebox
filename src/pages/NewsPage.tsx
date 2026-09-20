@@ -384,6 +384,8 @@ export const NewsPage = () => {
 
         {/* Barra superior pegajosa (Sticky header) con logos y títulos centrados */}
         <div className="news-sticky-header sticky top-[72px] z-30 bg-canvas/95 backdrop-blur-md pt-3 pb-3 border-b border-slate-200/50 -mx-4 px-4 sm:-mx-6 sm:px-6 shadow-sm">
+        {/* Barra superior con logos y títulos centrados (no fija) */}
+        <div className="news-sticky-header bg-canvas pt-3 pb-3 border-b border-slate-200/50 -mx-4 px-4 sm:-mx-6 sm:px-6">
           <div
             ref={headerScrollRef}
             className="flex gap-6 overflow-x-hidden hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
@@ -521,11 +523,14 @@ export const NewsPage = () => {
         {/* Sección: Sugerencias debajo del todo */}
         <div className="mt-14 border-t border-slate-200/40 pt-8 pb-10 space-y-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-14 border-t border-slate-200/40 pt-8 pb-10 space-y-6">
+          <div className="space-y-4">
             <div>
               <h2 className="font-bebas text-2xl uppercase text-ink sm:text-3xl">Sugerencias</h2>
               <p className="text-xs text-slate-500">Deslizá o explorá las sugerencias de cada plataforma para agregarlas a tu biblioteca</p>
             </div>
             <div className="flex flex-wrap gap-2 sm:gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
               {SUGGESTION_PLATFORMS.map((p) => {
                 const active = activeSuggestionPlatform === p.id;
                 const logoUrl = resolvePlatformLogoUrl({ name: p.name, logoPath: null });
@@ -542,17 +547,27 @@ export const NewsPage = () => {
                       }
                     }}
                     className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all ${
+                    title={p.name}
+                    aria-label={p.name}
+                    className={`news-suggestion-platform-btn group relative flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl border transition-all ${
                       active
                         ? 'border-coral bg-coral text-white shadow-sm'
                         : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                        ? 'active border-coral bg-coral/10 ring-2 ring-coral shadow-md scale-105'
+                        : 'border-slate-200 bg-white opacity-70 hover:opacity-100 hover:border-slate-300 hover:bg-slate-50'
                     }`}
                   >
                     {logoUrl && (
+                    {logoUrl ? (
                       <img
                         src={logoUrl}
                         alt=""
                         className="h-4 w-4 rounded object-contain"
+                        alt={p.name}
+                        className="h-8 w-8 sm:h-9 sm:w-9 rounded-md object-contain transition-transform group-hover:scale-105"
                       />
+                    ) : (
+                      <span className="text-xs font-bold text-slate-600">{p.name.slice(0, 2)}</span>
                     )}
                     <span>{p.name}</span>
                   </button>
