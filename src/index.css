@@ -274,6 +274,26 @@ body {
   color: #fff !important;
 }
 
+:root[data-theme="dark"] .library-toolbar .secondary-button,
+:root[data-theme="dark"] .library-toolbar .icon-button {
+  border-color: rgb(71 85 105);
+  background-color: rgb(42 45 49);
+  color: #fff;
+}
+
+:root[data-theme="dark"] .library-toolbar .secondary-button:hover,
+:root[data-theme="dark"] .library-toolbar .icon-button:hover {
+  border-color: rgb(100 116 139) !important;
+  background-color: rgb(52 56 62) !important;
+  color: #fff !important;
+}
+
+:root[data-theme="dark"] .library-toolbar .secondary-button:disabled,
+:root[data-theme="dark"] .library-toolbar .icon-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 :root[data-theme="dark"] .library-toolbar-dropdown button,
 :root[data-theme="dark"] .library-toolbar-dropdown input,
 :root[data-theme="dark"] .library-toolbar-dropdown input::placeholder {
@@ -387,8 +407,20 @@ body {
   background-color: rgb(52 56 62);
 }
 
+:root[data-theme="dark"] .movie-card .movie-card-genre-badge {
+  background-color: rgb(229 242 241);
+  color: rgb(46 52 57);
+}
+
 :root[data-theme="dark"] .movie-card[class~="bg-red-50"] {
-  background-color: rgb(72 36 36);
+  background-color: #2a2d32;
+  box-shadow: inset 0 0 0 2px #ef5544;
+  border-color: transparent;
+  border-radius: 0.375rem;
+}
+
+:root[data-theme="dark"] .movie-card[class~="bg-red-50"]:hover {
+  background-color: #2a2d32;
 }
 
 :root[data-theme="dark"] .movie-card-dropdown {

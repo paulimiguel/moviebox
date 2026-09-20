@@ -113,8 +113,10 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
     return (
       <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card relative grid min-h-[140px] cursor-pointer grid-cols-[92px_minmax(0,1fr)] items-stretch gap-x-4 gap-y-3 border-b border-slate-200 bg-white p-3 transition-colors hover:bg-slate-50 lg:grid-cols-[100px_minmax(240px,1fr)_minmax(230px,auto)] lg:items-center ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40' : ''} ${selected ? 'bg-red-50' : ''}`}>
         <div className="relative row-span-2 min-h-[140px] overflow-hidden bg-slate-100 lg:row-span-1 lg:h-full">
+        <div className="group/poster relative row-span-2 min-h-[140px] overflow-hidden bg-slate-100 lg:row-span-1 lg:h-full">
           {selectionMark(true)}
           {poster('h-full w-full object-cover')}
+          {poster('h-full w-full object-cover transition-transform duration-300 ease-out group-hover/poster:scale-105')}
         </div>
 
         <div className="min-w-0 self-center">
@@ -178,7 +180,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
           <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-4">
             <div className="flex flex-wrap items-center gap-1.5">
               <span className={typeBadgeStyle}>{typeLabel}</span>
-              {primaryGenre && <span className="rounded bg-mist px-2 py-1 text-[11px] font-semibold text-ink">{primaryGenre}</span>}
+              {primaryGenre && <span className="movie-card-genre-badge rounded bg-mist px-1.5 py-0.5 text-[9px] font-semibold uppercase text-ink shadow-sm">{primaryGenre}</span>}
             </div>
             {trailerLink && <div className="shrink-0 text-xs [&_img]:h-3 [&_img]:w-[18px]">{trailerLink}</div>}
           </div>
