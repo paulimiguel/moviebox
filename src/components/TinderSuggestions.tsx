@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { Check, ChevronLeft, ChevronRight, Loader2, Star, Tv, Film, X } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Eye, Film, Loader2, Star, Tv, X } from 'lucide-react';
 import { api } from '@/services/api';
 import { MovieDetailModal } from '@/components/MovieDetailModal';
 import type { TmdbSuggestionCandidate } from '@/types/movie';
@@ -85,6 +85,22 @@ export const TinderSuggestions = ({
               : 'z-10 left-full md:left-[90%] -translate-x-1/2 scale-75 opacity-40 blur-[1px]'
         }`}
       >
+        {isCurrent && (
+          <div className="mb-3 flex justify-center">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPreviewCandidate(candidate);
+              }}
+              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/85 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-ink shadow-sm backdrop-blur-md transition-all hover:bg-white hover:shadow hover:scale-105"
+              title={`Ver características de ${candidate.title}`}
+            >
+              <Eye className="h-3.5 w-3.5 text-aqua" />
+              VER
+            </button>
+          </div>
+        )}
         <div 
           onClick={() => isCurrent && setPreviewCandidate(candidate)}
           className={`movie-card flex flex-col overflow-hidden rounded-xl bg-white shadow-card ${isCurrent ? 'cursor-pointer w-64 md:w-72 hover:-translate-y-1' : 'w-56'} transition-transform`}
@@ -120,23 +136,25 @@ export const TinderSuggestions = ({
         </div>
 
         {isCurrent && (
-          <div className="mt-6 flex justify-center gap-6">
+          <div className="mt-4 flex justify-center gap-5">
             <button 
               type="button"
               onClick={handleReject}
-              className="grid h-14 w-14 place-items-center rounded-full border-2 border-red-500 bg-white text-red-500 shadow-md transition-all hover:bg-red-50 hover:scale-110"
+              className="grid h-10 w-10 place-items-center rounded-full border border-red-500/50 bg-white/40 text-red-500 shadow-sm backdrop-blur-md transition-all hover:bg-red-500 hover:text-white hover:scale-110"
               title="Rechazar"
+              aria-label="Rechazar"
             >
-              <X className="h-6 w-6" strokeWidth={3} />
+              <X className="h-5 w-5" strokeWidth={2.5} />
             </button>
             <button 
               type="button"
               disabled={isAddingThis}
               onClick={() => handleAccept(candidate)}
-              className="grid h-14 w-14 place-items-center rounded-full border-2 border-[#2cbc63] bg-white text-[#2cbc63] shadow-md transition-all hover:bg-green-50 hover:scale-110 disabled:opacity-50"
+              className="grid h-10 w-10 place-items-center rounded-full border border-[#2cbc63]/50 bg-white/40 text-[#2cbc63] shadow-sm backdrop-blur-md transition-all hover:bg-[#2cbc63] hover:text-white hover:scale-110 disabled:opacity-50"
               title="Agregar a biblioteca"
+              aria-label="Agregar a biblioteca"
             >
-              {isAddingThis ? <Loader2 className="h-6 w-6 animate-spin" /> : <Check className="h-6 w-6" strokeWidth={3} />}
+              {isAddingThis ? <Loader2 className="h-5 w-5 animate-spin" /> : <Check className="h-5 w-5" strokeWidth={2.5} />}
             </button>
           </div>
         )}

@@ -5,8 +5,20 @@ import { api } from '@/services/api';
 import { useNavigate } from 'react-router-dom';
 import { resolvePlatformLogoUrl } from '@/components/PlatformLogos';
 import { MovieDetailModal } from '@/components/MovieDetailModal';
+import { TinderSuggestions } from '@/components/TinderSuggestions';
 import { Loader2, Film, Tv, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { JustWatchTop10Item, MovieItem, TmdbSuggestionCandidate } from '@/types/movie';
+
+const SUGGESTION_PLATFORMS = [
+  { id: 'netflix', name: 'Netflix' },
+  { id: 'prime', name: 'Prime Video' },
+  { id: 'apple', name: 'Apple TV' },
+  { id: 'disney', name: 'Disney+' },
+  { id: 'max', name: 'HBO Max' },
+  { id: 'flow', name: 'Flow' },
+  { id: 'paramount', name: 'Paramount+' },
+  { id: 'justwatch', name: 'JustWatch' },
+];
 
 const PLATFORMS = [
   { id: 'netflix', name: 'Netflix' },
@@ -88,6 +100,53 @@ export const NewsPage = () => {
     queryKey: ['justwatchTop10'],
     queryFn: api.tmdb.justwatchTop10,
     staleTime: 1000 * 60 * 30,
+  });
+
+  const [activeSuggestionPlatform, setActiveSuggestionPlatform] = useState('netflix');
+  const [suggestionSeed, setSuggestionSeed] = useState(0);
+  const [addedSuggestionMovieIds, setAddedSuggestionMovieIds] = useState<Record<string, string>>({});
+
+  const suggestionsQuery = useQuery({
+    queryKey: ['tmdb-platform-suggestions', activeSuggestionPlatform, suggestionSeed],
+    queryFn: () => api.tmdb.platformSuggestions(activeSuggestionPlatform, suggestionSeed),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const libraryMovies = useMemo(() => (library.data || []) as MovieItem[], [library.data]);
+
+  const suggestionKey = (candidate: TmdbSuggestionCandidate) =>
+    candidate.imdbId || `${candidate.type}-${candidate.tmdbId}`;
+
+  const isSuggestionCandidateAdded = (candidate: TmdbSuggestionCandidate) => {
+    const key = suggestionKey(candidate);
+    if (addedSuggestionMovieIds[key]) return true;
+    return libraryMovies.some((movie) => {
+      if (candidate.imdbId && movie.imdbId) return movie.imdbId === candidate.imdbId;
+      if (candidate.tmdbId && movie.tmdbId) return movie.tmdbId === candidate.tmdbId;
+      const normalize = (val?: string | null) => (val || '').trim().toLocaleLowerCase('es');
+      const titleMatch = normalize(movie.originalTitle) === normalize(candidate.title) || normalize(movie.spanishTitle) === normalize(candidate.title);
+      const yearMatch = !movie.year || !candidate.year || movie.year === candidate.year;
+      return titleMatch && yearMatch;
+    });
+  };
+
+  const suggestionCandidates = useMemo(() => {
+    const raw = (suggestionsQuery.data || []) as TmdbSuggestionCandidate[];
+    return raw.filter((c) => !isSuggestionCandidateAdded(c));
+  }, [suggestionsQuery.data, libraryMovies, addedSuggestionMovieIds]);
+
+  const importSuggestionMutation = useMutation({
+    mutationFn: async (candidate: TmdbSuggestionCandidate) => {
+      const data = await api.imdb.import({ imdbId: candidate.imdbId, type: candidate.type });
+      return api.movies.create({ ...data, favorite: false, watched: false, watchlist: false, personalRating: null, collectionIds: [] });
+    },
+    onSuccess: (saved, candidate) => {
+      setAddedSuggestionMovieIds((current) => ({ ...current, [suggestionKey(candidate)]: saved.id }));
+      queryClient.setQueryData<MovieItem[]>(['movies'], (current = []) => current.some((movie) => movie.id === saved.id) ? current : [saved, ...current]);
+      queryClient.invalidateQueries({ queryKey: ['movies'] });
+      queryClient.invalidateQueries({ queryKey: ['metadata'] });
+      queryClient.invalidateQueries({ queryKey: ['collections'] });
+    },
   });
 
   const queries = useQueries({
@@ -456,6 +515,84 @@ export const NewsPage = () => {
             </div>
           ) : (
             <p className="text-sm text-slate-400 py-6">No se pudieron cargar los datos de JustWatch.</p>
+          )}
+        </div>
+
+        {/* Sección: Sugerencias debajo del todo */}
+        <div className="mt-14 border-t border-slate-200/40 pt-8 pb-10 space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-bebas text-2xl uppercase text-ink sm:text-3xl">Sugerencias</h2>
+              <p className="text-xs text-slate-500">Deslizá o explorá las sugerencias de cada plataforma para agregarlas a tu biblioteca</p>
+            </div>
+            <div className="flex flex-wrap gap-2 sm:gap-2.5">
+              {SUGGESTION_PLATFORMS.map((p) => {
+                const active = activeSuggestionPlatform === p.id;
+                const logoUrl = resolvePlatformLogoUrl({ name: p.name, logoPath: null });
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => {
+                      if (activeSuggestionPlatform === p.id) {
+                        setSuggestionSeed((s) => s + 1);
+                      } else {
+                        setActiveSuggestionPlatform(p.id);
+                        setSuggestionSeed((s) => s + 1);
+                      }
+                    }}
+                    className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all ${
+                      active
+                        ? 'border-coral bg-coral text-white shadow-sm'
+                        : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    {logoUrl && (
+                      <img
+                        src={logoUrl}
+                        alt=""
+                        className="h-4 w-4 rounded object-contain"
+                      />
+                    )}
+                    <span>{p.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {suggestionsQuery.isLoading ? (
+            <div className="grid min-h-[360px] place-items-center">
+              <Loader2 className="h-8 w-8 animate-spin text-aqua" />
+            </div>
+          ) : suggestionsQuery.isError ? (
+            <div className="mt-4 rounded-md border border-red-100 bg-red-50 p-5 text-center">
+              <p className="text-sm text-red-700">
+                No se pudieron cargar las sugerencias de {SUGGESTION_PLATFORMS.find((p) => p.id === activeSuggestionPlatform)?.name || 'la plataforma'}.
+              </p>
+              <button type="button" onClick={() => suggestionsQuery.refetch()} className="secondary-button mt-3">
+                Reintentar
+              </button>
+            </div>
+          ) : suggestionCandidates.length ? (
+            <TinderSuggestions
+              key={`${activeSuggestionPlatform}-${suggestionSeed}`}
+              initialCandidates={suggestionCandidates}
+              onAdd={(candidate) => {
+                if (!isSuggestionCandidateAdded(candidate)) {
+                  importSuggestionMutation.mutate(candidate);
+                }
+              }}
+              isAdding={importSuggestionMutation.isPending}
+              addingTmdbId={importSuggestionMutation.variables ? Number(importSuggestionMutation.variables.tmdbId) : null}
+            />
+          ) : (
+            <div className="grid min-h-[280px] place-items-center text-center">
+              <div>
+                <Film className="mx-auto h-12 w-12 text-aqua" />
+                <p className="mt-3 font-semibold text-ink">No hay sugerencias para mostrar</p>
+              </div>
+            </div>
           )}
         </div>
       </section>

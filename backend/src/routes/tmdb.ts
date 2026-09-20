@@ -204,6 +204,102 @@ router.get('/new-releases', async (req, res) => {
   }
 });
 
+router.get('/platform-suggestions', async (req, res) => {
+  if (!token) return res.status(503).json({ error: 'TMDB todavía no está configurado' });
+  const platform = String(req.query.platform || 'netflix');
+
+  if (platform === 'justwatch') {
+    try {
+      const popular = await getJustWatchPopularTitles();
+      const shuffled = [...popular].sort(() => Math.random() - 0.5).slice(0, 24);
+      const results = await allSettledInBatches(shuffled, async (item) => {
+        const search = await tmdbRequest<{ results?: any[] }>(`/search/multi?language=es-AR&query=${encodeURIComponent(item.title)}`);
+        const match = (search.results || []).find((r) => r.media_type === (item.type === 'movie' ? 'movie' : 'tv')) || search.results?.[0];
+        if (!match) return null;
+        const resource = match.media_type === 'movie' ? 'movie' : 'tv';
+        const ext = await tmdbRequest<{ imdb_id?: string | null }>(`/${resource}/${match.id}/external_ids`);
+        if (!ext?.imdb_id) return null;
+        return {
+          tmdbId: match.id,
+          imdbId: ext.imdb_id,
+          type: item.type,
+          title: match.title || match.name,
+          originalTitle: match.original_title || match.original_name,
+          year: Number((match.release_date || match.first_air_date || '').slice(0, 4)) || null,
+          posterUrl: match.poster_path ? `https://image.tmdb.org/t/p/w500${match.poster_path}` : null,
+          overview: match.overview || '',
+          genres: [],
+          rating: Number.isFinite(Number(match.vote_average)) ? Number(match.vote_average) : null,
+          popularity: Number.isFinite(Number(match.popularity)) ? Number(match.popularity) : 0,
+        };
+      });
+      return res.json(results.flatMap((r) => r.status === 'fulfilled' && r.value ? [r.value] : []));
+    } catch {
+      return res.status(502).json({ error: 'No se pudieron cargar sugerencias de JustWatch' });
+    }
+  }
+
+  let providerId = 8;
+  if (platform === 'prime') providerId = 119;
+  else if (platform === 'apple') providerId = 350;
+  else if (platform === 'disney') providerId = 337;
+  else if (platform === 'max') providerId = 1899;
+  else if (platform === 'paramount') providerId = 531;
+  else if (platform === 'claro') providerId = 167;
+  else if (platform === 'flow') providerId = 339;
+
+  const providerQuery = platform === 'stremio' ? '' : `&with_watch_providers=${providerId}&watch_region=AR`;
+  const moviePage = Math.floor(Math.random() * 5) + 1;
+  const seriesPage = Math.floor(Math.random() * 5) + 1;
+
+  try {
+    const [moviesP1, moviesP2, seriesP1, seriesP2, movieGenresReq, seriesGenresReq] = await Promise.all([
+      tmdbRequest<{ results?: any[] }>(`/discover/movie?language=es-AR&sort_by=popularity.desc${providerQuery}&vote_count.gte=30&page=${moviePage}`),
+      tmdbRequest<{ results?: any[] }>(`/discover/movie?language=es-AR&sort_by=popularity.desc${providerQuery}&vote_count.gte=30&page=${moviePage + 1}`),
+      tmdbRequest<{ results?: any[] }>(`/discover/tv?language=es-AR&sort_by=popularity.desc${providerQuery}&vote_count.gte=20&page=${seriesPage}`),
+      tmdbRequest<{ results?: any[] }>(`/discover/tv?language=es-AR&sort_by=popularity.desc${providerQuery}&vote_count.gte=20&page=${seriesPage + 1}`),
+      tmdbRequest<{ genres?: Array<{ id: number; name: string }> }>('/genre/movie/list?language=es-AR'),
+      tmdbRequest<{ genres?: Array<{ id: number; name: string }> }>('/genre/tv/list?language=es-AR'),
+    ]);
+
+    const movieGenreNames = new Map((movieGenresReq.genres || []).map((g) => [g.id, g.name]));
+    const seriesGenreNames = new Map((seriesGenresReq.genres || []).map((g) => [g.id, g.name]));
+
+    const processItems = async (items: any[], type: 'movie' | 'series') => {
+      const candidates = [...items].sort(() => Math.random() - 0.5).slice(0, 16);
+      const results = await allSettledInBatches(candidates, async (item) => {
+        const resource = type === 'movie' ? 'movie' : 'tv';
+        const external = await tmdbRequest<{ imdb_id?: string | null }>(`/${resource}/${item.id}/external_ids`);
+        if (!external.imdb_id) return null;
+        return {
+          tmdbId: item.id,
+          imdbId: external.imdb_id,
+          type,
+          title: item.title || item.name,
+          originalTitle: item.original_title || item.original_name,
+          year: Number((item.release_date || item.first_air_date || '').slice(0, 4)) || null,
+          posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
+          overview: item.overview || '',
+          genres: (item.genre_ids || []).map((id: number) => (type === 'movie' ? movieGenreNames : seriesGenreNames).get(id)).filter(Boolean).slice(0, 3),
+          rating: Number.isFinite(Number(item.vote_average)) ? Number(item.vote_average) : null,
+          popularity: Number.isFinite(Number(item.popularity)) ? Number(item.popularity) : 0,
+        };
+      });
+      return results.flatMap((r) => r.status === 'fulfilled' && r.value ? [r.value] : []);
+    };
+
+    const [movies, series] = await Promise.all([
+      processItems([...(moviesP1.results || []), ...(moviesP2.results || [])], 'movie'),
+      processItems([...(seriesP1.results || []), ...(seriesP2.results || [])], 'series'),
+    ]);
+
+    const combined = [...movies, ...series].sort(() => Math.random() - 0.5);
+    return res.json(combined);
+  } catch {
+    return res.status(502).json({ error: 'No se pudieron cargar sugerencias' });
+  }
+});
+
 
 router.get('/recommendations', async (req, res) => {
   if (!token) return res.status(503).json({ error: 'TMDB todavia no esta configurado' });

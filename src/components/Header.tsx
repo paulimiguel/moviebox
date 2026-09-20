@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Bookmark, ChevronDown, Eye, EyeOff, Film, Heart, LayoutGrid, LogOut, Moon, Sun, Tv } from 'lucide-react';
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/services/api';
 import { useTheme } from '@/contexts/ThemeContext';
+import { AddMovieModal } from '@/components/AddMovieModal';
 
 type LibraryFilterPreset = 'all' | 'movie' | 'series' | 'watchlist' | 'favorite' | 'watched' | 'unwatched';
 
@@ -23,12 +24,29 @@ export const Header = () => {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [addModalOpen, setAddModalOpen] = useState(searchParams.get('agregar') === '1');
   const [libraryMenuOpen, setLibraryMenuOpen] = useState(false);
   const [collectionMenuOpen, setCollectionMenuOpen] = useState(false);
   const [platformMenuOpen, setPlatformMenuOpen] = useState(false);
   const [genreMenuOpen, setGenreMenuOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [profilePhotoFailed, setProfilePhotoFailed] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('agregar') === '1') {
+      setAddModalOpen(true);
+    }
+  }, [searchParams]);
+
+  const handleCloseAddModal = () => {
+    setAddModalOpen(false);
+    if (searchParams.get('agregar') === '1') {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('agregar');
+      setSearchParams(nextParams, { replace: true });
+    }
+  };
   const libraryMenuRef = useRef<HTMLDivElement>(null);
   const collectionMenuRef = useRef<HTMLDivElement>(null);
   const platformMenuRef = useRef<HTMLDivElement>(null);
@@ -137,7 +155,13 @@ export const Header = () => {
               </div>}
             </div>
             <NavLink to="/novedades" className={({ isActive }) => `flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${isActive ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`}>NOVEDADES</NavLink>
-            <NavLink to="/agregar" className={({ isActive }) => `flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${isActive ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`}>AGREGAR</NavLink>
+            <button
+              type="button"
+              onClick={() => setAddModalOpen(true)}
+              className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold transition-colors ${addModalOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`}
+            >
+              AGREGAR
+            </button>
           </nav>
           <button type="button" onClick={() => filterLibrary('all')} className="header-all-button inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md bg-coral px-3 text-xs font-semibold text-white transition-colors hover:bg-[#e7473d]" title="Mostrar todos los títulos"><Film className="h-4 w-4" />TODOS</button>
           <div ref={menuRef} className="relative">
@@ -190,9 +214,16 @@ export const Header = () => {
                   <button type="button" onClick={() => { setTheme('dark'); setMenuOpen(false); }} className={`flex items-center justify-center gap-2 rounded-md border px-2 py-2 text-sm ${theme === 'dark' ? 'border-coral text-ink' : 'border-slate-200 text-slate-600'}`}><Moon className="h-4 w-4" />Oscuro</button>
                 </div>
               </div>
-              <Link to="/agregar" onClick={() => setMenuOpen(false)} className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 xl:hidden">
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setAddModalOpen(true);
+                }}
+                className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 xl:hidden"
+              >
                 Agregar
-              </Link>
+              </button>
               <button type="button" onClick={logout} className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50">
                 <LogOut className="h-4 w-4" />
                 Cerrar sesion
@@ -202,6 +233,7 @@ export const Header = () => {
           </div>
         </div>
       </div>
+      <AddMovieModal isOpen={addModalOpen} onClose={handleCloseAddModal} />
     </header>
   );
 };
