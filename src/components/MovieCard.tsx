@@ -112,10 +112,8 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
   if (mode === 'list') {
     return (
       <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card relative grid min-h-[140px] cursor-pointer grid-cols-[92px_minmax(0,1fr)] items-stretch gap-x-4 gap-y-3 border-b border-slate-200 bg-white p-3 transition-colors hover:bg-slate-50 lg:grid-cols-[100px_minmax(240px,1fr)_minmax(230px,auto)] lg:items-center ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40' : ''} ${selected ? 'bg-red-50' : ''}`}>
-        <div className="relative row-span-2 min-h-[140px] overflow-hidden bg-slate-100 lg:row-span-1 lg:h-full">
         <div className="group/poster relative row-span-2 min-h-[140px] overflow-hidden bg-slate-100 lg:row-span-1 lg:h-full">
           {selectionMark(true)}
-          {poster('h-full w-full object-cover')}
           {poster('h-full w-full object-cover transition-transform duration-300 ease-out group-hover/poster:scale-105')}
         </div>
 
