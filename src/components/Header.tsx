@@ -15,7 +15,7 @@ const libraryOptions: Array<{ label: string; preset: LibraryFilterPreset; icon: 
   { label: 'Series', preset: 'series', icon: <Tv className="h-4 w-4" /> },
   { label: 'Watchlist', preset: 'watchlist', icon: <Bookmark className="h-4 w-4" /> },
   { label: 'Like', preset: 'favorite', icon: <Heart className="h-4 w-4" /> },
-  { label: 'Watch', preset: 'watched', icon: <Eye className="h-4 w-4" /> },
+  { label: 'Watched', preset: 'watched', icon: <Eye className="h-4 w-4" /> },
   { label: 'Unwatched', preset: 'unwatched', icon: <EyeOff className="h-4 w-4" /> },
 ];
 

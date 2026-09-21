@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { Check, ChevronLeft, ChevronRight, Eye, Film, Loader2, Star, Tv, X } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, ExternalLink, Film, Loader2, Star, Tv, X } from 'lucide-react';
 import { api } from '@/services/api';
 import type { TmdbSuggestionCandidate } from '@/types/movie';
 
@@ -104,7 +104,7 @@ export const TinderSuggestions = ({
               {candidate.type === 'movie' ? 'Película' : 'Serie'}
             </span>
             {isCurrent && candidate.rating != null && candidate.rating > 0 && (
-              <span className="absolute right-2.5 top-2.5 inline-flex items-center gap-1 rounded-md bg-canvas/90 px-2 py-0.5 text-[11px] font-semibold text-ink backdrop-blur shadow-sm">
+              <span className="absolute right-2.5 top-2.5 inline-flex items-center gap-1 rounded-md bg-black/60 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur shadow-sm">
                 <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                 {candidate.rating.toFixed(1)}
               </span>
@@ -122,7 +122,7 @@ export const TinderSuggestions = ({
                   title="Ver detalle"
                   aria-label="Ver detalle"
                 >
-                  <Eye className="h-4 w-4" strokeWidth={2} />
+                  <ExternalLink className="h-4 w-4" strokeWidth={2} />
                 </button>
                 <button
                   type="button"

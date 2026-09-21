@@ -127,7 +127,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                 </div>
               ) : (
                 <div className="mt-3 grid grid-cols-2 gap-2">
-                <button type="button" aria-pressed={movie.watched} onClick={() => onPersonal(movie, 'watched')} className={`moviebox-translucent-action secondary-button min-w-0 gap-2 px-2 text-xs uppercase ${movie.watched ? 'border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]' : ''}`}><Eye className="h-[18px] w-[18px]" />Watch</button>
+                <button type="button" aria-pressed={movie.watched} onClick={() => onPersonal(movie, 'watched')} className={`moviebox-translucent-action secondary-button min-w-0 gap-2 px-2 text-xs uppercase ${movie.watched ? 'border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]' : ''}`}><Eye className="h-[18px] w-[18px]" />Watched</button>
                 <button type="button" aria-pressed={movie.favorite} onClick={() => onPersonal(movie, 'favorite')} className={`moviebox-translucent-action secondary-button min-w-0 gap-2 px-2 text-xs uppercase ${movie.favorite ? 'border-coral bg-red-50 text-coral' : ''}`}><Heart className={`h-4 w-4 ${movie.favorite ? 'fill-current' : ''}`} />Like</button>
                 <button type="button" aria-pressed={movie.watchlist} onClick={() => onPersonal(movie, 'watchlist')} className={`moviebox-translucent-action secondary-button h-12 min-w-0 gap-1.5 px-1.5 py-1 text-[11px] uppercase ${movie.watchlist ? 'border-aqua bg-mist text-aqua' : ''}`}><Bookmark className={`h-3.5 w-3.5 ${movie.watchlist ? 'fill-current' : ''}`} />Watchlist</button>
                 <div className="flex h-12 min-w-0 flex-col justify-center rounded-md border border-slate-200 bg-white px-1.5 py-1 text-left">

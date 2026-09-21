@@ -41,7 +41,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
   const activate = (rangeSelection = false) => selectionMode ? onSelectionChange?.(movie, rangeSelection) : onOpen(movie);
   const interactive = (event: React.MouseEvent) => event.stopPropagation();
   const selectionMark = (compact = false) => selectionMode ? (
-    <span className={`absolute right-2 top-2 z-10 grid place-items-center rounded-md border-2 ${compact ? 'h-5 w-5' : 'h-6 w-6'} ${selected ? 'border-coral bg-coral text-white' : 'border-white bg-white/90 text-transparent shadow-sm'}`}>
+    <span className={`absolute right-2 top-2 z-10 grid place-items-center rounded-md border-2 ${compact ? 'h-5 w-5' : 'h-6 w-6'} ${selected ? 'border-white bg-white text-slate-900 shadow-md' : 'border-white bg-white/90 text-transparent shadow-sm'}`}>
       <Check className={compact ? 'h-3 w-3' : 'h-4 w-4'} />
     </span>
   ) : null;
@@ -88,7 +88,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
   const actionControls = (overlay = false, includeWatch = false, compact = false) => selectionMode ? null : (
     <div ref={menuRef} className={`relative flex shrink-0 flex-col items-end gap-1 ${menuOpen ? 'z-[60]' : ''}`} onClick={interactive} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) closeMenu(); }}>
       <div className={`flex items-center ${compact ? 'gap-0.5' : 'gap-1'}`}>
-        {includeWatch && <button type="button" aria-pressed={movie.watched} onClick={() => onPersonal?.(movie, 'watched')} className={`moviebox-translucent-action grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : 'h-8 w-8'} ${overlay ? 'border border-white/30 bg-white/70 shadow-sm backdrop-blur-sm hover:bg-white/90' : 'border border-slate-200 bg-white hover:bg-slate-50'} ${movie.watched ? 'text-[#2cbc63]' : 'text-slate-500'}`} title="Watch" aria-label="Watch"><Eye className={compact ? 'h-3.5 w-3.5' : 'h-[18px] w-[18px]'} /></button>}
+        {includeWatch && <button type="button" aria-pressed={movie.watched} onClick={() => onPersonal?.(movie, 'watched')} className={`moviebox-translucent-action grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : 'h-8 w-8'} ${overlay ? 'border border-white/30 bg-white/70 shadow-sm backdrop-blur-sm hover:bg-white/90' : 'border border-slate-200 bg-white hover:bg-slate-50'} ${movie.watched ? 'text-[#2cbc63]' : 'text-slate-500'}`} title="Watched" aria-label="Watched"><Eye className={compact ? 'h-3.5 w-3.5' : 'h-[18px] w-[18px]'} /></button>}
         <button type="button" aria-pressed={movie.favorite} onClick={() => onPersonal?.(movie, 'favorite')} className={`moviebox-translucent-action grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : 'h-8 w-8'} ${overlay ? 'border border-white/30 bg-white/70 shadow-sm backdrop-blur-sm hover:bg-white/90' : 'border border-slate-200 bg-white hover:bg-slate-50'} ${movie.favorite ? 'text-coral' : 'text-slate-500'}`} title="Like" aria-label="Like"><Heart className={`${compact ? 'h-3 w-3' : 'h-4 w-4'} ${movie.favorite ? 'fill-current' : ''}`} /></button>
         <button type="button" aria-pressed={movie.watchlist} onClick={() => onPersonal?.(movie, 'watchlist')} className={`moviebox-translucent-action grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : 'h-8 w-8'} ${overlay ? 'border border-white/30 bg-white/70 shadow-sm backdrop-blur-sm hover:bg-white/90' : 'border border-slate-200 bg-white hover:bg-slate-50'} ${movie.watchlist ? 'text-aqua' : 'text-slate-500'}`} title={movie.watchlist ? 'Quitar de Watchlist' : 'Agregar a Watchlist'} aria-label={movie.watchlist ? 'Quitar de Watchlist' : 'Agregar a Watchlist'}><Bookmark className={`${compact ? 'h-3 w-3' : 'h-4 w-4'} ${movie.watchlist ? 'fill-current' : ''}`} /></button>
         <button type="button" onClick={() => setMenuOpen((current) => !current)} className={`moviebox-translucent-action grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : 'h-8 w-8'} ${overlay ? 'border border-white/30 bg-white/70 text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white/90' : 'border border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`} title="Más acciones" aria-label="Más acciones" aria-expanded={menuOpen}><MoreVertical className={compact ? 'h-3 w-3' : 'h-4 w-4'} /></button>
@@ -111,7 +111,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
 
   if (mode === 'list') {
     return (
-      <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card relative grid min-h-[140px] cursor-pointer grid-cols-[92px_minmax(0,1fr)] items-stretch gap-x-4 gap-y-3 border-b border-slate-200 bg-white p-3 transition-colors hover:bg-slate-50 lg:grid-cols-[100px_minmax(240px,1fr)_minmax(230px,auto)] lg:items-center ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40' : ''} ${selected ? 'bg-red-50' : ''}`}>
+      <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card relative grid min-h-[140px] cursor-pointer grid-cols-[92px_minmax(0,1fr)] items-stretch gap-x-4 gap-y-3 border-b border-slate-200 bg-white p-3 transition-colors hover:bg-slate-50 lg:grid-cols-[100px_minmax(240px,1fr)_minmax(230px,auto)] lg:items-center ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40' : ''} ${selected ? 'movie-card-selected' : ''}`}>
         <div className="group/poster relative row-span-2 min-h-[140px] overflow-hidden bg-slate-100 lg:row-span-1 lg:h-full">
           {selectionMark(true)}
           {poster('h-full w-full object-cover transition-transform duration-300 ease-out group-hover/poster:scale-105')}
@@ -146,7 +146,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
 
   if (mode === 'details') {
     return (
-      <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card relative grid cursor-pointer gap-5 border-b border-slate-200 bg-white p-4 transition-colors hover:bg-slate-50 sm:grid-cols-[200px_minmax(0,1fr)] lg:grid-cols-[220px_minmax(190px,0.65fr)_minmax(300px,1.35fr)] ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40' : ''} ${selected ? 'bg-red-50' : ''}`}>
+      <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card relative grid cursor-pointer gap-5 border-b border-slate-200 bg-white p-4 transition-colors hover:bg-slate-50 sm:grid-cols-[200px_minmax(0,1fr)] lg:grid-cols-[220px_minmax(190px,0.65fr)_minmax(300px,1.35fr)] ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40' : ''} ${selected ? 'movie-card-selected' : ''}`}>
         <div className="group/poster relative mx-auto aspect-[2/3] w-full max-w-[220px] overflow-hidden bg-slate-100">{selectionMark()}{poster('h-full w-full object-cover transition-transform duration-300 ease-out group-hover/poster:scale-105')}</div>
 
         <div className="flex min-w-0 flex-col self-stretch">
@@ -201,7 +201,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
   if (mode === 'medium' || mode === 'mediumIcons') {
     const mediumIcons = mode === 'mediumIcons';
     return (
-      <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card group relative flex h-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-md bg-white shadow-card transition-transform hover:-translate-y-0.5 ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40 overflow-visible' : ''} ${selected ? 'ring-2 ring-coral ring-offset-2' : ''}`}>
+      <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card group relative flex h-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-md bg-white shadow-card transition-transform hover:-translate-y-0.5 ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40 overflow-visible' : ''} ${selected ? 'movie-card-selected' : ''}`}>
         <div className="relative aspect-[2/3]">
           {selectionMark()}
           <div className="h-full overflow-hidden rounded-t-md bg-slate-100">{poster('h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]')}</div>
@@ -209,7 +209,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
             {typeLabel}
           </span>
           <div className="absolute bottom-2 right-2 flex shrink-0 gap-1" onClick={interactive}>
-            <button type="button" aria-pressed={movie.watched} onClick={() => onPersonal?.(movie, 'watched')} className={`moviebox-translucent-action grid h-8 w-8 place-items-center rounded-md border border-white/60 bg-white/50 shadow-sm backdrop-blur-sm hover:bg-white/70 ${movie.watched ? 'text-[#2cbc63]' : 'text-gray-500'}`} title="Watch" aria-label="Watch"><Eye className="h-[18px] w-[18px]" /></button>
+            <button type="button" aria-pressed={movie.watched} onClick={() => onPersonal?.(movie, 'watched')} className={`moviebox-translucent-action grid h-8 w-8 place-items-center rounded-md border border-white/60 bg-white/50 shadow-sm backdrop-blur-sm hover:bg-white/70 ${movie.watched ? 'text-[#2cbc63]' : 'text-gray-500'}`} title="Watched" aria-label="Watched"><Eye className="h-[18px] w-[18px]" /></button>
             {actionControls(true)}
           </div>
         </div>
@@ -237,7 +237,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
   }
 
   return (
-    <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card group relative min-w-0 cursor-pointer rounded-md border bg-white shadow-card transition-transform hover:-translate-y-0.5 ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40' : ''} ${selected ? 'border-coral ring-2 ring-coral/20' : 'border-slate-200'}`}>
+    <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card group relative min-w-0 cursor-pointer rounded-md border bg-white shadow-card transition-transform hover:-translate-y-0.5 ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40' : ''} ${selected ? 'movie-card-selected' : 'border-slate-200'}`}>
       {selectionMark()}
       <div className="relative aspect-[2/3]">
         <div className="h-full overflow-hidden rounded-t-md bg-slate-100">{poster('h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]')}</div>

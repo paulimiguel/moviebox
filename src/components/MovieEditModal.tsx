@@ -261,7 +261,7 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
           <section>
             <h3 className="field-label">Estado</h3>
             <div className="grid gap-2 sm:grid-cols-3">
-              <button type="button" aria-pressed={watched} onClick={() => setWatched((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${watched ? 'border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]' : ''}`}><Eye className="h-[18px] w-[18px]" />Watch</button>
+              <button type="button" aria-pressed={watched} onClick={() => setWatched((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${watched ? 'border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]' : ''}`}><Eye className="h-[18px] w-[18px]" />Watched</button>
               <button type="button" aria-pressed={favorite} onClick={() => setFavorite((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${favorite ? 'border-coral bg-red-50 text-coral' : ''}`}><Heart className={`h-4 w-4 ${favorite ? 'fill-current' : ''}`} />Like</button>
               <button type="button" aria-pressed={watchlist} onClick={() => setWatchlist((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${watchlist ? 'border-aqua bg-mist text-aqua' : ''}`}><Bookmark className={`h-4 w-4 ${watchlist ? 'fill-current' : ''}`} />Watchlist</button>
             </div>
