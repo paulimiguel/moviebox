@@ -122,6 +122,36 @@ export const TinderSuggestions = ({
                 {candidate.rating.toFixed(1)}
               </span>
             )}
+
+            {isCurrent && (
+              <div className="absolute bottom-2.5 inset-x-0 flex items-center justify-center gap-3 z-20">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleReject();
+                  }}
+                  className="grid h-8 w-8 place-items-center rounded-full border border-red-400/60 bg-red-600/70 text-white shadow-md backdrop-blur-sm transition-all hover:bg-red-600 hover:scale-110 active:scale-95"
+                  title="Rechazar"
+                  aria-label="Rechazar"
+                >
+                  <X className="h-4 w-4" strokeWidth={2.5} />
+                </button>
+                <button
+                  type="button"
+                  disabled={isAddingThis}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAccept(candidate);
+                  }}
+                  className="grid h-8 w-8 place-items-center rounded-full border border-emerald-400/60 bg-[#2cbc63]/75 text-white shadow-md backdrop-blur-sm transition-all hover:bg-[#2cbc63] hover:scale-110 active:scale-95 disabled:opacity-50"
+                  title="Agregar a biblioteca"
+                  aria-label="Agregar a biblioteca"
+                >
+                  {isAddingThis ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" strokeWidth={2.5} />}
+                </button>
+              </div>
+            )}
           </div>
           
           <div className="flex flex-col p-2.5 sm:p-3 text-center">
