@@ -82,7 +82,13 @@ body {
   background-color: rgb(52 55 62 / 0.95);
 }
 
+:root[data-theme="dark"] .moviebox-header {
+  background-color: rgb(38 41 46 / 0.97);
+  border-bottom: 1px solid rgb(24 26 30);
+}
+
 :root[data-theme="dark"] .main-navigation > a,
+:root[data-theme="dark"] .main-navigation > button,
 :root[data-theme="dark"] .main-navigation > div > button {
   color: #fff;
 }
@@ -542,7 +548,6 @@ body {
   background-color: rgb(52 56 62);
 }
 
-:root[data-theme="dark"] .moviebox-header,
 :root[data-theme="dark"] .library-toolbar {
   border-bottom-width: 0;
 }

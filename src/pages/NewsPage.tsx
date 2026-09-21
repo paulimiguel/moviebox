@@ -394,7 +394,7 @@ export const NewsPage = () => {
       </button>
 
       <section id="top-10-plataforma" className="scroll-mt-20 mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8">
-        <h1 className="font-bebas text-3xl font-normal text-ink uppercase flex items-center gap-2 mb-4">
+        <h1 className="font-bebas text-3xl font-normal text-ink uppercase text-center mb-4">
           Top 10 por plataforma
         </h1>
 
@@ -463,11 +463,11 @@ export const NewsPage = () => {
 
         {/* Sección: Top 10 en AR (JustWatch) */}
         <div id="top-10-ar" className="scroll-mt-20 mt-14 border-t border-slate-200/40 pt-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-bebas text-2xl sm:text-3xl font-normal text-ink uppercase tracking-wide flex items-center gap-2">
+          <div className="relative flex items-center justify-center mb-4">
+            <h2 className="font-bebas text-2xl sm:text-3xl font-normal text-ink uppercase tracking-wide text-center">
               Top 10 en AR
             </h2>
-            <span className="text-xs text-slate-400 font-medium">JustWatch</span>
+            <span className="absolute right-0 text-xs text-slate-400 font-medium">JustWatch</span>
           </div>
 
           {justwatchTop10Query.isLoading ? (
@@ -537,11 +537,11 @@ export const NewsPage = () => {
         {/* Sección: Sugerencias debajo del todo */}
         <div id="sugerencias-plataforma" className="scroll-mt-20 mt-14 border-t border-slate-200/40 pt-8 pb-10 space-y-6">
           <div className="space-y-4">
-            <div>
+            <div className="text-center">
               <h2 className="font-bebas text-2xl uppercase text-ink sm:text-3xl">Sugerencias por plataforma</h2>
               <p className="text-xs text-slate-500">Deslizá o explorá las sugerencias de cada plataforma para agregarlas a tu biblioteca</p>
             </div>
-            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
               {SUGGESTION_PLATFORMS.map((p) => {
                 const active = activeSuggestionPlatform === p.id;
                 const logoUrl = resolvePlatformLogoUrl({ name: p.name, logoPath: null });

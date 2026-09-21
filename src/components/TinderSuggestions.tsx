@@ -85,22 +85,6 @@ export const TinderSuggestions = ({
               : 'z-10 left-[96%] md:left-[86%] -translate-x-1/2 scale-75 opacity-40 blur-[1px]'
         }`}
       >
-        {isCurrent && (
-          <div className="mb-2.5 flex justify-center">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setPreviewCandidate(candidate);
-              }}
-              className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/85 px-3.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-ink shadow-sm backdrop-blur-md transition-all hover:bg-white hover:shadow hover:scale-105"
-              title={`Ver características de ${candidate.title}`}
-            >
-              <Eye className="h-3 w-3 text-aqua" />
-              VER
-            </button>
-          </div>
-        )}
         <div 
           onClick={() => isCurrent && setPreviewCandidate(candidate)}
           className={`movie-card flex flex-col overflow-hidden rounded-xl bg-white shadow-card ${isCurrent ? 'cursor-pointer w-44 sm:w-48 md:w-52 hover:-translate-y-1' : 'w-32 sm:w-36'} transition-transform`}
@@ -124,7 +108,7 @@ export const TinderSuggestions = ({
             )}
 
             {isCurrent && (
-              <div className="absolute bottom-2.5 inset-x-0 flex items-center justify-center gap-3 z-20">
+              <div className="absolute bottom-2.5 inset-x-0 flex items-center justify-center gap-2.5 z-20">
                 <button
                   type="button"
                   onClick={(e) => {
@@ -136,6 +120,18 @@ export const TinderSuggestions = ({
                   aria-label="Rechazar"
                 >
                   <X className="h-4 w-4" strokeWidth={2.5} />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPreviewCandidate(candidate);
+                  }}
+                  className="grid h-8 w-8 place-items-center rounded-full border border-white/40 bg-slate-900/40 text-white shadow-md backdrop-blur-md transition-all hover:bg-slate-900/70 hover:scale-110 active:scale-95"
+                  title="Ver detalle"
+                  aria-label="Ver detalle"
+                >
+                  <Eye className="h-4 w-4" strokeWidth={2} />
                 </button>
                 <button
                   type="button"
@@ -164,30 +160,6 @@ export const TinderSuggestions = ({
             </p>
           </div>
         </div>
-
-        {isCurrent && (
-          <div className="mt-3.5 flex justify-center gap-4">
-            <button 
-              type="button"
-              onClick={handleReject}
-              className="grid h-9 w-9 place-items-center rounded-full border border-red-500/50 bg-white/40 text-red-500 shadow-sm backdrop-blur-md transition-all hover:bg-red-500 hover:text-white hover:scale-110"
-              title="Rechazar"
-              aria-label="Rechazar"
-            >
-              <X className="h-4.5 w-4.5" strokeWidth={2.5} />
-            </button>
-            <button 
-              type="button"
-              disabled={isAddingThis}
-              onClick={() => handleAccept(candidate)}
-              className="grid h-9 w-9 place-items-center rounded-full border border-[#2cbc63]/50 bg-white/40 text-[#2cbc63] shadow-sm backdrop-blur-md transition-all hover:bg-[#2cbc63] hover:text-white hover:scale-110 disabled:opacity-50"
-              title="Agregar a biblioteca"
-              aria-label="Agregar a biblioteca"
-            >
-              {isAddingThis ? <Loader2 className="h-4.5 w-4.5 animate-spin" /> : <Check className="h-4.5 w-4.5" strokeWidth={2.5} />}
-            </button>
-          </div>
-        )}
       </div>
     );
   };
