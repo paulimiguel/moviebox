@@ -16,7 +16,7 @@ const libraryOptions: Array<{ label: string; preset: LibraryFilterPreset; icon: 
   { label: 'Watchlist', preset: 'watchlist', icon: <Bookmark className="h-4 w-4" /> },
   { label: 'Like', preset: 'favorite', icon: <Heart className="h-4 w-4" /> },
   { label: 'Watch', preset: 'watched', icon: <Eye className="h-4 w-4" /> },
-  { label: 'No Watch', preset: 'unwatched', icon: <EyeOff className="h-4 w-4" /> },
+  { label: 'Unwatched', preset: 'unwatched', icon: <EyeOff className="h-4 w-4" /> },
 ];
 
 export const Header = () => {
