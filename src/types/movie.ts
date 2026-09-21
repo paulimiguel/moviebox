@@ -352,6 +352,15 @@ export interface JustWatchTop10Item extends TmdbSuggestionCandidate {
   justwatchUrl?: string | null;
 }
 
+export interface JustWatchPlatformPopularResponse {
+  platform: string;
+  platformName: string;
+  featuredMovies: JustWatchTop10Item[];
+  featuredSeries: JustWatchTop10Item[];
+  popularMovies: JustWatchTop10Item[];
+  popularSeries: JustWatchTop10Item[];
+}
+
 export type TmdbImportedMovieData = Omit<
   CreateMovieInput,
   "favorite" | "watched" | "watchlist" | "personalRating" | "collectionIds"

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Header } from '@/components/Header';
 import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/services/api';
@@ -6,7 +6,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { resolvePlatformLogoUrl } from '@/components/PlatformLogos';
 import { MovieDetailModal } from '@/components/MovieDetailModal';
 import { TinderSuggestions } from '@/components/TinderSuggestions';
-import { Loader2, Film, Tv, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, Film, Tv, ChevronLeft, ChevronRight, Plus, Check } from 'lucide-react';
 import type { JustWatchTop10Item, MovieItem, TmdbSuggestionCandidate } from '@/types/movie';
 
 const SUGGESTION_PLATFORMS = [
@@ -40,35 +40,105 @@ const getTop10 = (data: any): TmdbSuggestionCandidate[] => {
   return candidates.slice(0, 10);
 };
 
+const CoverAddButton = ({
+  item,
+  isAdded,
+  isAdding,
+  onAdd,
+  size = 'md',
+}: {
+  item: TmdbSuggestionCandidate;
+  isAdded: boolean;
+  isAdding: boolean;
+  onAdd: (item: TmdbSuggestionCandidate) => void;
+  size?: 'sm' | 'md';
+}) => {
+  const isSm = size === 'sm';
+  const sizeClasses = isSm ? 'h-6 w-6' : 'h-8 w-8';
+  const iconSize = isSm ? 'h-3.5 w-3.5' : 'h-4.5 w-4.5';
+
+  if (isAdded) {
+    return (
+      <div
+        className={`grid ${sizeClasses} place-items-center rounded-full bg-[#2cbc63] text-white shadow-md cursor-default pointer-events-auto transition-transform hover:scale-105`}
+        title="En tu biblioteca"
+        aria-label="En tu biblioteca"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Check className={iconSize} strokeWidth={3} />
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      disabled={isAdding}
+      onClick={(e) => {
+        e.stopPropagation();
+        onAdd(item);
+      }}
+      className={`grid ${sizeClasses} place-items-center rounded-full bg-red-600 text-white shadow-md hover:bg-red-500 hover:scale-110 active:scale-95 transition-all disabled:opacity-50 pointer-events-auto`}
+      title="Agregar a la biblioteca"
+      aria-label="Agregar a la biblioteca"
+    >
+      {isAdding ? (
+        <Loader2 className={`${iconSize} animate-spin`} />
+      ) : (
+        <Plus className={iconSize} strokeWidth={2.8} />
+      )}
+    </button>
+  );
+};
+
 const Top10Item = ({
   item,
   rank,
   onSelect,
+  isAdded = false,
+  isAdding = false,
+  onAdd,
 }: {
   item: TmdbSuggestionCandidate;
   rank: number;
   onSelect: (item: TmdbSuggestionCandidate) => void;
+  isAdded?: boolean;
+  isAdding?: boolean;
+  onAdd?: (item: TmdbSuggestionCandidate) => void;
 }) => {
   return (
     <article className="flex items-center gap-3 group/item">
       <div className="news-ranking-number relative flex shrink-0 items-center justify-center w-[52px] font-black text-[42px] tracking-tighter text-slate-400">
         {rank}
       </div>
-      <button
-        type="button"
-        onClick={() => onSelect(item)}
-        className="h-[84px] w-[58px] shrink-0 overflow-hidden rounded bg-mist relative text-left transition-transform group-hover/item:scale-105 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-coral"
-        title={`Ver características de ${item.title}`}
-        aria-label={`Ver características de ${item.title}`}
-      >
-        {item.posterUrl ? (
-          <img src={item.posterUrl} alt={item.title} className="h-full w-full object-cover" />
-        ) : (
-          <div className="grid h-full place-items-center text-aqua/50">
-            {item.type === 'movie' ? <Film className="h-5 w-5" /> : <Tv className="h-5 w-5" />}
+      <div className="relative h-[84px] w-[58px] shrink-0">
+        <button
+          type="button"
+          onClick={() => onSelect(item)}
+          className="h-full w-full overflow-hidden rounded bg-mist relative text-left transition-transform group-hover/item:scale-105 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-coral block"
+          title={`Ver características de ${item.title}`}
+          aria-label={`Ver características de ${item.title}`}
+        >
+          {item.posterUrl ? (
+            <img src={item.posterUrl} alt={item.title} className="h-full w-full object-cover" />
+          ) : (
+            <div className="grid h-full place-items-center text-aqua/50">
+              {item.type === 'movie' ? <Film className="h-5 w-5" /> : <Tv className="h-5 w-5" />}
+            </div>
+          )}
+        </button>
+        {onAdd && (
+          <div className="absolute bottom-1 right-1 z-10">
+            <CoverAddButton
+              item={item}
+              isAdded={isAdded}
+              isAdding={isAdding}
+              onAdd={onAdd}
+              size="sm"
+            />
           </div>
         )}
-      </button>
+      </div>
       <div className="flex-1 min-w-0">
         <button
           type="button"
@@ -83,6 +153,219 @@ const Top10Item = ({
         <p className="truncate text-xs text-slate-500 mt-0.5">{item.year || ''}</p>
       </div>
     </article>
+  );
+};
+
+const Top10FeaturedSection = ({
+  items,
+  onSelect,
+  isMovieInLibrary,
+  isItemAdding,
+  onAdd,
+}: {
+  items: JustWatchTop10Item[];
+  onSelect: (item: TmdbSuggestionCandidate) => void;
+  isMovieInLibrary: (item: TmdbSuggestionCandidate) => boolean;
+  isItemAdding: (item: TmdbSuggestionCandidate) => boolean;
+  onAdd: (item: TmdbSuggestionCandidate) => void;
+}) => {
+  return (
+    <div className="flex gap-6 sm:gap-10 overflow-x-auto pb-6 pt-2 hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+      {items.map((item) => (
+        <div
+          key={`featured-${item.type}-${item.rank}-${item.tmdbId || item.jwId}`}
+          onClick={() => onSelect(item)}
+          className="relative flex items-end shrink-0 select-none group/jw cursor-pointer focus:outline-none"
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onSelect(item);
+            }
+          }}
+          title={`Ver características de ${item.title}`}
+          aria-label={`Ver características de ${item.title}`}
+        >
+          {/* Número de ranking amplio y visible a la izquierda con sutil solapamiento */}
+          <span className="justwatch-rank-number font-sans font-black text-[130px] sm:text-[165px] leading-[0.8] tracking-tighter select-none -mr-2 sm:-mr-3 z-0 transition-all duration-200 group-hover/jw:scale-105 pointer-events-none">
+            {item.rank}
+          </span>
+
+          {/* Tarjeta de póster */}
+          <div className="relative z-10 w-[135px] sm:w-[160px] aspect-[2/3] overflow-hidden rounded-lg bg-mist shadow-md transition-all duration-200 group-hover/jw:scale-105 group-hover/jw:shadow-xl ring-1 ring-black/5 dark:ring-white/10">
+            {item.posterUrl ? (
+              <img src={item.posterUrl} alt={item.title} className="h-full w-full object-cover" loading="lazy" />
+            ) : (
+              <div className="grid h-full place-items-center text-aqua/50">
+                {item.type === 'movie' ? <Film className="h-8 w-8" /> : <Tv className="h-8 w-8" />}
+              </div>
+            )}
+
+            {/* Cinta / Bookmark superior izquierda */}
+            <div className="absolute top-0 left-2 z-20 pointer-events-none drop-shadow-sm opacity-80 group-hover/jw:opacity-100 transition-opacity">
+              <svg viewBox="0 0 24 32" className="w-4 h-6 sm:w-5 sm:h-7 fill-black/45 text-white/90">
+                <path d="M0 0h24v32l-12-7-12 7z" />
+              </svg>
+            </div>
+
+            {/* Badges inferiores izquierdos */}
+            <div className="absolute bottom-2 left-2 z-20 flex flex-col items-start gap-1 pointer-events-none">
+              {item.subBadge && (
+                <span className="bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-tight shadow">
+                  {item.subBadge}
+                </span>
+              )}
+              <span className="bg-black/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-tight shadow">
+                {item.badge || (item.type === 'series' ? 'TV' : 'PELÍCULA')}
+              </span>
+            </div>
+
+            {/* Botón inferior derecho: Agregar a biblioteca (+) o ya agregado (tilde verde) */}
+            <div className="absolute bottom-2 right-2 z-20">
+              <CoverAddButton
+                item={item}
+                isAdded={isMovieInLibrary(item)}
+                isAdding={isItemAdding(item)}
+                onAdd={onAdd}
+              />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const HorizontalScrollSection = ({
+  items,
+  onSelect,
+  isMovieInLibrary,
+  isItemAdding,
+  onAdd,
+}: {
+  items: JustWatchTop10Item[];
+  onSelect: (item: TmdbSuggestionCandidate) => void;
+  isMovieInLibrary: (item: TmdbSuggestionCandidate) => boolean;
+  isItemAdding: (item: TmdbSuggestionCandidate) => boolean;
+  onAdd: (item: TmdbSuggestionCandidate) => void;
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 10);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
+  };
+
+  useEffect(() => {
+    checkScroll();
+    const el = containerRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', checkScroll, { passive: true });
+    window.addEventListener('resize', checkScroll);
+    return () => {
+      el.removeEventListener('scroll', checkScroll);
+      window.removeEventListener('resize', checkScroll);
+    };
+  }, [items]);
+
+  const scrollByAmount = (amount: number) => {
+    containerRef.current?.scrollBy({ left: amount, behavior: 'smooth' });
+    setTimeout(checkScroll, 350);
+  };
+
+  return (
+    <div className="relative group/carousel">
+      {canScrollLeft && (
+        <button
+          type="button"
+          onClick={() => scrollByAmount(-400)}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
+          aria-label="Anterior"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+      )}
+      {canScrollRight && (
+        <button
+          type="button"
+          onClick={() => scrollByAmount(400)}
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
+          aria-label="Siguiente"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      )}
+      <div
+        ref={containerRef}
+        className="flex gap-4 overflow-x-auto pb-4 pt-2 hide-scrollbar scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {items.map((item, idx) => (
+          <div
+            key={`pop-${item.type}-${item.tmdbId || item.jwId || idx}`}
+            onClick={() => onSelect(item)}
+            className="w-[125px] sm:w-[145px] shrink-0 select-none group/card cursor-pointer focus:outline-none flex flex-col"
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onSelect(item);
+              }
+            }}
+            title={`Ver características de ${item.title}`}
+          >
+            <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-mist shadow-md transition-all duration-200 group-hover/card:scale-105 group-hover/card:shadow-xl ring-1 ring-black/5 dark:ring-white/10">
+              {item.posterUrl ? (
+                <img src={item.posterUrl} alt={item.title} className="h-full w-full object-cover" loading="lazy" />
+              ) : (
+                <div className="grid h-full place-items-center text-aqua/50">
+                  {item.type === 'movie' ? <Film className="h-8 w-8" /> : <Tv className="h-8 w-8" />}
+                </div>
+              )}
+              {item.rating && (
+                <div className="absolute top-2 right-2 z-10 flex items-center gap-1 rounded bg-black/80 px-1.5 py-0.5 text-[10px] font-bold text-white shadow backdrop-blur-sm">
+                  <span className="text-amber-400">★</span>
+                  <span>{item.rating.toFixed(1)}</span>
+                </div>
+              )}
+
+              {/* Badges inferiores izquierdos */}
+              <div className="absolute bottom-2 left-2 z-10 flex flex-col items-start gap-1 pointer-events-none">
+                {item.subBadge && (
+                  <span className="bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-tight shadow">
+                    {item.subBadge}
+                  </span>
+                )}
+                <span className="bg-black/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-tight shadow">
+                  {item.badge || (item.type === 'series' ? 'TV' : 'PELÍCULA')}
+                </span>
+              </div>
+
+              {/* Botón inferior derecho: Agregar a biblioteca (+) o ya agregado (tilde verde) */}
+              <div className="absolute bottom-2 right-2 z-10">
+                <CoverAddButton
+                  item={item}
+                  isAdded={isMovieInLibrary(item)}
+                  isAdding={isItemAdding(item)}
+                  onAdd={onAdd}
+                />
+              </div>
+            </div>
+            <div className="mt-2 flex flex-col min-w-0">
+              <h4 className="font-bebas text-lg leading-tight uppercase text-ink line-clamp-1 transition-colors group-hover/card:text-coral">
+                {item.title}
+              </h4>
+              <p className="text-xs text-slate-500 truncate mt-0.5">{item.year || ''}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 
@@ -118,6 +401,18 @@ export const NewsPage = () => {
     staleTime: 1000 * 60 * 30,
   });
 
+  const [activePopularPlatform, setActivePopularPlatform] = useState('netflix');
+
+  const platformPopularQuery = useQuery({
+    queryKey: ['justwatch-platform-popular', activePopularPlatform],
+    queryFn: () => api.tmdb.justwatchPlatformPopular(activePopularPlatform),
+    staleTime: 1000 * 60 * 30,
+  });
+
+  const currentPopularPlatformName = useMemo(() => {
+    return SUGGESTION_PLATFORMS.find((p) => p.id === activePopularPlatform)?.name || 'la plataforma';
+  }, [activePopularPlatform]);
+
   const [activeSuggestionPlatform, setActiveSuggestionPlatform] = useState('netflix');
   const [suggestionSeed, setSuggestionSeed] = useState(0);
   const [addedSuggestionMovieIds, setAddedSuggestionMovieIds] = useState<Record<string, string>>({});
@@ -129,27 +424,35 @@ export const NewsPage = () => {
   });
 
   const libraryMovies = useMemo(() => (library.data || []) as MovieItem[], [library.data]);
+  const [addedMovieKeys, setAddedMovieKeys] = useState<Record<string, boolean>>({});
 
   const suggestionKey = (candidate: TmdbSuggestionCandidate) =>
     candidate.imdbId || `${candidate.type}-${candidate.tmdbId}`;
 
-  const isSuggestionCandidateAdded = (candidate: TmdbSuggestionCandidate) => {
-    const key = suggestionKey(candidate);
-    if (addedSuggestionMovieIds[key]) return true;
-    return libraryMovies.some((movie) => {
-      if (candidate.imdbId && movie.imdbId) return movie.imdbId === candidate.imdbId;
-      if (candidate.tmdbId && movie.tmdbId) return movie.tmdbId === candidate.tmdbId;
-      const normalize = (val?: string | null) => (val || '').trim().toLocaleLowerCase('es');
-      const titleMatch = normalize(movie.originalTitle) === normalize(candidate.title) || normalize(movie.spanishTitle) === normalize(candidate.title);
-      const yearMatch = !movie.year || !candidate.year || movie.year === candidate.year;
-      return titleMatch && yearMatch;
-    });
-  };
+  const isMovieInLibrary = useCallback(
+    (candidate: TmdbSuggestionCandidate) => {
+      const key = suggestionKey(candidate);
+      if (addedMovieKeys[key] || addedSuggestionMovieIds[key]) return true;
+      return libraryMovies.some((movie) => {
+        if (candidate.imdbId && movie.imdbId) return movie.imdbId === candidate.imdbId;
+        if (candidate.tmdbId && movie.tmdbId && movie.tmdbId < 80000000) return movie.tmdbId === candidate.tmdbId;
+        const normalize = (val?: string | null) => (val || '').trim().toLocaleLowerCase('es');
+        const titleMatch =
+          normalize(movie.originalTitle) === normalize(candidate.title) ||
+          normalize(movie.spanishTitle) === normalize(candidate.title);
+        const yearMatch = !movie.year || !candidate.year || movie.year === candidate.year;
+        return titleMatch && yearMatch;
+      });
+    },
+    [addedMovieKeys, addedSuggestionMovieIds, libraryMovies]
+  );
+
+  const isSuggestionCandidateAdded = (candidate: TmdbSuggestionCandidate) => isMovieInLibrary(candidate);
 
   const suggestionCandidates = useMemo(() => {
     const raw = (suggestionsQuery.data || []) as TmdbSuggestionCandidate[];
     return raw.filter((c) => !isSuggestionCandidateAdded(c));
-  }, [suggestionsQuery.data, libraryMovies, addedSuggestionMovieIds]);
+  }, [suggestionsQuery.data, isMovieInLibrary]);
 
   const importSuggestionMutation = useMutation({
     mutationFn: async (candidate: TmdbSuggestionCandidate) => {
@@ -261,6 +564,17 @@ export const NewsPage = () => {
 
   const allCandidatesInActivePlatform = useMemo(() => {
     if (!selectedCandidate) return [];
+    if (platformPopularQuery.data) {
+      const all = [
+        ...(platformPopularQuery.data.featuredMovies || []),
+        ...(platformPopularQuery.data.featuredSeries || []),
+        ...(platformPopularQuery.data.popularMovies || []),
+        ...(platformPopularQuery.data.popularSeries || []),
+      ];
+      if (all.some((c) => (c.tmdbId && c.tmdbId === selectedCandidate.tmdbId) || c.title === selectedCandidate.title)) {
+        return all;
+      }
+    }
     if (justwatchTop10Query.data?.some((c) => c.tmdbId === selectedCandidate.tmdbId)) {
       return justwatchTop10Query.data;
     }
@@ -271,7 +585,7 @@ export const NewsPage = () => {
       }
     }
     return [];
-  }, [selectedCandidate, queries, justwatchTop10Query.data]);
+  }, [selectedCandidate, platformPopularQuery.data, queries, justwatchTop10Query.data]);
 
   const activeIndex = useMemo(() => {
     if (!selectedCandidate || !allCandidatesInActivePlatform.length) return -1;
@@ -283,17 +597,59 @@ export const NewsPage = () => {
 
   const importMutation = useMutation({
     mutationFn: async (candidate: TmdbSuggestionCandidate) => {
-      const data = candidateDetails.data || await api.imdb.import({ imdbId: candidate.imdbId, type: candidate.type });
+      let data = (candidateDetails.data && candidateDetails.data.imdbId === candidate.imdbId) ? candidateDetails.data : null;
+      if (!data && candidate.imdbId) {
+        try {
+          data = await api.imdb.import({ imdbId: candidate.imdbId, type: candidate.type });
+        } catch {
+          // fallback to manual creation below
+        }
+      }
+      if (data) {
+        return api.movies.create({
+          ...data,
+          favorite: false,
+          watched: false,
+          watchlist: false,
+          personalRating: null,
+          collectionIds: [],
+        });
+      }
       return api.movies.create({
-        ...data,
-        favorite: false,
+        type: candidate.type,
+        originalTitle: candidate.title,
+        spanishTitle: candidate.title,
+        year: candidate.year || null,
+        synopsis: candidate.overview || 'Sin descripción disponible.',
+        durationMinutes: null,
+        seasons: null,
+        totalEpisodes: null,
         watched: false,
+        favorite: false,
         watchlist: false,
+        instagramRecommendation: false,
         personalRating: null,
+        imdbRating: candidate.rating || null,
+        tmdbId: candidate.tmdbId || null,
+        imdbId: candidate.imdbId || null,
+        imdbUrl: candidate.imdbId ? `https://www.imdb.com/title/${candidate.imdbId}` : null,
+        tmdbUrl: candidate.tmdbId ? `https://www.themoviedb.org/${candidate.type === 'movie' ? 'movie' : 'tv'}/${candidate.tmdbId}` : null,
+        justwatchUrl: (candidate as any).justwatchUrl || null,
+        trailerUrl: null,
+        tmdbCollectionId: null,
+        tmdbCollectionName: null,
+        images: candidate.posterUrl ? [{ url: candidate.posterUrl, isPrimary: true, order: 0 }] : [],
+        genres: (candidate.genres || []).map((g) => ({ name: g })),
+        platforms: [],
+        keywords: [],
+        credits: [],
+        countries: [],
         collectionIds: [],
       });
     },
-    onSuccess: (saved) => {
+    onSuccess: (saved, candidate) => {
+      const key = candidate.imdbId || `${candidate.type}-${candidate.tmdbId}`;
+      setAddedMovieKeys((current) => ({ ...current, [key]: true, [saved.id]: true }));
       queryClient.setQueryData<MovieItem[]>(['movies'], (current = []) =>
         current.some((m) => m.id === saved.id) ? current : [saved, ...current]
       );
@@ -302,6 +658,19 @@ export const NewsPage = () => {
       queryClient.invalidateQueries({ queryKey: ['collections'] });
     },
   });
+
+  const isItemAdding = useCallback(
+    (candidate: TmdbSuggestionCandidate) => {
+      if (!importMutation.isPending || !importMutation.variables) return false;
+      const v = importMutation.variables;
+      return (
+        (Boolean(v.imdbId) && v.imdbId === candidate.imdbId) ||
+        (Boolean(v.tmdbId) && v.tmdbId === candidate.tmdbId) ||
+        v.title === candidate.title
+      );
+    },
+    [importMutation.isPending, importMutation.variables]
+  );
 
   const updatePersonal = useMutation({
     mutationFn: ({ movie, field }: { movie: MovieItem; field: 'favorite' | 'watched' | 'watchlist' }) =>
@@ -393,6 +762,130 @@ export const NewsPage = () => {
         <ChevronRight className="h-6 w-6 sm:h-7 sm:w-7 drop-shadow-sm" />
       </button>
 
+      {/* Sección principal superior: Populares por plataforma (JustWatch) */}
+      <section id="populares-plataforma" className="scroll-mt-20 mx-auto max-w-[1500px] px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-14 border-b border-slate-200/50">
+        <h1 className="font-bebas text-3xl sm:text-4xl font-normal text-ink uppercase text-center mb-4">
+          Populares por plataforma
+        </h1>
+
+        {/* Iconos de plataformas */}
+        <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 mb-8">
+          {SUGGESTION_PLATFORMS.map((p) => {
+            const active = activePopularPlatform === p.id;
+            const logoUrl = resolvePlatformLogoUrl({ name: p.name, logoPath: null });
+            return (
+              <button
+                key={`popular-${p.id}`}
+                type="button"
+                onClick={() => setActivePopularPlatform(p.id)}
+                title={p.name}
+                aria-label={p.name}
+                className={`news-suggestion-platform-btn group relative flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl transition-all p-0 ${
+                  active
+                    ? 'active ring-2 ring-coral ring-offset-2 ring-offset-canvas shadow-md scale-105 opacity-100'
+                    : 'opacity-75 hover:opacity-100 hover:scale-105'
+                }`}
+              >
+                {logoUrl ? (
+                  <img
+                    src={logoUrl}
+                    alt={p.name}
+                    className="h-full w-full rounded-xl object-contain shrink-0"
+                  />
+                ) : (
+                  <span className="flex h-full w-full items-center justify-center rounded-xl bg-slate-800 text-sm font-bold text-white">
+                    {p.name.slice(0, 2)}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Contenido de acuerdo a la plataforma elegida */}
+        {platformPopularQuery.isLoading ? (
+          <div className="grid h-64 place-items-center">
+            <Loader2 className="h-8 w-8 animate-spin text-aqua" />
+          </div>
+        ) : platformPopularQuery.data ? (
+          <div className="space-y-10">
+            {/* 1. Las 10 películas más destacadas */}
+            <div>
+              <div className="relative flex items-center justify-between mb-3">
+                <h2 className="font-bebas text-2xl sm:text-3xl text-ink uppercase tracking-wide">
+                  Las 10 películas más destacadas en {currentPopularPlatformName}
+                </h2>
+              </div>
+              <Top10FeaturedSection
+                items={platformPopularQuery.data.featuredMovies || []}
+                onSelect={setSelectedCandidate}
+                isMovieInLibrary={isMovieInLibrary}
+                isItemAdding={isItemAdding}
+                onAdd={(cand) => importMutation.mutate(cand)}
+              />
+            </div>
+
+            {/* 2. Las 10 series más destacadas */}
+            <div>
+              <div className="relative flex items-center justify-between mb-3">
+                <h2 className="font-bebas text-2xl sm:text-3xl text-ink uppercase tracking-wide">
+                  Las 10 series más destacadas en {currentPopularPlatformName}
+                </h2>
+              </div>
+              <Top10FeaturedSection
+                items={platformPopularQuery.data.featuredSeries || []}
+                onSelect={setSelectedCandidate}
+                isMovieInLibrary={isMovieInLibrary}
+                isItemAdding={isItemAdding}
+                onAdd={(cand) => importMutation.mutate(cand)}
+              />
+            </div>
+
+            {/* 3. Todas las películas de la plataforma (las 50 más populares) */}
+            <div>
+              <div className="relative flex items-center justify-between mb-3">
+                <div>
+                  <h2 className="font-bebas text-2xl sm:text-3xl text-ink uppercase tracking-wide">
+                    Todas las películas en {currentPopularPlatformName}
+                  </h2>
+                  <p className="text-xs text-slate-500">Las 50 más populares</p>
+                </div>
+              </div>
+              <HorizontalScrollSection
+                items={platformPopularQuery.data.popularMovies || []}
+                onSelect={setSelectedCandidate}
+                isMovieInLibrary={isMovieInLibrary}
+                isItemAdding={isItemAdding}
+                onAdd={(cand) => importMutation.mutate(cand)}
+              />
+            </div>
+
+            {/* 4. Todas las series de la plataforma (las 50 más populares) */}
+            <div>
+              <div className="relative flex items-center justify-between mb-3">
+                <div>
+                  <h2 className="font-bebas text-2xl sm:text-3xl text-ink uppercase tracking-wide">
+                    Todas las series en {currentPopularPlatformName}
+                  </h2>
+                  <p className="text-xs text-slate-500">Las 50 más populares</p>
+                </div>
+              </div>
+              <HorizontalScrollSection
+                items={platformPopularQuery.data.popularSeries || []}
+                onSelect={setSelectedCandidate}
+                isMovieInLibrary={isMovieInLibrary}
+                isItemAdding={isItemAdding}
+                onAdd={(cand) => importMutation.mutate(cand)}
+              />
+            </div>
+          </div>
+        ) : (
+          <p className="text-center text-sm text-slate-400 py-8">
+            No se pudieron cargar los títulos populares para {currentPopularPlatformName}.
+          </p>
+        )}
+      </section>
+
       <section id="top-10-plataforma" className="scroll-mt-20 mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8">
         <h1 className="font-bebas text-3xl font-normal text-ink uppercase text-center mb-4">
           Top 10 por plataforma
@@ -451,6 +944,9 @@ export const NewsPage = () => {
                           item={item}
                           rank={itemIndex + 1}
                           onSelect={setSelectedCandidate}
+                          isAdded={isMovieInLibrary(item)}
+                          isAdding={isItemAdding(item)}
+                          onAdd={(cand) => importMutation.mutate(cand)}
                         />
                       ))}
                     </div>
@@ -461,13 +957,12 @@ export const NewsPage = () => {
           </div>
         </div>
 
-        {/* Sección: Top 10 en AR (JustWatch) */}
+        {/* Sección: Top 10 en AR */}
         <div id="top-10-ar" className="scroll-mt-20 mt-14 border-t border-slate-200/40 pt-8">
           <div className="relative flex items-center justify-center mb-4">
             <h2 className="font-bebas text-2xl sm:text-3xl font-normal text-ink uppercase tracking-wide text-center">
               Top 10 en AR
             </h2>
-            <span className="absolute right-0 text-xs text-slate-400 font-medium">JustWatch</span>
           </div>
 
           {justwatchTop10Query.isLoading ? (
@@ -514,8 +1009,8 @@ export const NewsPage = () => {
                       </svg>
                     </div>
 
-                    {/* Badges inferiores derechos */}
-                    <div className="absolute bottom-2 right-2 z-20 flex flex-col items-end gap-1 pointer-events-none">
+                    {/* Badges inferiores izquierdos */}
+                    <div className="absolute bottom-2 left-2 z-20 flex flex-col items-start gap-1 pointer-events-none">
                       {item.subBadge && (
                         <span className="bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-tight shadow">
                           {item.subBadge}
@@ -525,12 +1020,22 @@ export const NewsPage = () => {
                         {item.badge || (item.type === 'series' ? 'TV' : 'PELÍCULA')}
                       </span>
                     </div>
+
+                    {/* Botón inferior derecho: Agregar a biblioteca (+) o ya agregado (tilde verde) */}
+                    <div className="absolute bottom-2 right-2 z-20">
+                      <CoverAddButton
+                        item={item}
+                        isAdded={isMovieInLibrary(item)}
+                        isAdding={isItemAdding(item)}
+                        onAdd={(cand) => importMutation.mutate(cand)}
+                      />
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-slate-400 py-6">No se pudieron cargar los datos de JustWatch.</p>
+            <p className="text-sm text-slate-400 py-6">No se pudieron cargar los títulos destacados.</p>
           )}
         </div>
 

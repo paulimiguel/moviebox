@@ -112,7 +112,7 @@ export const TinderSuggestions = ({
 
           </div>
           
-          <div className="flex flex-col p-2.5 sm:p-3 text-center">
+          <div className="flex flex-col p-2.5 sm:p-3 text-center min-h-[84px] sm:min-h-[92px] justify-center">
             <h2 className="font-bebas line-clamp-2 text-lg sm:text-xl uppercase leading-5 text-ink">{candidate.title}</h2>
             <div className="mt-0.5 flex items-center justify-center gap-2 text-xs text-slate-500">
               {candidate.year && <span className="font-semibold">{candidate.year}</span>}
@@ -169,7 +169,7 @@ export const TinderSuggestions = ({
   };
 
   return (
-    <section className="relative mx-auto flex h-[440px] sm:h-[455px] max-w-[960px] items-center justify-center overflow-hidden pt-1 pb-3 px-4">
+    <section className="relative mx-auto flex h-[490px] sm:h-[515px] max-w-[960px] items-center justify-center overflow-hidden pt-1 pb-4 px-4">
       {/* Navigation Arrows */}
       <button 
         type="button"

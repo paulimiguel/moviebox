@@ -53,13 +53,15 @@ const getJustWatchPopularTitles = async () => {
   return Array.from(unique.values()).slice(0, 80);
 };
 
-const allSettledInBatches = async <T, R>(items: T[], worker: (item: T) => Promise<R>, batchSize = 8) => {
+const allSettledInBatches = async <T, R>(items: T[], worker: (item: T, index: number) => Promise<R>, batchSize = 8) => {
   const results: PromiseSettledResult<R>[] = [];
   for (let index = 0; index < items.length; index += batchSize) {
-    results.push(...await Promise.allSettled(items.slice(index, index + batchSize).map(worker)));
+    const chunk = items.slice(index, index + batchSize);
+    results.push(...await Promise.allSettled(chunk.map((item, chunkIdx) => worker(item, index + chunkIdx))));
   }
   return results;
 };
+
 
 const tmdbRequest = async <T>(path: string): Promise<T> => {
   if (!token) throw new Error('TMDB_TOKEN_MISSING');
@@ -519,6 +521,234 @@ router.get('/justwatch-top10', async (_req, res) => {
   } catch (error) {
     if (justwatchTop10Cache) return res.json(justwatchTop10Cache.data);
     return res.status(502).json({ error: 'No se pudo cargar el Top 10 de JustWatch' });
+  }
+});
+
+const JW_PLATFORM_PACKAGES: Record<string, string | null> = {
+  netflix: 'nfx',
+  prime: 'prv',
+  apple: 'atp',
+  disney: 'dnp',
+  max: 'mxx',
+  flow: 'mvp',
+  paramount: 'pmp',
+  justwatch: null,
+};
+
+const JW_PLATFORM_NAMES: Record<string, string> = {
+  netflix: 'Netflix',
+  prime: 'Prime Video',
+  apple: 'Apple TV',
+  disney: 'Disney+',
+  max: 'HBO Max',
+  flow: 'Flow',
+  paramount: 'Paramount+',
+  justwatch: 'JustWatch',
+};
+
+const justwatchPlatformPopularCache = new Map<string, { data: any; cachedAt: number }>();
+
+router.get('/justwatch-platform-popular', async (req, res) => {
+  const platform = String(req.query.platform || 'netflix').toLowerCase();
+  const cached = justwatchPlatformPopularCache.get(platform);
+  if (cached && Date.now() - cached.cachedAt < JW_CACHE_TTL_MS) {
+    return res.json(cached.data);
+  }
+
+  const pkg = platform in JW_PLATFORM_PACKAGES ? JW_PLATFORM_PACKAGES[platform] : JW_PLATFORM_PACKAGES.netflix;
+  const platformName = JW_PLATFORM_NAMES[platform] || 'Plataforma';
+
+  try {
+    const query = `
+      query GetPlatformPopular($country: Country!, $movieFilter: TitleFilter, $seriesFilter: TitleFilter, $first: Int!) {
+        movies: popularTitles(country: $country, filter: $movieFilter, first: $first, sortBy: POPULAR) {
+          edges {
+            node {
+              id
+              objectId
+              objectType
+              content(country: $country, language: "es") {
+                title
+                fullPath
+                originalReleaseYear
+                posterUrl
+                shortDescription
+                scoring {
+                  imdbScore
+                  tmdbScore
+                }
+              }
+            }
+          }
+        }
+        series: popularTitles(country: $country, filter: $seriesFilter, first: $first, sortBy: POPULAR) {
+          edges {
+            node {
+              id
+              objectId
+              objectType
+              content(country: $country, language: "es") {
+                title
+                fullPath
+                originalReleaseYear
+                posterUrl
+                shortDescription
+                scoring {
+                  imdbScore
+                  tmdbScore
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const jwRes = await fetch('https://apis.justwatch.com/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      },
+      body: JSON.stringify({
+        operationName: 'GetPlatformPopular',
+        variables: {
+          country: 'AR',
+          movieFilter: {
+            packages: pkg ? [pkg] : [],
+            objectTypes: ['MOVIE'],
+          },
+          seriesFilter: {
+            packages: pkg ? [pkg] : [],
+            objectTypes: ['SHOW'],
+          },
+          first: 50,
+        },
+        query,
+      }),
+      signal: AbortSignal.timeout(15_000),
+    });
+
+    if (!jwRes.ok) throw new Error(`JUSTWATCH_GQL_${jwRes.status}`);
+    const jwData = (await jwRes.json()) as any;
+    const movieEdges = jwData?.data?.movies?.edges || [];
+    const seriesEdges = jwData?.data?.series?.edges || [];
+
+    let movieGenreNames = new Map<number, string>();
+    let seriesGenreNames = new Map<number, string>();
+    if (token) {
+      try {
+        const [mg, sg] = await Promise.all([
+          tmdbRequest<{ genres?: Array<{ id: number; name: string }> }>('/genre/movie/list?language=es-AR'),
+          tmdbRequest<{ genres?: Array<{ id: number; name: string }> }>('/genre/tv/list?language=es-AR'),
+        ]);
+        movieGenreNames = new Map((mg.genres || []).map((g) => [g.id, g.name]));
+        seriesGenreNames = new Map((sg.genres || []).map((g) => [g.id, g.name]));
+      } catch {
+        // best effort
+      }
+    }
+
+    const processEdges = async (edges: any[], type: 'movie' | 'series') => {
+      const results = await allSettledInBatches(edges, async (edge: any, index: number) => {
+        const node = edge.node;
+        const c = node.content || {};
+        const rawPoster = c.posterUrl
+          ? `https://images.justwatch.com${c.posterUrl.replace('{profile}', 's332').replace('{format}', 'webp')}`
+          : null;
+
+        let tmdbId: number | null = null;
+        let imdbId: string | null = null;
+        let originalTitle = c.title;
+        let overview = c.shortDescription || '';
+        let posterUrl = rawPoster;
+        let genres: string[] = [];
+        let rating: number | null = c.scoring?.imdbScore || c.scoring?.tmdbScore || null;
+
+        if (token) {
+          try {
+            const tmdbSearch = await tmdbRequest<{ results?: any[] }>(
+              `/search/multi?language=es-AR&include_adult=false&query=${encodeURIComponent(c.title)}`
+            );
+            const mediaType = type === 'movie' ? 'movie' : 'tv';
+            const matched = (tmdbSearch.results || []).find((r) => r.media_type === mediaType) || tmdbSearch.results?.[0];
+            if (matched) {
+              tmdbId = matched.id;
+              originalTitle = matched.original_title || matched.original_name || c.title;
+              if (matched.overview) overview = matched.overview;
+              if (matched.poster_path) posterUrl = `https://image.tmdb.org/t/p/w500${matched.poster_path}`;
+              if (Number.isFinite(Number(matched.vote_average))) rating = Number(matched.vote_average);
+              const gMap = type === 'movie' ? movieGenreNames : seriesGenreNames;
+              genres = (matched.genre_ids || []).map((gid: number) => gMap.get(gid)).filter(Boolean);
+
+              // Para los primeros 10 buscamos además el external imdb_id para enriquecimiento completo
+              if (index < 10) {
+                try {
+                  const resource = matched.media_type === 'movie' ? 'movie' : 'tv';
+                  const ext = await tmdbRequest<{ imdb_id?: string | null }>(`/${resource}/${matched.id}/external_ids`);
+                  if (ext?.imdb_id) imdbId = ext.imdb_id;
+                } catch {
+                  // best effort
+                }
+              }
+            }
+          } catch {
+            // best effort fallback
+          }
+        }
+
+        let subBadge: string | null = null;
+        if (type === 'series') {
+          if (c.originalReleaseYear === 2026 || c.originalReleaseYear === 2025) {
+            subBadge = 'Nuevo episodio';
+          }
+        }
+
+        return {
+          rank: index + 1,
+          jwId: node.id,
+          tmdbId: tmdbId || (type === 'movie' ? 80000000 + index : 90000000 + index),
+          imdbId: imdbId || '',
+          type,
+          title: c.title,
+          originalTitle,
+          year: c.originalReleaseYear || null,
+          overview,
+          genres,
+          posterUrl,
+          rating,
+          popularity: 100 - index,
+          badge: type === 'series' ? 'TV' : 'PELÍCULA',
+          subBadge,
+          justwatchUrl: c.fullPath ? `https://www.justwatch.com${c.fullPath}` : null,
+        };
+      }, 8);
+
+      return results.flatMap((r) => (r.status === 'fulfilled' && r.value ? [r.value] : []));
+    };
+
+    const [popularMovies, popularSeries] = await Promise.all([
+      processEdges(movieEdges, 'movie'),
+      processEdges(seriesEdges, 'series'),
+    ]);
+
+    const featuredMovies = popularMovies.slice(0, 10);
+    const featuredSeries = popularSeries.slice(0, 10);
+
+    const payload = {
+      platform,
+      platformName,
+      featuredMovies,
+      featuredSeries,
+      popularMovies,
+      popularSeries,
+    };
+
+    justwatchPlatformPopularCache.set(platform, { data: payload, cachedAt: Date.now() });
+    return res.json(payload);
+  } catch (error) {
+    if (cached) return res.json(cached.data);
+    return res.status(502).json({ error: 'No se pudieron cargar los populares de JustWatch para la plataforma seleccionada' });
   }
 });
 

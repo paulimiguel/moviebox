@@ -167,6 +167,13 @@ export const Header = () => {
                 <div className="header-dropdown absolute left-0 top-full w-64 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
                   <button
                     type="button"
+                    onClick={() => navigateToNewsSection('populares-plataforma')}
+                    className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                  >
+                    Populares por plataforma
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => navigateToNewsSection('top-10-plataforma')}
                     className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
                   >
