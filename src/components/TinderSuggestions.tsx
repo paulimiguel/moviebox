@@ -131,7 +131,6 @@ export const TinderSuggestions = ({
                     e.stopPropagation();
                     handleReject();
                   }}
-                  className="grid h-8 w-8 place-items-center rounded-full border border-red-400/60 bg-red-600/70 text-white shadow-md backdrop-blur-sm transition-all hover:bg-red-600 hover:scale-110 active:scale-95"
                   className="grid h-8 w-8 place-items-center rounded-full border border-red-400/50 bg-red-600/40 text-white shadow-md backdrop-blur-md transition-all hover:bg-red-600/80 hover:scale-110 active:scale-95"
                   title="Rechazar"
                   aria-label="Rechazar"
@@ -145,7 +144,6 @@ export const TinderSuggestions = ({
                     e.stopPropagation();
                     handleAccept(candidate);
                   }}
-                  className="grid h-8 w-8 place-items-center rounded-full border border-emerald-400/60 bg-[#2cbc63]/75 text-white shadow-md backdrop-blur-sm transition-all hover:bg-[#2cbc63] hover:scale-110 active:scale-95 disabled:opacity-50"
                   className="grid h-8 w-8 place-items-center rounded-full border border-emerald-400/50 bg-[#2cbc63]/40 text-white shadow-md backdrop-blur-md transition-all hover:bg-[#2cbc63]/80 hover:scale-110 active:scale-95 disabled:opacity-50"
                   title="Agregar a biblioteca"
                   aria-label="Agregar a biblioteca"
