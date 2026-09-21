@@ -103,33 +103,33 @@ export const TinderSuggestions = ({
         )}
         <div 
           onClick={() => isCurrent && setPreviewCandidate(candidate)}
-          className={`movie-card flex flex-col overflow-hidden rounded-xl bg-white shadow-card ${isCurrent ? 'cursor-pointer w-64 md:w-72 hover:-translate-y-1' : 'w-56'} transition-transform`}
+          className={`movie-card flex flex-col overflow-hidden rounded-xl bg-white shadow-card ${isCurrent ? 'cursor-pointer w-52 sm:w-56 md:w-60 hover:-translate-y-1' : 'w-40 sm:w-44'} transition-transform`}
         >
           <div className="relative aspect-[2/3] bg-mist">
             {candidate.posterUrl ? (
               <img src={candidate.posterUrl} alt={candidate.title} className="h-full w-full object-cover" />
             ) : (
               <div className="grid h-full place-items-center text-aqua/70">
-                {candidate.type === 'movie' ? <Film className="h-16 w-16" /> : <Tv className="h-16 w-16" />}
+                {candidate.type === 'movie' ? <Film className="h-12 w-12" /> : <Tv className="h-12 w-12" />}
               </div>
             )}
-            <span className={`absolute left-3 top-3 rounded-md px-2.5 py-1 text-[11px] font-semibold uppercase text-white shadow-sm ${candidate.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>
+            <span className={`absolute left-3 top-3 rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase text-white shadow-sm ${candidate.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>
               {candidate.type === 'movie' ? 'Película' : 'Serie'}
             </span>
             {isCurrent && candidate.rating != null && candidate.rating > 0 && (
-              <span className="absolute right-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-canvas/90 px-2.5 py-1 text-xs font-semibold text-ink backdrop-blur shadow-sm">
-                <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+              <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-md bg-canvas/90 px-2 py-0.5 text-xs font-semibold text-ink backdrop-blur shadow-sm">
+                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
                 {candidate.rating.toFixed(1)}
               </span>
             )}
           </div>
           
-          <div className="flex flex-col p-4 text-center">
-            <h2 className="font-bebas line-clamp-2 text-2xl uppercase leading-7 text-ink">{candidate.title}</h2>
-            <div className="mt-1 flex items-center justify-center gap-2 text-sm text-slate-500">
+          <div className="flex flex-col p-3 sm:p-3.5 text-center">
+            <h2 className="font-bebas line-clamp-2 text-xl sm:text-2xl uppercase leading-6 text-ink">{candidate.title}</h2>
+            <div className="mt-0.5 flex items-center justify-center gap-2 text-xs text-slate-500">
               {candidate.year && <span className="font-semibold">{candidate.year}</span>}
             </div>
-            <p className="mt-2 line-clamp-1 text-sm text-slate-500">
+            <p className="mt-1 line-clamp-1 text-xs text-slate-500">
               {(candidate.genres || []).join(', ') || 'Sin género'}
             </p>
           </div>
@@ -163,7 +163,7 @@ export const TinderSuggestions = ({
   };
 
   return (
-    <section className="relative mx-auto mt-6 flex h-[600px] max-w-[1200px] items-center justify-center overflow-hidden py-10 px-4">
+    <section className="relative mx-auto mt-4 flex h-[480px] sm:h-[500px] max-w-[1050px] items-center justify-center overflow-hidden py-6 px-4">
       {/* Navigation Arrows */}
       <button 
         type="button"

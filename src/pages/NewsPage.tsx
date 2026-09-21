@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Header } from '@/components/Header';
 import { useQuery, useQueries, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/services/api';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { resolvePlatformLogoUrl } from '@/components/PlatformLogos';
 import { MovieDetailModal } from '@/components/MovieDetailModal';
 import { TinderSuggestions } from '@/components/TinderSuggestions';
@@ -88,7 +88,23 @@ const Top10Item = ({
 
 export const NewsPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (location.hash) {
+      const targetId = location.hash.replace('#', '');
+      const scroll = () => {
+        const el = document.getElementById(targetId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      };
+      scroll();
+      const timer = setTimeout(scroll, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [location.hash]);
   const headerScrollRef = useRef<HTMLDivElement>(null);
   const contentScrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -377,9 +393,9 @@ export const NewsPage = () => {
         <ChevronRight className="h-6 w-6 sm:h-7 sm:w-7 drop-shadow-sm" />
       </button>
 
-      <section className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8">
+      <section id="top-10-plataforma" className="scroll-mt-20 mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8">
         <h1 className="font-bebas text-3xl font-normal text-ink uppercase flex items-center gap-2 mb-4">
-          Novedades por plataforma
+          Top 10 por plataforma
         </h1>
 
         {/* Barra superior con logos y títulos centrados (no fija) */}
@@ -445,11 +461,11 @@ export const NewsPage = () => {
           </div>
         </div>
 
-        {/* Sección: Top 10 en AR hoy (JustWatch) */}
-        <div className="mt-14 border-t border-slate-200/40 pt-8">
+        {/* Sección: Top 10 en AR (JustWatch) */}
+        <div id="top-10-ar" className="scroll-mt-20 mt-14 border-t border-slate-200/40 pt-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-bebas text-2xl sm:text-3xl font-normal text-ink uppercase tracking-wide flex items-center gap-2">
-              Top 10 en AR hoy
+              Top 10 en AR
             </h2>
             <span className="text-xs text-slate-400 font-medium">JustWatch</span>
           </div>
@@ -519,10 +535,10 @@ export const NewsPage = () => {
         </div>
 
         {/* Sección: Sugerencias debajo del todo */}
-        <div className="mt-14 border-t border-slate-200/40 pt-8 pb-10 space-y-6">
+        <div id="sugerencias-plataforma" className="scroll-mt-20 mt-14 border-t border-slate-200/40 pt-8 pb-10 space-y-6">
           <div className="space-y-4">
             <div>
-              <h2 className="font-bebas text-2xl uppercase text-ink sm:text-3xl">Sugerencias</h2>
+              <h2 className="font-bebas text-2xl uppercase text-ink sm:text-3xl">Sugerencias por plataforma</h2>
               <p className="text-xs text-slate-500">Deslizá o explorá las sugerencias de cada plataforma para agregarlas a tu biblioteca</p>
             </div>
             <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
@@ -543,7 +559,7 @@ export const NewsPage = () => {
                     }}
                     title={p.name}
                     aria-label={p.name}
-                    className={`news-suggestion-platform-btn group relative flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl border transition-all ${
+                    className={`news-suggestion-platform-btn group relative flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl border transition-all ${
                       active
                         ? 'active border-coral bg-coral/10 ring-2 ring-coral shadow-md scale-105'
                         : 'border-slate-200 bg-white opacity-70 hover:opacity-100 hover:border-slate-300 hover:bg-slate-50'
@@ -553,7 +569,7 @@ export const NewsPage = () => {
                       <img
                         src={logoUrl}
                         alt={p.name}
-                        className="h-8 w-8 sm:h-9 sm:w-9 rounded-md object-contain transition-transform group-hover:scale-105"
+                        className="h-6 w-6 sm:h-7 sm:w-7 rounded-md object-contain transition-transform group-hover:scale-105"
                       />
                     ) : (
                       <span className="text-xs font-bold text-slate-600">{p.name.slice(0, 2)}</span>

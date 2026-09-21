@@ -30,6 +30,7 @@ export const Header = () => {
   const [collectionMenuOpen, setCollectionMenuOpen] = useState(false);
   const [platformMenuOpen, setPlatformMenuOpen] = useState(false);
   const [genreMenuOpen, setGenreMenuOpen] = useState(false);
+  const [newsMenuOpen, setNewsMenuOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [profilePhotoFailed, setProfilePhotoFailed] = useState(false);
 
@@ -51,6 +52,7 @@ export const Header = () => {
   const collectionMenuRef = useRef<HTMLDivElement>(null);
   const platformMenuRef = useRef<HTMLDivElement>(null);
   const genreMenuRef = useRef<HTMLDivElement>(null);
+  const newsMenuRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const metadataQuery = useQuery({ queryKey: ['metadata'], queryFn: api.metadata.getAll });
   const collectionsQuery = useQuery({ queryKey: ['collections'], queryFn: api.collections.getAll });
@@ -61,6 +63,7 @@ export const Header = () => {
       if (!collectionMenuRef.current?.contains(event.target as Node)) setCollectionMenuOpen(false);
       if (!platformMenuRef.current?.contains(event.target as Node)) setPlatformMenuOpen(false);
       if (!genreMenuRef.current?.contains(event.target as Node)) setGenreMenuOpen(false);
+      if (!newsMenuRef.current?.contains(event.target as Node)) setNewsMenuOpen(false);
       if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
     };
     document.addEventListener('mousedown', close);
@@ -115,6 +118,20 @@ export const Header = () => {
     window.setTimeout(() => window.dispatchEvent(new CustomEvent('moviebox:filter-platform', { detail: platformId })), 0);
   };
 
+  const navigateToNewsSection = (sectionId: string) => {
+    setNewsMenuOpen(false);
+    setMenuOpen(false);
+    if (location.pathname === '/novedades') {
+      const el = document.getElementById(sectionId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+      window.history.replaceState(null, '', `/novedades#${sectionId}`);
+    } else {
+      navigate(`/novedades#${sectionId}`);
+    }
+  };
+
   return (
     <header className="moviebox-header sticky top-0 z-40 border-b border-slate-200 bg-canvas/95 backdrop-blur">
       <div className="mx-auto flex h-[72px] max-w-[1500px] items-center gap-5 px-4 sm:px-6">
@@ -122,13 +139,13 @@ export const Header = () => {
         <div className="ml-auto flex h-full min-w-0 items-center gap-2 sm:gap-4">
           <nav className="main-navigation hidden h-full items-end xl:flex">
             <div ref={libraryMenuRef} className="relative h-full" onMouseEnter={() => setLibraryMenuOpen(true)} onMouseLeave={() => setLibraryMenuOpen(false)}>
-              <button type="button" onClick={() => { filterLibrary('all'); setPlatformMenuOpen(false); setGenreMenuOpen(false); setCollectionMenuOpen(false); }} className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${libraryMenuOpen || location.pathname === '/' ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={libraryMenuOpen}>BIBLIOTECA<ChevronDown className="h-4 w-4" /></button>
+              <button type="button" onClick={() => { filterLibrary('all'); setPlatformMenuOpen(false); setGenreMenuOpen(false); setCollectionMenuOpen(false); setNewsMenuOpen(false); }} className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${libraryMenuOpen || location.pathname === '/' ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={libraryMenuOpen}>BIBLIOTECA<ChevronDown className="h-4 w-4" /></button>
               {libraryMenuOpen && <div className="header-dropdown absolute left-0 top-full w-52 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
                 {libraryOptions.map((option) => <button key={option.preset} type="button" onClick={() => filterLibrary(option.preset)} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink">{option.icon}<span>{option.label}</span></button>)}
               </div>}
             </div>
             <div ref={platformMenuRef} className="relative h-full">
-              <button type="button" onClick={() => { setPlatformMenuOpen((current) => !current); setLibraryMenuOpen(false); setCollectionMenuOpen(false); setGenreMenuOpen(false); }} className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${platformMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={platformMenuOpen}>PLATAFORMAS<ChevronDown className="h-4 w-4" /></button>
+              <button type="button" onClick={() => { setPlatformMenuOpen((current) => !current); setLibraryMenuOpen(false); setCollectionMenuOpen(false); setGenreMenuOpen(false); setNewsMenuOpen(false); }} className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${platformMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={platformMenuOpen}>PLATAFORMAS<ChevronDown className="h-4 w-4" /></button>
               {platformMenuOpen && <div className="header-dropdown absolute left-0 top-full w-56 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
                 <div className="max-h-72 overflow-y-auto">
                   {(metadataQuery.data?.platforms || []).length ? (metadataQuery.data?.platforms || []).map((platform) => <button key={platform.id} type="button" onClick={() => filterLibraryByPlatform(platform.id)} className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink">{platform.name}</button>) : <p className="px-3 py-3 text-sm text-slate-400">No hay plataformas.</p>}
@@ -137,7 +154,7 @@ export const Header = () => {
               </div>}
             </div>
             <div ref={genreMenuRef} className="relative h-full">
-              <button type="button" onClick={() => { setGenreMenuOpen((current) => !current); setLibraryMenuOpen(false); setCollectionMenuOpen(false); setPlatformMenuOpen(false); }} className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${genreMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={genreMenuOpen}>GÉNEROS<ChevronDown className="h-4 w-4" /></button>
+              <button type="button" onClick={() => { setGenreMenuOpen((current) => !current); setLibraryMenuOpen(false); setCollectionMenuOpen(false); setPlatformMenuOpen(false); setNewsMenuOpen(false); }} className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${genreMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={genreMenuOpen}>GÉNEROS<ChevronDown className="h-4 w-4" /></button>
               {genreMenuOpen && <div className="header-dropdown absolute left-0 top-full w-56 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
                 <div className="max-h-72 overflow-y-auto">
                   {(metadataQuery.data?.genres || []).length ? (metadataQuery.data?.genres || []).map((genre) => <button key={genre.id} type="button" onClick={() => filterLibraryByGenre(genre.id)} className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink">{genre.name}</button>) : <p className="px-3 py-3 text-sm text-slate-400">No hay géneros.</p>}
@@ -146,7 +163,7 @@ export const Header = () => {
               </div>}
             </div>
             <div ref={collectionMenuRef} className="relative h-full">
-              <button type="button" onClick={() => { setCollectionMenuOpen((current) => !current); setLibraryMenuOpen(false); setPlatformMenuOpen(false); setGenreMenuOpen(false); }} className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${collectionMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={collectionMenuOpen}>COLECCIONES<ChevronDown className="h-4 w-4" /></button>
+              <button type="button" onClick={() => { setCollectionMenuOpen((current) => !current); setLibraryMenuOpen(false); setPlatformMenuOpen(false); setGenreMenuOpen(false); setNewsMenuOpen(false); }} className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${collectionMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={collectionMenuOpen}>COLECCIONES<ChevronDown className="h-4 w-4" /></button>
               {collectionMenuOpen && <div className="header-dropdown absolute left-0 top-full w-64 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
                 <div className="max-h-72 overflow-y-auto">
                   {(collectionsQuery.data || []).length ? (collectionsQuery.data || []).map((collection) => <Link key={collection.id} to={`/colecciones/${collection.id}`} onClick={() => setCollectionMenuOpen(false)} className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink">{collection.name}</Link>) : <p className="px-3 py-3 text-sm text-slate-400">No hay colecciones.</p>}
@@ -154,7 +171,50 @@ export const Header = () => {
                 <Link to="/colecciones" onClick={() => setCollectionMenuOpen(false)} className="mt-1 flex w-full items-center gap-2 border-t border-slate-100 px-3 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink"><LayoutGrid className="h-4 w-4" />Mostrar colecciones</Link>
               </div>}
             </div>
-            <NavLink to="/novedades" className={({ isActive }) => `flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${isActive ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`}>NOVEDADES</NavLink>
+            <div ref={newsMenuRef} className="relative h-full" onMouseEnter={() => setNewsMenuOpen(true)} onMouseLeave={() => setNewsMenuOpen(false)}>
+              <button
+                type="button"
+                onClick={() => {
+                  setNewsMenuOpen((current) => !current);
+                  setLibraryMenuOpen(false);
+                  setPlatformMenuOpen(false);
+                  setGenreMenuOpen(false);
+                  setCollectionMenuOpen(false);
+                  if (location.pathname !== '/novedades') {
+                    navigate('/novedades');
+                  }
+                }}
+                className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${newsMenuOpen || location.pathname === '/novedades' ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`}
+                aria-expanded={newsMenuOpen}
+              >
+                NOVEDADES<ChevronDown className="h-4 w-4" />
+              </button>
+              {newsMenuOpen && (
+                <div className="header-dropdown absolute left-0 top-full w-64 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
+                  <button
+                    type="button"
+                    onClick={() => navigateToNewsSection('top-10-plataforma')}
+                    className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                  >
+                    Top 10 por plataforma
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigateToNewsSection('top-10-ar')}
+                    className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                  >
+                    Top 10 en AR
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigateToNewsSection('sugerencias-plataforma')}
+                    className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                  >
+                    Sugerencias por plataforma
+                  </button>
+                </div>
+              )}
+            </div>
             <button
               type="button"
               onClick={() => setAddModalOpen(true)}
@@ -206,6 +266,30 @@ export const Header = () => {
                   {(collectionsQuery.data || []).length ? (collectionsQuery.data || []).map((collection) => <Link key={`mobile-collection-${collection.id}`} to={`/colecciones/${collection.id}`} onClick={() => setMenuOpen(false)} className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50">{collection.name}</Link>) : <p className="px-3 py-2 text-sm text-slate-400">No hay colecciones.</p>}
                 </div>
                 <Link to="/colecciones" onClick={() => setMenuOpen(false)} className="mt-1 flex w-full items-center gap-2 border-t border-slate-100 px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"><LayoutGrid className="h-4 w-4" />Mostrar colecciones</Link>
+              </div>
+              <div className="mt-1 border-b border-slate-100 py-1 xl:hidden">
+                <p className="px-3 py-1.5 text-xs font-semibold uppercase text-slate-400">Novedades</p>
+                <button
+                  type="button"
+                  onClick={() => navigateToNewsSection('top-10-plataforma')}
+                  className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"
+                >
+                  Top 10 por plataforma
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigateToNewsSection('top-10-ar')}
+                  className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"
+                >
+                  Top 10 en AR
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigateToNewsSection('sugerencias-plataforma')}
+                  className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"
+                >
+                  Sugerencias por plataforma
+                </button>
               </div>
               <div className="border-b border-slate-100 px-3 py-2">
                 <p className="mb-2 text-xs font-semibold uppercase text-slate-400">Temas</p>
