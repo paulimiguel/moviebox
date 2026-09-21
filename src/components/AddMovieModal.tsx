@@ -424,7 +424,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                           {group.candidates.slice(0, 5).map((candidate) => {
                             const selected = (selectedIds[groupIndex] || []).includes(candidate.imdbId);
                             return (
-                              <div key={`${candidate.type}-${candidate.imdbId}`} className={`flex items-center gap-4 p-3 sm:px-4 ${selected ? 'bg-mist' : 'hover:bg-slate-50'}`}>
+                              <div key={`${candidate.type}-${candidate.imdbId}`} className={`flex items-center gap-4 p-3 sm:px-4 transition-colors ${selected ? 'bg-mist' : 'hover:bg-slate-50'}`}>
                                 <input
                                   type="checkbox"
                                   checked={selected}

@@ -2,23 +2,23 @@ import { useState, useEffect, useMemo } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Check, ChevronLeft, ChevronRight, Eye, Film, Loader2, Star, Tv, X } from 'lucide-react';
 import { api } from '@/services/api';
-import { MovieDetailModal } from '@/components/MovieDetailModal';
 import type { TmdbSuggestionCandidate } from '@/types/movie';
 
 export const TinderSuggestions = ({ 
   initialCandidates, 
+  onSelect,
   onAdd, 
   isAdding,
   addingTmdbId
 }: { 
   initialCandidates: TmdbSuggestionCandidate[]; 
+  onSelect?: (candidate: TmdbSuggestionCandidate) => void;
   onAdd: (candidate: TmdbSuggestionCandidate) => void;
   isAdding: boolean;
   addingTmdbId: number | null;
 }) => {
   const [deck, setDeck] = useState<TmdbSuggestionCandidate[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [previewCandidate, setPreviewCandidate] = useState<TmdbSuggestionCandidate | null>(null);
 
   useEffect(() => {
     // Only set initially or when deck is completely empty
@@ -86,10 +86,13 @@ export const TinderSuggestions = ({
         }`}
       >
         <div 
-          onClick={() => isCurrent && setPreviewCandidate(candidate)}
+          onClick={() => isCurrent && onSelect?.(candidate)}
           className={`movie-card flex flex-col overflow-hidden rounded-xl bg-white shadow-card ${isCurrent ? 'cursor-pointer w-44 sm:w-48 md:w-52 hover:-translate-y-1' : 'w-32 sm:w-36'} transition-transform`}
         >
-          <div className="relative aspect-[2/3] bg-mist">
+          <div
+            onClick={() => isCurrent && onSelect?.(candidate)}
+            className="relative aspect-[2/3] bg-mist cursor-pointer"
+          >
             {candidate.posterUrl ? (
               <img src={candidate.posterUrl} alt={candidate.title} className="h-full w-full object-cover" />
             ) : (
@@ -125,7 +128,7 @@ export const TinderSuggestions = ({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    setPreviewCandidate(candidate);
+                    onSelect?.(candidate);
                   }}
                   className="grid h-8 w-8 place-items-center rounded-full border border-white/40 bg-slate-900/40 text-white shadow-md backdrop-blur-md transition-all hover:bg-slate-900/70 hover:scale-110 active:scale-95"
                   title="Ver detalle"
@@ -188,47 +191,6 @@ export const TinderSuggestions = ({
       >
         <ChevronRight className="h-6 w-6" />
       </button>
-
-      {previewCandidate && (
-        <MovieDetailModal
-          movie={{
-            id: 'preview-' + previewCandidate.tmdbId,
-            title: previewCandidate.title,
-            originalTitle: previewCandidate.title,
-            type: previewCandidate.type,
-            year: previewCandidate.year || null,
-            runtime: null,
-            synopsis: previewCandidate.overview || 'Sin descripción disponible.',
-            imdbId: previewCandidate.imdbId || null,
-            tmdbId: previewCandidate.tmdbId || null,
-            imdbRating: previewCandidate.rating || null,
-            trailerUrl: null,
-            favorite: false,
-            watched: false,
-            watchlist: false,
-            personalRating: null,
-            instagramRecommendation: false,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            images: previewCandidate.posterUrl ? [{ id: '1', url: previewCandidate.posterUrl, localPath: null, tmdbFilePath: null, order: 0, isPrimary: true, altText: null }] : [],
-            genres: (previewCandidate.genres || []).map((g, i) => ({ id: String(i), name: g, normalizedName: g, order: i })),
-            platforms: [],
-            keywords: [],
-            director: [],
-            cast: [],
-            countries: [],
-            collectionIds: [],
-          } as any}
-          onClose={() => setPreviewCandidate(null)}
-          onAdd={() => {
-            setPreviewCandidate(null);
-            handleAccept(previewCandidate);
-          }}
-          onPersonal={() => {}}
-          onRating={() => {}}
-          onCollections={() => {}}
-        />
-      )}
     </section>
   );
 };

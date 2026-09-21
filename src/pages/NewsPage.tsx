@@ -20,14 +20,6 @@ const SUGGESTION_PLATFORMS = [
   { id: 'justwatch', name: 'JustWatch' },
 ];
 
-type SuggestionFilter = 'novedades' | 'populares' | 'mas_vistos';
-
-const SUGGESTION_FILTERS: { id: SuggestionFilter; label: string }[] = [
-  { id: 'novedades', label: 'Últimas novedades' },
-  { id: 'populares', label: 'Más populares' },
-  { id: 'mas_vistos', label: 'Más vistos' },
-];
-
 const PLATFORMS = [
   { id: 'netflix', name: 'Netflix' },
   { id: 'prime', name: 'Prime Video' },
@@ -127,13 +119,12 @@ export const NewsPage = () => {
   });
 
   const [activeSuggestionPlatform, setActiveSuggestionPlatform] = useState('netflix');
-  const [activeSuggestionFilter, setActiveSuggestionFilter] = useState<SuggestionFilter>('novedades');
   const [suggestionSeed, setSuggestionSeed] = useState(0);
   const [addedSuggestionMovieIds, setAddedSuggestionMovieIds] = useState<Record<string, string>>({});
 
   const suggestionsQuery = useQuery({
-    queryKey: ['tmdb-platform-suggestions', activeSuggestionPlatform, activeSuggestionFilter, suggestionSeed],
-    queryFn: () => api.tmdb.platformSuggestions(activeSuggestionPlatform, suggestionSeed, activeSuggestionFilter),
+    queryKey: ['tmdb-platform-suggestions', activeSuggestionPlatform, suggestionSeed],
+    queryFn: () => api.tmdb.platformSuggestions(activeSuggestionPlatform, suggestionSeed),
     staleTime: 1000 * 60 * 5,
   });
 
@@ -568,7 +559,7 @@ export const NewsPage = () => {
                     }}
                     title={p.name}
                     aria-label={p.name}
-                    className={`news-suggestion-platform-btn group relative flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl border transition-all ${
+                    className={`news-suggestion-platform-btn group relative flex h-12 sm:h-14 min-w-[50px] sm:min-w-[58px] px-2.5 sm:px-3.5 items-center justify-center rounded-xl border transition-all ${
                       active
                         ? 'active border-coral bg-coral/10 ring-2 ring-coral shadow-md scale-105'
                         : 'border-slate-200 bg-white opacity-70 hover:opacity-100 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800'
@@ -578,37 +569,11 @@ export const NewsPage = () => {
                       <img
                         src={logoUrl}
                         alt={p.name}
-                        className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg object-contain transition-transform group-hover:scale-105"
+                        className="h-9 sm:h-10 w-auto rounded object-contain shrink-0 transition-transform group-hover:scale-105"
                       />
                     ) : (
-                      <span className="text-sm font-bold text-slate-600">{p.name.slice(0, 2)}</span>
+                      <span className="text-sm font-bold text-slate-600 dark:text-slate-300">{p.name.slice(0, 2)}</span>
                     )}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Selector de filtro: últimas novedades, más populares, más vistos */}
-            <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
-              {SUGGESTION_FILTERS.map((f) => {
-                const active = activeSuggestionFilter === f.id;
-                return (
-                  <button
-                    key={f.id}
-                    type="button"
-                    onClick={() => {
-                      if (activeSuggestionFilter !== f.id) {
-                        setActiveSuggestionFilter(f.id);
-                        setSuggestionSeed(0);
-                      }
-                    }}
-                    className={`rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide transition-all ${
-                      active
-                        ? 'bg-coral text-white shadow-sm'
-                        : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
-                    }`}
-                  >
-                    {f.label}
                   </button>
                 );
               })}
@@ -632,6 +597,7 @@ export const NewsPage = () => {
             <TinderSuggestions
               key={`${activeSuggestionPlatform}-${suggestionSeed}`}
               initialCandidates={suggestionCandidates}
+              onSelect={(candidate) => setSelectedCandidate(candidate)}
               onAdd={(candidate) => {
                 if (!isSuggestionCandidateAdded(candidate)) {
                   importSuggestionMutation.mutate(candidate);

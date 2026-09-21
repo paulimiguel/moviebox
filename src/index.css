@@ -499,6 +499,9 @@ body {
 :root[data-theme="dark"] .movie-detail-modal .icon-button,
 :root[data-theme="dark"] .movie-detail-modal .control,
 :root[data-theme="dark"] .movie-detail-modal [class~="bg-white"] {
+  --color-slate-50: 58 63 70;
+  --color-slate-100: 55 59 65;
+  --color-slate-200: 71 76 83;
   border-color: rgb(71 76 83);
   background-color: rgb(52 56 62);
   color: #fff;
@@ -515,13 +518,17 @@ body {
 :root[data-theme="dark"] .movie-detail-modal .secondary-button:hover,
 :root[data-theme="dark"] .movie-detail-modal .icon-button:hover,
 :root[data-theme="dark"] .movie-detail-modal .control:hover,
-:root[data-theme="dark"] .movie-detail-modal [class~="bg-white"] button:hover {
+:root[data-theme="dark"] .movie-detail-modal [class~="bg-white"] button:hover,
+:root[data-theme="dark"] .movie-detail-modal [class*="hover:bg-slate-50"]:hover,
+:root[data-theme="dark"] .movie-detail-modal [class*="hover:bg-slate-100"]:hover {
   background-color: rgb(65 70 77);
   color: #fff;
 }
 
-:root[data-theme="dark"] .movie-detail-modal [class~="border-t"] {
-  border-color: rgb(55 59 65);
+:root[data-theme="dark"] .movie-detail-modal [class~="border-t"],
+:root[data-theme="dark"] .movie-detail-modal [class~="border-b"],
+:root[data-theme="dark"] .movie-detail-modal [class~="divide-slate-100"] > * + * {
+  border-color: rgb(71 76 83);
 }
 
 :root[data-theme="dark"] .auth-page .control,

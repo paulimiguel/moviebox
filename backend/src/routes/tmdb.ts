@@ -207,7 +207,7 @@ router.get('/new-releases', async (req, res) => {
 router.get('/platform-suggestions', async (req, res) => {
   if (!token) return res.status(503).json({ error: 'TMDB todavía no está configurado' });
   const platform = String(req.query.platform || 'netflix');
-  const filter = String(req.query.filter || 'novedades');
+  const filter = String(req.query.filter || 'populares');
   const seed = Number(req.query.seed || 0);
 
   if (platform === 'justwatch') {
