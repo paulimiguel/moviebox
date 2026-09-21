@@ -116,25 +116,25 @@ export const TinderSuggestions = ({
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleReject();
+                    onSelect?.(candidate);
                   }}
-                  className="grid h-8 w-8 place-items-center rounded-full border border-red-400/50 bg-red-600/40 text-white shadow-md backdrop-blur-md transition-all hover:bg-red-600/80 hover:scale-110 active:scale-95"
-                  title="Rechazar"
-                  aria-label="Rechazar"
+                  className="grid h-8 w-8 place-items-center rounded-full border border-white/40 bg-black/30 text-white shadow-md backdrop-blur-md transition-all hover:bg-blue-600 hover:border-blue-500 hover:scale-110 active:scale-95"
+                  title="Ver detalle"
+                  aria-label="Ver detalle"
                 >
-                  <X className="h-4 w-4" strokeWidth={2.5} />
+                  <Eye className="h-4 w-4" strokeWidth={2} />
                 </button>
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
-                    onSelect?.(candidate);
+                    handleReject();
                   }}
-                  className="grid h-8 w-8 place-items-center rounded-full border border-white/40 bg-slate-900/40 text-white shadow-md backdrop-blur-md transition-all hover:bg-slate-900/70 hover:scale-110 active:scale-95"
-                  title="Ver detalle"
-                  aria-label="Ver detalle"
+                  className="grid h-8 w-8 place-items-center rounded-full border border-white/40 bg-black/30 text-white shadow-md backdrop-blur-md transition-all hover:bg-red-600 hover:border-red-500 hover:scale-110 active:scale-95"
+                  title="Rechazar"
+                  aria-label="Rechazar"
                 >
-                  <Eye className="h-4 w-4" strokeWidth={2} />
+                  <X className="h-4 w-4" strokeWidth={2.5} />
                 </button>
                 <button
                   type="button"
@@ -143,7 +143,7 @@ export const TinderSuggestions = ({
                     e.stopPropagation();
                     handleAccept(candidate);
                   }}
-                  className="grid h-8 w-8 place-items-center rounded-full border border-emerald-400/50 bg-[#2cbc63]/40 text-white shadow-md backdrop-blur-md transition-all hover:bg-[#2cbc63]/80 hover:scale-110 active:scale-95 disabled:opacity-50"
+                  className="grid h-8 w-8 place-items-center rounded-full border border-white/40 bg-black/30 text-white shadow-md backdrop-blur-md transition-all hover:bg-[#2cbc63] hover:border-emerald-500 hover:scale-110 active:scale-95 disabled:opacity-50"
                   title="Agregar a biblioteca"
                   aria-label="Agregar a biblioteca"
                 >
