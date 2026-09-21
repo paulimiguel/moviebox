@@ -559,7 +559,7 @@ export const NewsPage = () => {
                     }}
                     title={p.name}
                     aria-label={p.name}
-                    className={`news-suggestion-platform-btn group relative flex h-11 w-11 sm:h-12 sm:w-12 items-center justify-center rounded-xl border transition-all ${
+                    className={`news-suggestion-platform-btn group relative flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl border transition-all ${
                       active
                         ? 'active border-coral bg-coral/10 ring-2 ring-coral shadow-md scale-105'
                         : 'border-slate-200 bg-white opacity-70 hover:opacity-100 hover:border-slate-300 hover:bg-slate-50'
@@ -569,10 +569,10 @@ export const NewsPage = () => {
                       <img
                         src={logoUrl}
                         alt={p.name}
-                        className="h-6 w-6 sm:h-7 sm:w-7 rounded-md object-contain transition-transform group-hover:scale-105"
+                        className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg object-contain transition-transform group-hover:scale-105"
                       />
                     ) : (
-                      <span className="text-xs font-bold text-slate-600">{p.name.slice(0, 2)}</span>
+                      <span className="text-sm font-bold text-slate-600">{p.name.slice(0, 2)}</span>
                     )}
                   </button>
                 );

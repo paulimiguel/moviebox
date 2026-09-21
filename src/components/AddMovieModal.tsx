@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
@@ -49,7 +49,6 @@ interface AddMovieModalProps {
 export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
   const queryClient = useQueryClient();
 
-  const [step, setStep] = useState<1 | 2>(1);
   const [searchQuery, setSearchQuery] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
   const [bulkMenuOpen, setBulkMenuOpen] = useState(false);
@@ -65,6 +64,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
 
   const txtInputRef = useRef<HTMLInputElement>(null);
   const spreadsheetInputRef = useRef<HTMLInputElement>(null);
+  const bulkMenuRef = useRef<HTMLDivElement>(null);
 
   const library = useQuery({ queryKey: ['movies'], queryFn: api.movies.getAll, enabled: isOpen });
   const libraryMovies = useMemo(() => (library.data || []) as MovieItem[], [library.data]);
@@ -72,7 +72,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
   const searchResultsQuery = useQuery({
     queryKey: ['tmdb-search-by-name', appliedSearch],
     queryFn: () => api.tmdb.suggestions(appliedSearch),
-    enabled: isOpen && step === 2 && Boolean(appliedSearch),
+    enabled: isOpen && !bulkDialogOpen && Boolean(appliedSearch),
   });
 
   const suggestionKey = (candidate: TmdbSuggestionCandidate) =>
@@ -189,10 +189,36 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
     onError: (reason: Error) => setError(reason.message),
   });
 
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (trimmed.length < 2) {
+      setAppliedSearch('');
+      return;
+    }
+    const timer = setTimeout(() => {
+      setAppliedSearch(trimmed);
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (!bulkMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (bulkMenuRef.current && !bulkMenuRef.current.contains(e.target as Node)) {
+        setBulkMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [bulkMenuOpen]);
+
   const pasteSearch = async () => {
     try {
       const text = (await navigator.clipboard.readText()).trim().replace(/\s+/g, ' ');
-      if (text) setSearchQuery(text);
+      if (text) {
+        setSearchQuery(text);
+        setAppliedSearch(text);
+      }
     } catch {
       setError('No se pudo leer el portapapeles. Revisá el permiso del navegador.');
     }
@@ -203,7 +229,6 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
     const queryToSearch = searchQuery.trim();
     if (!queryToSearch) return;
     setAppliedSearch(queryToSearch);
-    setStep(2);
   };
 
   const loadImportedTitles = (titles: string[]) => {
@@ -243,55 +268,78 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
   };
 
   const handleClose = () => {
-    setStep(1);
     setSearchQuery('');
     setAppliedSearch('');
     setBulkMenuOpen(false);
     setBulkDialogOpen(false);
+    setGroups(null);
+    setSelectedIds({});
     setError('');
     onClose();
   };
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (bulkMenuOpen) {
+          setBulkMenuOpen(false);
+        } else {
+          handleClose();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, bulkMenuOpen]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-end justify-center bg-ink/55 p-0 sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="add-movie-modal-title">
-      <div className="movie-detail-modal flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-4xl sm:rounded-md">
+    <div
+      className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-6 bg-ink/60 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="add-movie-modal-title"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          handleClose();
+        }
+      }}
+    >
+      <div
+        className="movie-detail-modal flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-canvas shadow-2xl border border-slate-200"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6">
-          <div className="flex items-center gap-3">
-            {step === 2 && !bulkDialogOpen && (
+          <div className="flex items-center gap-3 min-w-0">
+            {bulkDialogOpen && (
               <button
                 type="button"
-                onClick={() => setStep(1)}
-                className="icon-button -ml-1 border-0 shadow-none"
-                title="Volver a buscar"
-                aria-label="Volver a buscar"
+                onClick={() => setBulkDialogOpen(false)}
+                className="icon-button -ml-1 border-0 shadow-none text-slate-500 hover:text-ink"
+                title="Volver a búsqueda por título"
+                aria-label="Volver a búsqueda por título"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
             )}
-            <div>
-              <h2 id="add-movie-modal-title" className="font-bebas text-2xl uppercase text-ink">
-                {bulkDialogOpen
-                  ? 'Buscar varios títulos'
-                  : step === 1
-                  ? 'Agregar título por nombre'
-                  : 'Resultados de búsqueda'}
+            <div className="min-w-0">
+              <h2 id="add-movie-modal-title" className="font-bebas text-2xl sm:text-3xl uppercase tracking-wide text-ink truncate">
+                {bulkDialogOpen ? 'Buscar varios títulos' : 'Agregar títulos'}
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="truncate text-xs text-slate-500">
                 {bulkDialogOpen
-                  ? 'Ingresá títulos o revisá los cargados desde un archivo'
-                  : step === 1
-                  ? 'Buscá un título para sumarlo a tu biblioteca o agregá varios a la vez'
-                  : `Coincidencias encontradas para “${appliedSearch}”`}
+                  ? 'Ingresá títulos o cargalos desde un archivo para buscarlos y agregarlos en lote'
+                  : 'Buscá una película o serie por nombre o agregá varias a la vez'}
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={handleClose}
-            className="icon-button ml-auto border-0 shadow-none"
+            className="icon-button border-0 shadow-none text-slate-400 hover:text-ink shrink-0 ml-2"
             title="Cerrar"
             aria-label="Cerrar"
           >
@@ -304,8 +352,8 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
           <input ref={txtInputRef} type="file" accept=".txt,text/plain" className="hidden" onChange={importTextFile} />
           <input ref={spreadsheetInputRef} type="file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" className="hidden" onChange={importSpreadsheet} />
 
-          {/* Diálogo / Modo Carga Masiva */}
           {bulkDialogOpen ? (
+            /* Diálogo / Modo Carga Masiva */
             <div className="space-y-4">
               <form
                 onSubmit={(e) => {
@@ -436,269 +484,259 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                 </button>
               </div>
             </div>
-          ) : step === 1 ? (
-            /* Paso 1: Búsqueda individual y botón grande de búsqueda masiva */
+          ) : (
+            /* Modo Búsqueda de Título */
             <div className="space-y-6">
-              <form onSubmit={handleSearchSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="movie-search-modal-input" className="field-label mb-1.5 block">
-                    Título a buscar
-                  </label>
-                  <div className="flex gap-2 sm:gap-3">
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                      <input
-                        id="movie-search-modal-input"
-                        type="text"
-                        placeholder="Escribí el título a buscar"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleSearchSubmit();
-                          }
+              {/* Barra de búsqueda y botón con menú */}
+              <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
+                <form onSubmit={handleSearchSubmit} className="relative flex flex-1 gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input
+                      id="movie-search-modal-input"
+                      type="text"
+                      placeholder="Escribí el título a buscar..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="control w-full pl-9 pr-16"
+                      autoFocus
+                    />
+                    {!searchQuery ? (
+                      <button
+                        type="button"
+                        onClick={() => void pasteSearch()}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-slate-100 px-2 py-1 text-[10px] font-semibold uppercase text-slate-600 transition-colors hover:bg-slate-200 hover:text-ink"
+                      >
+                        Pegar
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchQuery('');
+                          setAppliedSearch('');
                         }}
-                        className="control w-full pl-9 pr-16"
-                        autoFocus
-                      />
-                      {!searchQuery && (
-                        <button
-                          type="button"
-                          onClick={() => void pasteSearch()}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-slate-100 px-2 py-1 text-[10px] font-semibold uppercase text-slate-600 transition-colors hover:bg-slate-200 hover:text-ink"
-                        >
-                          Pegar
-                        </button>
-                      )}
-                    </div>
-                    <button
-                      type="submit"
-                      disabled={!searchQuery.trim()}
-                      className="primary-button shrink-0"
-                    >
-                      <Search className="h-4 w-4" />
-                      Buscar
-                    </button>
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-ink"
+                        title="Limpiar"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
-                </div>
-              </form>
+                  <button
+                    type="submit"
+                    disabled={!searchQuery.trim()}
+                    className="primary-button shrink-0"
+                  >
+                    <Search className="h-4 w-4" />
+                    <span className="hidden sm:inline">Buscar</span>
+                  </button>
+                </form>
 
-              {/* Botón grande: Buscar varios títulos */}
-              <div className="relative border-t border-slate-200 pt-6">
-                <button
-                  type="button"
-                  onClick={() => setBulkMenuOpen((c) => !c)}
-                  className="flex w-full items-center justify-between rounded-lg border border-slate-200 bg-white p-4 text-left shadow-sm transition-all hover:border-aqua hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-aqua"
-                >
-                  <div className="flex items-center gap-3.5">
-                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-aqua/10 text-aqua">
-                      <Plus className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <span className="block font-semibold text-ink">Buscar varios títulos</span>
-                      <span className="block text-xs text-slate-500">
-                        Cargar múltiples títulos pegando texto o desde archivos TXT y Excel
-                      </span>
-                    </div>
-                  </div>
-                  <ChevronDown className={`h-5 w-5 text-slate-400 transition-transform ${bulkMenuOpen ? 'rotate-180' : ''}`} />
-                </button>
-
-                {bulkMenuOpen && (
-                  <div className="mt-2 space-y-1 rounded-md border border-slate-200 bg-white p-1.5 shadow-lg">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setBulkMenuOpen(false);
-                        setBulkDialogOpen(true);
-                      }}
-                      className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-ink"
-                    >
+                {/* Botón Buscar varios títulos con dropdown */}
+                <div className="relative shrink-0" ref={bulkMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setBulkMenuOpen((c) => !c)}
+                    className="secondary-button w-full sm:w-auto justify-between sm:justify-center gap-2 border-slate-200 font-semibold"
+                    aria-expanded={bulkMenuOpen}
+                  >
+                    <div className="flex items-center gap-2">
                       <Plus className="h-4 w-4 text-aqua" />
-                      Pegar texto con títulos
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setBulkMenuOpen(false);
-                        txtInputRef.current?.click();
-                      }}
-                      className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-ink"
-                    >
-                      <FileText className="h-4 w-4 text-slate-500" />
-                      Cargar archivo de texto (.txt)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setBulkMenuOpen(false);
-                        spreadsheetInputRef.current?.click();
-                      }}
-                      className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-ink"
-                    >
-                      <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
-                      Cargar archivo Excel (.xlsx, .xls)
-                    </button>
-                  </div>
-                )}
+                      <span>Buscar varios títulos</span>
+                    </div>
+                    <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${bulkMenuOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {bulkMenuOpen && (
+                    <div className="header-dropdown absolute right-0 top-full mt-1.5 z-40 w-full sm:w-72 rounded-lg border border-slate-200 bg-white p-1.5 shadow-xl">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setBulkMenuOpen(false);
+                          setBulkDialogOpen(true);
+                        }}
+                        className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-ink"
+                      >
+                        <Plus className="h-4 w-4 text-aqua shrink-0" />
+                        <span>Pegar texto con títulos</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setBulkMenuOpen(false);
+                          txtInputRef.current?.click();
+                        }}
+                        className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-ink"
+                      >
+                        <FileText className="h-4 w-4 text-slate-400 shrink-0" />
+                        <span>Cargar archivo de texto (.txt)</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setBulkMenuOpen(false);
+                          spreadsheetInputRef.current?.click();
+                        }}
+                        className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-ink"
+                      >
+                        <FileSpreadsheet className="h-4 w-4 text-emerald-500 shrink-0" />
+                        <span>Cargar archivo Excel (.xlsx, .xls)</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {error && <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-            </div>
-          ) : (
-            /* Paso 2: Resultados encontrados en formato iconos medianos */
-            <div className="space-y-4">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-ink">
-                    Resultados para “{appliedSearch}”
-                  </span>
-                  {searchResultsQuery.data && (
-                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-                      {searchResultsQuery.data.length}
+
+              {/* Títulos encontrados debajo */}
+              {appliedSearch ? (
+                <div className="space-y-4 pt-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-ink">
+                      Resultados para “{appliedSearch}”
                     </span>
+                    {searchResultsQuery.data && (
+                      <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
+                        {searchResultsQuery.data.length} {searchResultsQuery.data.length === 1 ? 'título' : 'títulos'}
+                      </span>
+                    )}
+                  </div>
+
+                  {searchResultsQuery.isLoading ? (
+                    <div className="grid min-h-[260px] place-items-center">
+                      <div className="text-center">
+                        <Loader2 className="mx-auto h-8 w-8 animate-spin text-aqua" />
+                        <p className="mt-3 text-sm text-slate-500">Buscando coincidencias para “{appliedSearch}”...</p>
+                      </div>
+                    </div>
+                  ) : searchResultsQuery.isError ? (
+                    <div className="rounded-md border border-red-100 bg-red-50 p-6 text-center">
+                      <p className="text-sm text-red-700">No se pudo realizar la búsqueda.</p>
+                      <button
+                        type="button"
+                        onClick={() => searchResultsQuery.refetch()}
+                        className="secondary-button mt-3"
+                      >
+                        Reintentar
+                      </button>
+                    </div>
+                  ) : searchResultsQuery.data?.length ? (
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-4">
+                      {searchResultsQuery.data.map((candidate) => {
+                        const inLibraryId = addedMovieIdFor(candidate);
+                        const isAddingThis =
+                          importSuggestion.isPending &&
+                          importSuggestion.variables &&
+                          suggestionKey(importSuggestion.variables) === suggestionKey(candidate);
+
+                        const typeBadge =
+                          candidate.type === 'movie' ? (
+                            <span className="rounded border border-coral/20 bg-red-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-coral">
+                              Película
+                            </span>
+                          ) : (
+                            <span className="rounded border border-aqua/20 bg-[#f0fbfb] px-1.5 py-0.5 text-[10px] font-bold uppercase text-[#1c646b]">
+                              Serie
+                            </span>
+                          );
+
+                        return (
+                          <article
+                            key={suggestionKey(candidate)}
+                            className="movie-card group flex flex-col overflow-hidden rounded-md border border-slate-200 bg-white transition-shadow hover:shadow-md"
+                          >
+                            <div className="relative aspect-[2/3] w-full overflow-hidden bg-slate-100">
+                              {candidate.posterUrl ? (
+                                <img
+                                  src={candidate.posterUrl}
+                                  alt={candidate.title}
+                                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <div className="grid h-full place-items-center text-slate-300">
+                                  {candidate.type === 'movie' ? <Film className="h-10 w-10" /> : <Tv className="h-10 w-10" />}
+                                </div>
+                              )}
+                              <div className="absolute left-2 top-2">{typeBadge}</div>
+                            </div>
+
+                            <div className="flex flex-1 flex-col justify-between p-3">
+                              <div>
+                                <h4 className="font-bebas text-lg uppercase leading-5 text-ink line-clamp-1" title={candidate.title}>
+                                  {candidate.title}
+                                </h4>
+                                {candidate.originalTitle && candidate.originalTitle !== candidate.title && (
+                                  <p className="truncate text-xs text-slate-400" title={candidate.originalTitle}>
+                                    {candidate.originalTitle}
+                                  </p>
+                                )}
+                                <div className="mt-1 flex items-center justify-between text-xs text-slate-500">
+                                  <span>{candidate.year || 'S/D'}</span>
+                                  {candidate.rating ? (
+                                    <span className="inline-flex items-center gap-0.5 font-semibold text-amber-500">
+                                      <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                                      {candidate.rating.toFixed(1)}
+                                    </span>
+                                  ) : null}
+                                </div>
+                              </div>
+
+                              <div className="mt-3">
+                                {inLibraryId ? (
+                                  <button
+                                    type="button"
+                                    disabled
+                                    className="secondary-button w-full justify-center gap-1.5 border-[#2cbc63]/40 text-xs font-semibold text-[#2cbc63]"
+                                    title="Título ya incorporado a la biblioteca"
+                                  >
+                                    <Check className="h-4 w-4" />
+                                    En biblioteca
+                                  </button>
+                                ) : isAddingThis ? (
+                                  <button
+                                    type="button"
+                                    disabled
+                                    className="primary-button w-full justify-center gap-1.5 text-xs opacity-75"
+                                  >
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Agregando...
+                                  </button>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => importSuggestion.mutate(candidate)}
+                                    disabled={importSuggestion.isPending}
+                                    className="primary-button w-full justify-center gap-1.5 text-xs"
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                    Agregar
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          </article>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="rounded-md border border-slate-200 bg-white p-8 text-center shadow-sm">
+                      <Film className="mx-auto h-10 w-10 text-aqua" />
+                      <p className="mt-3 font-semibold text-ink">No se encontraron títulos con ese nombre</p>
+                      <p className="mt-1 text-xs text-slate-500">Probá con otro término o revisá la ortografía.</p>
+                    </div>
                   )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="secondary-button text-xs"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" />
-                  Buscar otro título
-                </button>
-              </div>
-
-              {searchResultsQuery.isLoading ? (
-                <div className="grid min-h-[300px] place-items-center">
-                  <div className="text-center">
-                    <Loader2 className="mx-auto h-8 w-8 animate-spin text-aqua" />
-                    <p className="mt-3 text-sm text-slate-500">Buscando coincidencias para “{appliedSearch}”...</p>
-                  </div>
-                </div>
-              ) : searchResultsQuery.isError ? (
-                <div className="rounded-md border border-red-100 bg-red-50 p-6 text-center">
-                  <p className="text-sm text-red-700">No se pudo realizar la búsqueda.</p>
-                  <button
-                    type="button"
-                    onClick={() => searchResultsQuery.refetch()}
-                    className="secondary-button mt-3"
-                  >
-                    Reintentar
-                  </button>
-                </div>
-              ) : searchResultsQuery.data?.length ? (
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-4">
-                  {searchResultsQuery.data.map((candidate) => {
-                    const inLibraryId = addedMovieIdFor(candidate);
-                    const isAddingThis =
-                      importSuggestion.isPending &&
-                      importSuggestion.variables &&
-                      suggestionKey(importSuggestion.variables) === suggestionKey(candidate);
-
-                    const typeBadge =
-                      candidate.type === 'movie' ? (
-                        <span className="rounded border border-coral/20 bg-red-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-coral dark:border-coral/30 dark:bg-[#34181a] dark:text-[#f37c70]">
-                          Película
-                        </span>
-                      ) : (
-                        <span className="rounded border border-aqua/20 bg-[#f0fbfb] px-1.5 py-0.5 text-[10px] font-bold uppercase text-[#1c646b] dark:border-aqua/30 dark:bg-[#102a2e] dark:text-[#88d2d4]">
-                          Serie
-                        </span>
-                      );
-
-                    return (
-                      <article
-                        key={suggestionKey(candidate)}
-                        className="movie-card group flex flex-col overflow-hidden rounded-md border border-slate-200 bg-white transition-shadow hover:shadow-md"
-                      >
-                        <div className="relative aspect-[2/3] w-full overflow-hidden bg-slate-100">
-                          {candidate.posterUrl ? (
-                            <img
-                              src={candidate.posterUrl}
-                              alt={candidate.title}
-                              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="grid h-full place-items-center text-slate-300">
-                              {candidate.type === 'movie' ? <Film className="h-10 w-10" /> : <Tv className="h-10 w-10" />}
-                            </div>
-                          )}
-                          <div className="absolute left-2 top-2">{typeBadge}</div>
-                        </div>
-
-                        <div className="flex flex-1 flex-col justify-between p-3">
-                          <div>
-                            <h4 className="font-bebas text-lg uppercase leading-5 text-ink line-clamp-1" title={candidate.title}>
-                              {candidate.title}
-                            </h4>
-                            {candidate.originalTitle && candidate.originalTitle !== candidate.title && (
-                              <p className="truncate text-xs text-slate-400" title={candidate.originalTitle}>
-                                {candidate.originalTitle}
-                              </p>
-                            )}
-                            <div className="mt-1 flex items-center justify-between text-xs text-slate-500">
-                              <span>{candidate.year || 'S/D'}</span>
-                              {candidate.rating ? (
-                                <span className="inline-flex items-center gap-0.5 font-semibold text-amber-500">
-                                  <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                                  {candidate.rating.toFixed(1)}
-                                </span>
-                              ) : null}
-                            </div>
-                          </div>
-
-                          <div className="mt-3">
-                            {inLibraryId ? (
-                              <button
-                                type="button"
-                                disabled
-                                className="secondary-button w-full justify-center gap-1.5 border-[#2cbc63]/40 text-xs font-semibold text-[#2cbc63]"
-                                title="Título ya incorporado a la biblioteca"
-                              >
-                                <Check className="h-4 w-4" />
-                                En biblioteca
-                              </button>
-                            ) : isAddingThis ? (
-                              <button
-                                type="button"
-                                disabled
-                                className="primary-button w-full justify-center gap-1.5 text-xs opacity-75"
-                              >
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                                Agregando...
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => importSuggestion.mutate(candidate)}
-                                disabled={importSuggestion.isPending}
-                                className="primary-button w-full justify-center gap-1.5 text-xs"
-                              >
-                                <Plus className="h-4 w-4" />
-                                Agregar
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
               ) : (
-                <div className="rounded-md border border-slate-200 bg-white p-8 text-center shadow-sm">
-                  <Film className="mx-auto h-10 w-10 text-aqua" />
-                  <p className="mt-3 font-semibold text-ink">No se encontraron títulos con ese nombre</p>
-                  <p className="mt-1 text-xs text-slate-500">Probá con otro término o revisá la ortografía.</p>
-                  <button
-                    type="button"
-                    onClick={() => setStep(1)}
-                    className="secondary-button mt-4"
-                  >
-                    Volver a buscar
-                  </button>
+                /* Estado inicial sin búsqueda */
+                <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-10 text-center">
+                  <Film className="mx-auto h-12 w-12 text-slate-300" />
+                  <p className="mt-3 text-sm font-semibold text-ink">Buscador de películas y series</p>
+                  <p className="mt-1 text-xs text-slate-500 max-w-md mx-auto">
+                    Ingresá una palabra clave para buscar títulos y agregarlos a tu biblioteca, o usá <strong>Buscar varios títulos</strong> para importar por lista o archivo.
+                  </p>
                 </div>
               )}
             </div>
