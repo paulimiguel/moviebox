@@ -110,47 +110,6 @@ export const TinderSuggestions = ({
               </span>
             )}
 
-            {isCurrent && (
-              <div className="absolute bottom-2.5 inset-x-0 flex items-center justify-center gap-2.5 z-20">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSelect?.(candidate);
-                  }}
-                  className="grid h-8 w-8 place-items-center rounded-full border border-white/40 bg-black/30 text-white shadow-md backdrop-blur-md transition-all hover:bg-blue-600 hover:border-blue-500 hover:scale-110 active:scale-95"
-                  title="Ver detalle"
-                  aria-label="Ver detalle"
-                >
-                  <ExternalLink className="h-4 w-4" strokeWidth={2} />
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleReject();
-                  }}
-                  className="grid h-8 w-8 place-items-center rounded-full border border-white/40 bg-black/30 text-white shadow-md backdrop-blur-md transition-all hover:bg-red-600 hover:border-red-500 hover:scale-110 active:scale-95"
-                  title="Rechazar"
-                  aria-label="Rechazar"
-                >
-                  <X className="h-4 w-4" strokeWidth={2.5} />
-                </button>
-                <button
-                  type="button"
-                  disabled={isAddingThis}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAccept(candidate);
-                  }}
-                  className="grid h-8 w-8 place-items-center rounded-full border border-white/40 bg-black/30 text-white shadow-md backdrop-blur-md transition-all hover:bg-[#2cbc63] hover:border-emerald-500 hover:scale-110 active:scale-95 disabled:opacity-50"
-                  title="Agregar a biblioteca"
-                  aria-label="Agregar a biblioteca"
-                >
-                  {isAddingThis ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" strokeWidth={2.5} />}
-                </button>
-              </div>
-            )}
           </div>
           
           <div className="flex flex-col p-2.5 sm:p-3 text-center">
@@ -172,7 +131,7 @@ export const TinderSuggestions = ({
                 e.stopPropagation();
                 onSelect?.(candidate);
               }}
-              className="grid h-9 w-9 sm:h-10 sm:w-10 place-items-center rounded-full border border-white/40 bg-slate-800/50 dark:bg-black/40 text-white shadow-md backdrop-blur-md transition-all hover:bg-blue-600 hover:border-blue-500 hover:scale-110 active:scale-95"
+              className="grid h-8 w-8 place-items-center rounded-full bg-blue-600 text-white shadow-md transition-all hover:bg-blue-500 hover:scale-110 active:scale-95"
               title="Ver detalle"
               aria-label="Ver detalle"
             >
@@ -184,7 +143,7 @@ export const TinderSuggestions = ({
                 e.stopPropagation();
                 handleReject();
               }}
-              className="grid h-9 w-9 sm:h-10 sm:w-10 place-items-center rounded-full border border-white/40 bg-slate-800/50 dark:bg-black/40 text-white shadow-md backdrop-blur-md transition-all hover:bg-red-600 hover:border-red-500 hover:scale-110 active:scale-95"
+              className="grid h-8 w-8 place-items-center rounded-full bg-red-600 text-white shadow-md transition-all hover:bg-red-500 hover:scale-110 active:scale-95"
               title="Rechazar"
               aria-label="Rechazar"
             >
@@ -197,7 +156,7 @@ export const TinderSuggestions = ({
                 e.stopPropagation();
                 handleAccept(candidate);
               }}
-              className="grid h-9 w-9 sm:h-10 sm:w-10 place-items-center rounded-full border border-white/40 bg-slate-800/50 dark:bg-black/40 text-white shadow-md backdrop-blur-md transition-all hover:bg-[#2cbc63] hover:border-emerald-500 hover:scale-110 active:scale-95 disabled:opacity-50"
+              className="grid h-8 w-8 place-items-center rounded-full bg-[#2cbc63] text-white shadow-md transition-all hover:bg-emerald-500 hover:scale-110 active:scale-95 disabled:opacity-50"
               title="Agregar a biblioteca"
               aria-label="Agregar a biblioteca"
             >

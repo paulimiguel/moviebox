@@ -558,20 +558,20 @@ export const NewsPage = () => {
                     }}
                     title={p.name}
                     aria-label={p.name}
-                    className={`news-suggestion-platform-btn group relative flex h-12 sm:h-14 min-w-[50px] sm:min-w-[58px] px-2.5 sm:px-3.5 items-center justify-center rounded-xl border transition-all ${
+                    className={`news-suggestion-platform-btn group relative flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl transition-all p-0 ${
                       active
-                        ? 'active border-coral bg-coral/10 ring-2 ring-coral shadow-md scale-105'
-                        : 'border-slate-200 bg-white opacity-70 hover:opacity-100 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800'
+                        ? 'active ring-2 ring-coral ring-offset-2 ring-offset-canvas shadow-md scale-105 opacity-100'
+                        : 'opacity-75 hover:opacity-100 hover:scale-105'
                     }`}
                   >
                     {logoUrl ? (
                       <img
                         src={logoUrl}
                         alt={p.name}
-                        className="h-9 sm:h-10 w-auto rounded object-contain shrink-0 transition-transform group-hover:scale-105"
+                        className="h-full w-full rounded-xl object-contain shrink-0"
                       />
                     ) : (
-                      <span className="text-sm font-bold text-slate-600 dark:text-slate-300">{p.name.slice(0, 2)}</span>
+                      <span className="flex h-full w-full items-center justify-center rounded-xl bg-slate-800 text-sm font-bold text-white">{p.name.slice(0, 2)}</span>
                     )}
                   </button>
                 );
