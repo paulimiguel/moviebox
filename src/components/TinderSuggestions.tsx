@@ -77,7 +77,7 @@ export const TinderSuggestions = ({
 
     return (
       <div 
-        className={`absolute top-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out ${
+        className={`absolute top-1/2 -translate-y-1/2 transition-all duration-300 ease-in-out flex flex-col items-center ${
           isCurrent 
             ? 'z-20 left-1/2 -translate-x-1/2 scale-100 opacity-100' 
             : position === 'prev' 
@@ -163,12 +163,54 @@ export const TinderSuggestions = ({
             </p>
           </div>
         </div>
+
+        {isCurrent && (
+          <div className="mt-3 flex items-center justify-center gap-3 z-20">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect?.(candidate);
+              }}
+              className="grid h-9 w-9 sm:h-10 sm:w-10 place-items-center rounded-full border border-white/40 bg-slate-800/50 dark:bg-black/40 text-white shadow-md backdrop-blur-md transition-all hover:bg-blue-600 hover:border-blue-500 hover:scale-110 active:scale-95"
+              title="Ver detalle"
+              aria-label="Ver detalle"
+            >
+              <ExternalLink className="h-4 w-4" strokeWidth={2} />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleReject();
+              }}
+              className="grid h-9 w-9 sm:h-10 sm:w-10 place-items-center rounded-full border border-white/40 bg-slate-800/50 dark:bg-black/40 text-white shadow-md backdrop-blur-md transition-all hover:bg-red-600 hover:border-red-500 hover:scale-110 active:scale-95"
+              title="Rechazar"
+              aria-label="Rechazar"
+            >
+              <X className="h-4 w-4" strokeWidth={2.5} />
+            </button>
+            <button
+              type="button"
+              disabled={isAddingThis}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAccept(candidate);
+              }}
+              className="grid h-9 w-9 sm:h-10 sm:w-10 place-items-center rounded-full border border-white/40 bg-slate-800/50 dark:bg-black/40 text-white shadow-md backdrop-blur-md transition-all hover:bg-[#2cbc63] hover:border-emerald-500 hover:scale-110 active:scale-95 disabled:opacity-50"
+              title="Agregar a biblioteca"
+              aria-label="Agregar a biblioteca"
+            >
+              {isAddingThis ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" strokeWidth={2.5} />}
+            </button>
+          </div>
+        )}
       </div>
     );
   };
 
   return (
-    <section className="relative mx-auto mt-2 flex h-[430px] sm:h-[450px] max-w-[960px] items-center justify-center overflow-hidden py-4 px-4">
+    <section className="relative mx-auto flex h-[440px] sm:h-[455px] max-w-[960px] items-center justify-center overflow-hidden pt-1 pb-3 px-4">
       {/* Navigation Arrows */}
       <button 
         type="button"

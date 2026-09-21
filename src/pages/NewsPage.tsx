@@ -535,11 +535,10 @@ export const NewsPage = () => {
         </div>
 
         {/* Sección: Sugerencias debajo del todo */}
-        <div id="sugerencias-plataforma" className="scroll-mt-20 mt-14 border-t border-slate-200/40 pt-8 pb-10 space-y-6">
-          <div className="space-y-4">
+        <div id="sugerencias-plataforma" className="scroll-mt-20 mt-14 border-t border-slate-200/40 pt-8 pb-10 space-y-3">
+          <div className="space-y-3">
             <div className="text-center">
               <h2 className="font-bebas text-2xl uppercase text-ink sm:text-3xl">Sugerencias por plataforma</h2>
-              <p className="text-xs text-slate-500">Deslizá o explorá las sugerencias de cada plataforma para agregarlas a tu biblioteca</p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
               {SUGGESTION_PLATFORMS.map((p) => {
