@@ -20,6 +20,14 @@ const SUGGESTION_PLATFORMS = [
   { id: 'justwatch', name: 'JustWatch' },
 ];
 
+type SuggestionFilter = 'novedades' | 'populares' | 'mas_vistos';
+
+const SUGGESTION_FILTERS: { id: SuggestionFilter; label: string }[] = [
+  { id: 'novedades', label: 'Últimas novedades' },
+  { id: 'populares', label: 'Más populares' },
+  { id: 'mas_vistos', label: 'Más vistos' },
+];
+
 const PLATFORMS = [
   { id: 'netflix', name: 'Netflix' },
   { id: 'prime', name: 'Prime Video' },
@@ -119,12 +127,13 @@ export const NewsPage = () => {
   });
 
   const [activeSuggestionPlatform, setActiveSuggestionPlatform] = useState('netflix');
+  const [activeSuggestionFilter, setActiveSuggestionFilter] = useState<SuggestionFilter>('novedades');
   const [suggestionSeed, setSuggestionSeed] = useState(0);
   const [addedSuggestionMovieIds, setAddedSuggestionMovieIds] = useState<Record<string, string>>({});
 
   const suggestionsQuery = useQuery({
-    queryKey: ['tmdb-platform-suggestions', activeSuggestionPlatform, suggestionSeed],
-    queryFn: () => api.tmdb.platformSuggestions(activeSuggestionPlatform, suggestionSeed),
+    queryKey: ['tmdb-platform-suggestions', activeSuggestionPlatform, activeSuggestionFilter, suggestionSeed],
+    queryFn: () => api.tmdb.platformSuggestions(activeSuggestionPlatform, suggestionSeed, activeSuggestionFilter),
     staleTime: 1000 * 60 * 5,
   });
 
@@ -554,7 +563,7 @@ export const NewsPage = () => {
                         setSuggestionSeed((s) => s + 1);
                       } else {
                         setActiveSuggestionPlatform(p.id);
-                        setSuggestionSeed((s) => s + 1);
+                        setSuggestionSeed(0);
                       }
                     }}
                     title={p.name}
@@ -562,7 +571,7 @@ export const NewsPage = () => {
                     className={`news-suggestion-platform-btn group relative flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl border transition-all ${
                       active
                         ? 'active border-coral bg-coral/10 ring-2 ring-coral shadow-md scale-105'
-                        : 'border-slate-200 bg-white opacity-70 hover:opacity-100 hover:border-slate-300 hover:bg-slate-50'
+                        : 'border-slate-200 bg-white opacity-70 hover:opacity-100 hover:border-slate-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800'
                     }`}
                   >
                     {logoUrl ? (
@@ -574,6 +583,32 @@ export const NewsPage = () => {
                     ) : (
                       <span className="text-sm font-bold text-slate-600">{p.name.slice(0, 2)}</span>
                     )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Selector de filtro: últimas novedades, más populares, más vistos */}
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+              {SUGGESTION_FILTERS.map((f) => {
+                const active = activeSuggestionFilter === f.id;
+                return (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => {
+                      if (activeSuggestionFilter !== f.id) {
+                        setActiveSuggestionFilter(f.id);
+                        setSuggestionSeed(0);
+                      }
+                    }}
+                    className={`rounded-full px-4 py-1.5 text-xs font-semibold tracking-wide transition-all ${
+                      active
+                        ? 'bg-coral text-white shadow-sm'
+                        : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    {f.label}
                   </button>
                 );
               })}

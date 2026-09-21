@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { createPortal } from 'react-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
@@ -295,9 +296,9 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-6 bg-ink/60 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-ink/60 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="add-movie-modal-title"
@@ -743,6 +744,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

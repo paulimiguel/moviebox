@@ -207,11 +207,13 @@ router.get('/new-releases', async (req, res) => {
 router.get('/platform-suggestions', async (req, res) => {
   if (!token) return res.status(503).json({ error: 'TMDB todavía no está configurado' });
   const platform = String(req.query.platform || 'netflix');
+  const filter = String(req.query.filter || 'novedades');
+  const seed = Number(req.query.seed || 0);
 
   if (platform === 'justwatch') {
     try {
       const popular = await getJustWatchPopularTitles();
-      const shuffled = [...popular].sort(() => Math.random() - 0.5).slice(0, 24);
+      const shuffled = [...popular].sort(() => Math.random() - 0.5).slice(0, 32);
       const results = await allSettledInBatches(shuffled, async (item) => {
         const search = await tmdbRequest<{ results?: any[] }>(`/search/multi?language=es-AR&query=${encodeURIComponent(item.title)}`);
         const match = (search.results || []).find((r) => r.media_type === (item.type === 'movie' ? 'movie' : 'tv')) || search.results?.[0];
@@ -233,7 +235,15 @@ router.get('/platform-suggestions', async (req, res) => {
           popularity: Number.isFinite(Number(match.popularity)) ? Number(match.popularity) : 0,
         };
       });
-      return res.json(results.flatMap((r) => r.status === 'fulfilled' && r.value ? [r.value] : []));
+      const candidates = results.flatMap((r) => r.status === 'fulfilled' && r.value ? [r.value] : []);
+      if (filter === 'novedades') {
+        candidates.sort((a, b) => (b.year || 0) - (a.year || 0));
+      } else if (filter === 'mas_vistos') {
+        candidates.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      } else {
+        candidates.sort((a, b) => (b.popularity || 0) - (a.popularity || 0));
+      }
+      return res.json(candidates.slice(0, 24));
     } catch {
       return res.status(502).json({ error: 'No se pudieron cargar sugerencias de JustWatch' });
     }
@@ -249,15 +259,26 @@ router.get('/platform-suggestions', async (req, res) => {
   else if (platform === 'flow') providerId = 339;
 
   const providerQuery = platform === 'stremio' ? '' : `&with_watch_providers=${providerId}&watch_region=AR`;
-  const moviePage = Math.floor(Math.random() * 5) + 1;
-  const seriesPage = Math.floor(Math.random() * 5) + 1;
+  const basePage = Math.max(1, (Math.abs(seed) % 5) + 1);
+
+  const today = new Date().toISOString().slice(0, 10);
+  let movieQuery = 'sort_by=popularity.desc&vote_count.gte=30';
+  let seriesQuery = 'sort_by=popularity.desc&vote_count.gte=20';
+
+  if (filter === 'novedades') {
+    movieQuery = `sort_by=primary_release_date.desc&primary_release_date.lte=${today}&vote_count.gte=5`;
+    seriesQuery = `sort_by=first_air_date.desc&first_air_date.lte=${today}&vote_count.gte=5`;
+  } else if (filter === 'mas_vistos') {
+    movieQuery = 'sort_by=vote_count.desc&vote_count.gte=100';
+    seriesQuery = 'sort_by=vote_count.desc&vote_count.gte=50';
+  }
 
   try {
     const [moviesP1, moviesP2, seriesP1, seriesP2, movieGenresReq, seriesGenresReq] = await Promise.all([
-      tmdbRequest<{ results?: any[] }>(`/discover/movie?language=es-AR&sort_by=popularity.desc${providerQuery}&vote_count.gte=30&page=${moviePage}`),
-      tmdbRequest<{ results?: any[] }>(`/discover/movie?language=es-AR&sort_by=popularity.desc${providerQuery}&vote_count.gte=30&page=${moviePage + 1}`),
-      tmdbRequest<{ results?: any[] }>(`/discover/tv?language=es-AR&sort_by=popularity.desc${providerQuery}&vote_count.gte=20&page=${seriesPage}`),
-      tmdbRequest<{ results?: any[] }>(`/discover/tv?language=es-AR&sort_by=popularity.desc${providerQuery}&vote_count.gte=20&page=${seriesPage + 1}`),
+      tmdbRequest<{ results?: any[] }>(`/discover/movie?language=es-AR&${movieQuery}${providerQuery}&page=${basePage}`),
+      tmdbRequest<{ results?: any[] }>(`/discover/movie?language=es-AR&${movieQuery}${providerQuery}&page=${basePage + 1}`),
+      tmdbRequest<{ results?: any[] }>(`/discover/tv?language=es-AR&${seriesQuery}${providerQuery}&page=${basePage}`),
+      tmdbRequest<{ results?: any[] }>(`/discover/tv?language=es-AR&${seriesQuery}${providerQuery}&page=${basePage + 1}`),
       tmdbRequest<{ genres?: Array<{ id: number; name: string }> }>('/genre/movie/list?language=es-AR'),
       tmdbRequest<{ genres?: Array<{ id: number; name: string }> }>('/genre/tv/list?language=es-AR'),
     ]);
