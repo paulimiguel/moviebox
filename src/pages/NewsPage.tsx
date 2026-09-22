@@ -451,7 +451,8 @@ export const NewsPage = () => {
   const justwatchTop10Query = useQuery({
     queryKey: ['justwatchTop10'],
     queryFn: api.tmdb.justwatchTop10,
-    staleTime: 1000 * 60 * 30,
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 
   const [activePopularPlatform, setActivePopularPlatform] = useState('netflix');

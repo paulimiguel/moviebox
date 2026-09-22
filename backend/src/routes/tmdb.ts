@@ -364,163 +364,173 @@ router.get('/recommendations', async (req, res) => {
 });
 
 let justwatchTop10Cache: { data: any[]; cachedAt: number } | null = null;
+let justwatchTop10InFlight: Promise<any[]> | null = null;
 const JW_CACHE_TTL_MS = 1000 * 60 * 30; // 30 minutes
 
 router.get('/justwatch-top10', async (_req, res) => {
-  if (justwatchTop10Cache && Date.now() - justwatchTop10Cache.cachedAt < JW_CACHE_TTL_MS) {
-    return res.json(justwatchTop10Cache.data);
-  }
-
   try {
-    const query = `
-      query GetPopularTitles($country: Country!, $filter: TitleFilter, $first: Int!) {
-        popularTitles(country: $country, filter: $filter, first: $first, sortBy: POPULAR) {
-          edges {
-            node {
-              id
-              objectId
-              objectType
-              content(country: $country, language: "es") {
-                title
-                fullPath
-                originalReleaseYear
-                posterUrl
-                shortDescription
-                scoring {
-                  imdbScore
-                  tmdbScore
+    if (justwatchTop10InFlight) {
+      const items = await justwatchTop10InFlight;
+      return res.json(items);
+    }
+
+    const fetchTop10 = async () => {
+      const query = `
+        query GetPopularTitles($country: Country!, $filter: TitleFilter, $first: Int!) {
+          popularTitles(country: $country, filter: $filter, first: $first, sortBy: POPULAR) {
+            edges {
+              node {
+                id
+                objectId
+                objectType
+                content(country: $country, language: "es") {
+                  title
+                  fullPath
+                  originalReleaseYear
+                  posterUrl
+                  shortDescription
+                  scoring {
+                    imdbScore
+                    tmdbScore
+                  }
                 }
               }
             }
           }
         }
-      }
-    `;
+      `;
 
-    const jwRes = await fetch('https://apis.justwatch.com/graphql', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      },
-      body: JSON.stringify({
-        operationName: 'GetPopularTitles',
-        variables: {
-          country: 'AR',
-          filter: {
-            ageCertifications: [],
-            excludeGenres: [],
-            excludeIrrelevantTitles: false,
-            excludeProductionCountries: [],
-            genres: [],
-            monetizationTypes: [],
-            objectTypes: [],
-            packages: [],
-            presentationTypes: [],
-            productionCountries: [],
-            subgenres: [],
-          },
-          first: 10,
+      const jwRes = await fetch('https://apis.justwatch.com/graphql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         },
-        query,
-      }),
-      signal: AbortSignal.timeout(15_000),
-    });
+        body: JSON.stringify({
+          operationName: 'GetPopularTitles',
+          variables: {
+            country: 'AR',
+            filter: {
+              ageCertifications: [],
+              excludeGenres: [],
+              excludeIrrelevantTitles: false,
+              excludeProductionCountries: [],
+              genres: [],
+              monetizationTypes: [],
+              objectTypes: [],
+              packages: [],
+              presentationTypes: [],
+              productionCountries: [],
+              subgenres: [],
+            },
+            first: 10,
+          },
+          query,
+        }),
+        signal: AbortSignal.timeout(15_000),
+      });
 
-    if (!jwRes.ok) throw new Error(`JUSTWATCH_GQL_${jwRes.status}`);
-    const jwData = (await jwRes.json()) as any;
-    const edges = jwData?.data?.popularTitles?.edges || [];
+      if (!jwRes.ok) throw new Error(`JUSTWATCH_GQL_${jwRes.status}`);
+      const jwData = (await jwRes.json()) as any;
+      const edges = jwData?.data?.popularTitles?.edges || [];
 
-    let movieGenreNames = new Map<number, string>();
-    let seriesGenreNames = new Map<number, string>();
-    if (token) {
-      try {
-        const [mg, sg] = await Promise.all([
-          tmdbRequest<{ genres?: Array<{ id: number; name: string }> }>('/genre/movie/list?language=es-AR'),
-          tmdbRequest<{ genres?: Array<{ id: number; name: string }> }>('/genre/tv/list?language=es-AR'),
-        ]);
-        movieGenreNames = new Map((mg.genres || []).map((g) => [g.id, g.name]));
-        seriesGenreNames = new Map((sg.genres || []).map((g) => [g.id, g.name]));
-      } catch {
-        // best effort
+      let movieGenreNames = new Map<number, string>();
+      let seriesGenreNames = new Map<number, string>();
+      if (token) {
+        try {
+          const [mg, sg] = await Promise.all([
+            tmdbRequest<{ genres?: Array<{ id: number; name: string }> }>('/genre/movie/list?language=es-AR'),
+            tmdbRequest<{ genres?: Array<{ id: number; name: string }> }>('/genre/tv/list?language=es-AR'),
+          ]);
+          movieGenreNames = new Map((mg.genres || []).map((g) => [g.id, g.name]));
+          seriesGenreNames = new Map((sg.genres || []).map((g) => [g.id, g.name]));
+        } catch {
+          // best effort
+        }
       }
-    }
 
-    const items = await Promise.all(
-      edges.map(async (edge: any, index: number) => {
-        const node = edge.node;
-        const c = node.content || {};
-        const type: 'movie' | 'series' = node.objectType === 'SHOW' ? 'series' : 'movie';
-        const rawPoster = c.posterUrl
-          ? `https://images.justwatch.com${c.posterUrl.replace('{profile}', 's332').replace('{format}', 'webp')}`
-          : null;
+      const items = await Promise.all(
+        edges.map(async (edge: any, index: number) => {
+          const node = edge.node;
+          const c = node.content || {};
+          const type: 'movie' | 'series' = node.objectType === 'SHOW' ? 'series' : 'movie';
+          const rawPoster = c.posterUrl
+            ? `https://images.justwatch.com${c.posterUrl.replace('{profile}', 's332').replace('{format}', 'webp')}`
+            : null;
 
-        let tmdbId: number | null = null;
-        let imdbId: string | null = null;
-        let originalTitle = c.title;
-        let overview = c.shortDescription || '';
-        let posterUrl = rawPoster;
-        let genres: string[] = [];
-        let rating: number | null = c.scoring?.imdbScore || c.scoring?.tmdbScore || null;
+          let tmdbId: number | null = null;
+          let imdbId: string | null = null;
+          let originalTitle = c.title;
+          let overview = c.shortDescription || '';
+          let posterUrl = rawPoster;
+          let genres: string[] = [];
+          let rating: number | null = c.scoring?.imdbScore || c.scoring?.tmdbScore || null;
 
-        if (token) {
-          try {
-            const tmdbSearch = await tmdbRequest<{ results?: any[] }>(
-              `/search/multi?language=es-AR&include_adult=false&query=${encodeURIComponent(c.title)}`
-            );
-            const mediaType = type === 'movie' ? 'movie' : 'tv';
-            const matched = (tmdbSearch.results || []).find((r) => r.media_type === mediaType) || tmdbSearch.results?.[0];
-            if (matched) {
-              tmdbId = matched.id;
-              originalTitle = matched.original_title || matched.original_name || c.title;
-              if (matched.overview) overview = matched.overview;
-              if (matched.poster_path) posterUrl = `https://image.tmdb.org/t/p/w500${matched.poster_path}`;
-              if (Number.isFinite(Number(matched.vote_average))) rating = Number(matched.vote_average);
-              const gMap = type === 'movie' ? movieGenreNames : seriesGenreNames;
-              genres = (matched.genre_ids || []).map((gid: number) => gMap.get(gid)).filter(Boolean);
+          if (token) {
+            try {
+              const tmdbSearch = await tmdbRequest<{ results?: any[] }>(
+                `/search/multi?language=es-AR&include_adult=false&query=${encodeURIComponent(c.title)}`
+              );
+              const mediaType = type === 'movie' ? 'movie' : 'tv';
+              const matched = (tmdbSearch.results || []).find((r) => r.media_type === mediaType) || tmdbSearch.results?.[0];
+              if (matched) {
+                tmdbId = matched.id;
+                originalTitle = matched.original_title || matched.original_name || c.title;
+                if (matched.overview) overview = matched.overview;
+                if (matched.poster_path) posterUrl = `https://image.tmdb.org/t/p/w500${matched.poster_path}`;
+                if (Number.isFinite(Number(matched.vote_average))) rating = Number(matched.vote_average);
+                const gMap = type === 'movie' ? movieGenreNames : seriesGenreNames;
+                genres = (matched.genre_ids || []).map((gid: number) => gMap.get(gid)).filter(Boolean);
 
-              const resource = matched.media_type === 'movie' ? 'movie' : 'tv';
-              const ext = await tmdbRequest<{ imdb_id?: string | null }>(`/${resource}/${matched.id}/external_ids`);
-              if (ext?.imdb_id) imdbId = ext.imdb_id;
+                const resource = matched.media_type === 'movie' ? 'movie' : 'tv';
+                const ext = await tmdbRequest<{ imdb_id?: string | null }>(`/${resource}/${matched.id}/external_ids`);
+                if (ext?.imdb_id) imdbId = ext.imdb_id;
+              }
+            } catch {
+              // best effort fallback
             }
-          } catch {
-            // best effort fallback
           }
-        }
 
-        let subBadge: string | null = null;
-        if (type === 'series') {
-          if (c.originalReleaseYear === 2026 || c.originalReleaseYear === 2025) {
-            subBadge = 'Nuevo episodio';
+          let subBadge: string | null = null;
+          if (type === 'series') {
+            if (c.originalReleaseYear === 2026 || c.originalReleaseYear === 2025) {
+              subBadge = 'Nuevo episodio';
+            }
           }
-        }
 
-        return {
-          rank: index + 1,
-          jwId: node.id,
-          tmdbId: tmdbId || (90000000 + index),
-          imdbId: imdbId || '',
-          type,
-          title: c.title,
-          originalTitle,
-          year: c.originalReleaseYear || null,
-          overview,
-          genres,
-          posterUrl,
-          rating,
-          popularity: 100 - index,
-          badge: type === 'series' ? 'TV' : 'PELÍCULA',
-          subBadge,
-          justwatchUrl: c.fullPath ? `https://www.justwatch.com${c.fullPath}` : null,
-        };
-      })
-    );
+          return {
+            rank: index + 1,
+            jwId: node.id,
+            tmdbId: tmdbId || (90000000 + index),
+            imdbId: imdbId || '',
+            type,
+            title: c.title,
+            originalTitle,
+            year: c.originalReleaseYear || null,
+            overview,
+            genres,
+            posterUrl,
+            rating,
+            popularity: 100 - index,
+            badge: type === 'series' ? 'TV' : 'PELÍCULA',
+            subBadge,
+            justwatchUrl: c.fullPath ? `https://www.justwatch.com${c.fullPath}` : null,
+          };
+        })
+      );
 
-    justwatchTop10Cache = { data: items, cachedAt: Date.now() };
+      justwatchTop10Cache = { data: items, cachedAt: Date.now() };
+      return items;
+    };
+
+    justwatchTop10InFlight = fetchTop10();
+    const items = await justwatchTop10InFlight;
     return res.json(items);
   } catch (error) {
     if (justwatchTop10Cache) return res.json(justwatchTop10Cache.data);
     return res.status(502).json({ error: 'No se pudo cargar el Top 10 de JustWatch' });
+  } finally {
+    justwatchTop10InFlight = null;
   }
 });
 
