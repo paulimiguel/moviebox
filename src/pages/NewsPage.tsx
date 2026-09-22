@@ -794,26 +794,7 @@ export const NewsPage = () => {
     <main className="news-page min-h-screen bg-canvas pb-20 relative">
       <Header />
 
-      {/* Barras de desplazamiento laterales en los extremos de la ventana (visibles solo en hover) */}
-      <button
-        type="button"
-        onClick={scrollLeft}
-        className={`news-scroll-panel fixed left-0 top-[72px] bottom-0 z-[35] flex w-8 sm:w-10 items-center justify-center rounded-r-md border-r border-y border-l-0 transition-opacity duration-300 ${canScrollLeft ? 'opacity-0 hover:opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'}`}
-        title="Plataformas anteriores"
-        aria-label="Plataformas anteriores"
-      >
-        <ChevronLeft className="h-6 w-6 sm:h-7 sm:w-7 drop-shadow-sm" />
-      </button>
 
-      <button
-        type="button"
-        onClick={scrollRight}
-        className={`news-scroll-panel fixed right-0 top-[72px] bottom-0 z-[35] flex w-8 sm:w-10 items-center justify-center rounded-l-md border-l border-y border-r-0 transition-opacity duration-300 ${canScrollRight ? 'opacity-0 hover:opacity-100 cursor-pointer' : 'opacity-0 pointer-events-none'}`}
-        title="Siguientes plataformas"
-        aria-label="Siguientes plataformas"
-      >
-        <ChevronRight className="h-6 w-6 sm:h-7 sm:w-7 drop-shadow-sm" />
-      </button>
 
       {/* Sección principal superior: Populares por plataforma (JustWatch) */}
       <section id="populares-plataforma" className="scroll-mt-20 mx-auto max-w-[1500px] px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-14 border-b border-slate-200/50">
@@ -972,7 +953,27 @@ export const NewsPage = () => {
         </div>
 
         {/* Carrusel de contenido: 4 columnas por página en desktop */}
-        <div className="relative">
+        <div className="relative group/carousel">
+          {canScrollLeft && (
+            <button
+              type="button"
+              onClick={scrollLeft}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
+              aria-label="Anterior"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+          )}
+          {canScrollRight && (
+            <button
+              type="button"
+              onClick={scrollRight}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
+              aria-label="Siguiente"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </button>
+          )}
           <div
             ref={contentScrollRef}
             className="flex gap-6 overflow-x-auto pt-6 pb-8 snap-x snap-mandatory hide-scrollbar relative [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
