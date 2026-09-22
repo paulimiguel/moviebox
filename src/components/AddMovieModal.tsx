@@ -698,15 +698,23 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
               {/* Barra de búsqueda y botón con menú */}
               <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
                 <form onSubmit={handleSearchSubmit} className="relative flex flex-1 gap-2">
+                <form onSubmit={handleSearchSubmit} className="relative flex flex-1 gap-2" autoComplete="off">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input
                       id="movie-search-modal-input"
                       type="text"
+                      type="search"
+                      name="moviebox_search_query"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck="false"
                       placeholder="Escribí el título a buscar..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="control w-full pl-9 pr-16"
+                      className="control w-full pl-9 pr-16 [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none"
                       autoFocus
                     />
                     {!searchQuery ? (
