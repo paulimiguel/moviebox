@@ -54,13 +54,13 @@ const CoverAddButton = ({
   size?: 'sm' | 'md';
 }) => {
   const isSm = size === 'sm';
-  const sizeClasses = isSm ? 'h-6 w-6' : 'h-8 w-8';
-  const iconSize = isSm ? 'h-3.5 w-3.5' : 'h-4.5 w-4.5';
+  const sizeClasses = isSm ? 'h-4 w-4' : 'h-5 w-5';
+  const iconSize = isSm ? 'h-2.5 w-2.5' : 'h-3 w-3';
 
   if (isAdded) {
     return (
       <div
-        className={`grid ${sizeClasses} place-items-center rounded-full bg-[#2cbc63] text-white shadow-md cursor-default pointer-events-auto transition-transform hover:scale-105`}
+        className={`grid ${sizeClasses} place-items-center rounded-sm bg-[#2cbc63] text-white shadow-md cursor-default pointer-events-auto transition-transform hover:scale-105`}
         title="En tu biblioteca"
         aria-label="En tu biblioteca"
         onClick={(e) => e.stopPropagation()}
@@ -78,7 +78,7 @@ const CoverAddButton = ({
         e.stopPropagation();
         onAdd(item);
       }}
-      className={`grid ${sizeClasses} place-items-center rounded-full bg-red-600 text-white shadow-md hover:bg-red-500 hover:scale-110 active:scale-95 transition-all disabled:opacity-50 pointer-events-auto`}
+      className={`grid ${sizeClasses} place-items-center rounded-sm bg-red-600 text-white shadow-md hover:bg-red-500 hover:scale-110 active:scale-95 transition-all disabled:opacity-50 pointer-events-auto`}
       title="Agregar a la biblioteca"
       aria-label="Agregar a la biblioteca"
     >
