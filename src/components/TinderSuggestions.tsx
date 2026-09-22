@@ -103,20 +103,21 @@ export const TinderSuggestions = ({
             <span className={`absolute left-2.5 top-2.5 rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase text-white shadow-sm ${candidate.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>
               {candidate.type === 'movie' ? 'Película' : 'Serie'}
             </span>
-            {isCurrent && candidate.rating != null && candidate.rating > 0 && (
-              <span className="absolute right-2.5 top-2.5 inline-flex items-center gap-1 rounded-md bg-black/60 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur shadow-sm">
-                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                {candidate.rating.toFixed(1)}
-              </span>
-            )}
-
           </div>
           
           <div className="flex flex-col p-2.5 sm:p-3 text-center min-h-[84px] sm:min-h-[92px] justify-center">
             <h2 className="font-bebas line-clamp-2 text-lg sm:text-xl uppercase leading-5 text-ink">{candidate.title}</h2>
-            <div className="mt-0.5 flex items-center justify-center gap-2 text-xs text-slate-500">
-              {candidate.year && <span className="font-semibold">{candidate.year}</span>}
-            </div>
+            {(candidate.year || (candidate.rating != null && candidate.rating > 0)) && (
+              <div className="mt-1 flex items-center justify-center gap-2 text-slate-500">
+                {candidate.year && <span className="text-base font-bold text-slate-500">{candidate.year}</span>}
+                {candidate.rating != null && candidate.rating > 0 && (
+                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-slate-500">
+                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                    {candidate.rating.toFixed(1)}
+                  </span>
+                )}
+              </div>
+            )}
             <p className="mt-0.5 line-clamp-1 text-[11px] text-slate-500">
               {(candidate.genres || []).join(', ') || 'Sin género'}
             </p>
@@ -175,9 +176,10 @@ export const TinderSuggestions = ({
         type="button"
         onClick={goPrev}
         disabled={currentIndex === 0}
-        className="absolute left-2 md:left-8 top-1/2 z-30 -translate-y-1/2 grid h-12 w-12 place-items-center rounded-full bg-white/50 text-slate-700 shadow-sm backdrop-blur transition-all hover:bg-white hover:scale-110 disabled:opacity-0"
+        className="absolute left-2 md:left-8 top-1/2 z-30 -translate-y-1/2 grid h-8 w-8 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all disabled:opacity-0"
+        aria-label="Anterior"
       >
-        <ChevronLeft className="h-6 w-6" />
+        <ChevronLeft className="h-4 w-4" />
       </button>
 
       {renderCard(prevCandidate, 'prev')}
@@ -188,9 +190,10 @@ export const TinderSuggestions = ({
         type="button"
         onClick={goNext}
         disabled={currentIndex === deck.length - 1}
-        className="absolute right-2 md:right-8 top-1/2 z-30 -translate-y-1/2 grid h-12 w-12 place-items-center rounded-full bg-white/50 text-slate-700 shadow-sm backdrop-blur transition-all hover:bg-white hover:scale-110 disabled:opacity-0"
+        className="absolute right-2 md:right-8 top-1/2 z-30 -translate-y-1/2 grid h-8 w-8 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all disabled:opacity-0"
+        aria-label="Siguiente"
       >
-        <ChevronRight className="h-6 w-6" />
+        <ChevronRight className="h-4 w-4" />
       </button>
     </section>
   );
