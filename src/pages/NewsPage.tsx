@@ -169,70 +169,123 @@ const Top10FeaturedSection = ({
   isItemAdding: (item: TmdbSuggestionCandidate) => boolean;
   onAdd: (item: TmdbSuggestionCandidate) => void;
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 10);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
+  };
+
+  useEffect(() => {
+    checkScroll();
+    const el = containerRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', checkScroll, { passive: true });
+    window.addEventListener('resize', checkScroll);
+    return () => {
+      el.removeEventListener('scroll', checkScroll);
+      window.removeEventListener('resize', checkScroll);
+    };
+  }, [items]);
+
+  const scrollByAmount = (amount: number) => {
+    containerRef.current?.scrollBy({ left: amount, behavior: 'smooth' });
+    setTimeout(checkScroll, 350);
+  };
+
   return (
-    <div className="flex gap-6 sm:gap-10 overflow-x-auto pb-6 pt-2 hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-      {items.map((item) => (
-        <div
-          key={`featured-${item.type}-${item.rank}-${item.tmdbId || item.jwId}`}
-          onClick={() => onSelect(item)}
-          className="relative flex items-end shrink-0 select-none group/jw cursor-pointer focus:outline-none"
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              onSelect(item);
-            }
-          }}
-          title={`Ver características de ${item.title}`}
-          aria-label={`Ver características de ${item.title}`}
+    <div className="relative group/carousel">
+      {canScrollLeft && (
+        <button
+          type="button"
+          onClick={() => scrollByAmount(-400)}
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
+          aria-label="Anterior"
         >
-          {/* Número de ranking amplio y visible a la izquierda con sutil solapamiento */}
-          <span className="justwatch-rank-number font-sans font-black text-[130px] sm:text-[165px] leading-[0.8] tracking-tighter select-none -mr-2 sm:-mr-3 z-0 transition-all duration-200 group-hover/jw:scale-105 pointer-events-none">
-            {item.rank}
-          </span>
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+      )}
+      {canScrollRight && (
+        <button
+          type="button"
+          onClick={() => scrollByAmount(400)}
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
+          aria-label="Siguiente"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </button>
+      )}
+      <div
+        ref={containerRef}
+        className="flex gap-6 sm:gap-10 overflow-x-auto pb-6 pt-2 hide-scrollbar scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {items.map((item) => (
+          <div
+            key={`featured-${item.type}-${item.rank}-${item.tmdbId || item.jwId}`}
+            onClick={() => onSelect(item)}
+            className="relative flex items-end shrink-0 select-none group/jw cursor-pointer focus:outline-none"
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onSelect(item);
+              }
+            }}
+            title={`Ver características de ${item.title}`}
+            aria-label={`Ver características de ${item.title}`}
+          >
+            {/* Número de ranking amplio y visible a la izquierda con sutil solapamiento */}
+            <span className="justwatch-rank-number font-sans font-black text-[130px] sm:text-[165px] leading-[0.8] tracking-tighter select-none -mr-2 sm:-mr-3 z-0 transition-all duration-200 group-hover/jw:scale-105 pointer-events-none">
+              {item.rank}
+            </span>
 
-          {/* Tarjeta de póster */}
-          <div className="relative z-10 w-[135px] sm:w-[160px] aspect-[2/3] overflow-hidden rounded-lg bg-mist shadow-md transition-all duration-200 group-hover/jw:scale-105 group-hover/jw:shadow-xl ring-1 ring-black/5 dark:ring-white/10">
-            {item.posterUrl ? (
-              <img src={item.posterUrl} alt={item.title} className="h-full w-full object-cover" loading="lazy" />
-            ) : (
-              <div className="grid h-full place-items-center text-aqua/50">
-                {item.type === 'movie' ? <Film className="h-8 w-8" /> : <Tv className="h-8 w-8" />}
-              </div>
-            )}
-
-            {/* Cinta / Bookmark superior izquierda */}
-            <div className="absolute top-0 left-2 z-20 pointer-events-none drop-shadow-sm opacity-80 group-hover/jw:opacity-100 transition-opacity">
-              <svg viewBox="0 0 24 32" className="w-4 h-6 sm:w-5 sm:h-7 fill-black/45 text-white/90">
-                <path d="M0 0h24v32l-12-7-12 7z" />
-              </svg>
-            </div>
-
-            {/* Badges inferiores izquierdos */}
-            <div className="absolute bottom-2 left-2 z-20 flex flex-col items-start gap-1 pointer-events-none">
-              {item.subBadge && (
-                <span className="bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-tight shadow">
-                  {item.subBadge}
-                </span>
+            {/* Tarjeta de póster */}
+            <div className="relative z-10 w-[135px] sm:w-[160px] aspect-[2/3] overflow-hidden rounded-lg bg-mist shadow-md transition-all duration-200 group-hover/jw:scale-105 group-hover/jw:shadow-xl ring-1 ring-black/5 dark:ring-white/10">
+              {item.posterUrl ? (
+                <img src={item.posterUrl} alt={item.title} className="h-full w-full object-cover" loading="lazy" />
+              ) : (
+                <div className="grid h-full place-items-center text-aqua/50">
+                  {item.type === 'movie' ? <Film className="h-8 w-8" /> : <Tv className="h-8 w-8" />}
+                </div>
               )}
-              <span className="bg-black/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-tight shadow">
-                {item.badge || (item.type === 'series' ? 'TV' : 'PELÍCULA')}
-              </span>
-            </div>
 
-            {/* Botón inferior derecho: Agregar a biblioteca (+) o ya agregado (tilde verde) */}
-            <div className="absolute bottom-2 right-2 z-20">
-              <CoverAddButton
-                item={item}
-                isAdded={isMovieInLibrary(item)}
-                isAdding={isItemAdding(item)}
-                onAdd={onAdd}
-              />
+              {/* Cinta / Bookmark superior izquierda */}
+              <div className="absolute top-0 left-2 z-20 pointer-events-none drop-shadow-sm opacity-80 group-hover/jw:opacity-100 transition-opacity">
+                <svg viewBox="0 0 24 32" className="w-4 h-6 sm:w-5 sm:h-7 fill-black/45 text-white/90">
+                  <path d="M0 0h24v32l-12-7-12 7z" />
+                </svg>
+              </div>
+
+              {/* Badges inferiores izquierdos */}
+              <div className="absolute bottom-2 left-2 z-20 flex flex-col items-start gap-1 pointer-events-none">
+                {item.subBadge && (
+                  <span className="bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-tight shadow">
+                    {item.subBadge}
+                  </span>
+                )}
+                <span className={`rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase text-white shadow-sm ${item.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>
+                  {item.type === 'series' ? 'Serie' : 'Película'}
+                </span>
+              </div>
+
+              {/* Botón inferior derecho: Agregar a biblioteca (+) o ya agregado (tilde verde) */}
+              <div className="absolute bottom-2 right-2 z-20">
+                <CoverAddButton
+                  item={item}
+                  isAdded={isMovieInLibrary(item)}
+                  isAdding={isItemAdding(item)}
+                  onAdd={onAdd}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 };
@@ -341,8 +394,8 @@ const HorizontalScrollSection = ({
                     {item.subBadge}
                   </span>
                 )}
-                <span className="bg-black/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-tight shadow">
-                  {item.badge || (item.type === 'series' ? 'TV' : 'PELÍCULA')}
+                <span className={`rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase text-white shadow-sm ${item.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>
+                  {item.type === 'series' ? 'Serie' : 'Película'}
                 </span>
               </div>
 
@@ -970,70 +1023,13 @@ export const NewsPage = () => {
               <Loader2 className="h-8 w-8 animate-spin text-aqua" />
             </div>
           ) : justwatchTop10Query.data?.length ? (
-            <div className="flex gap-6 sm:gap-10 overflow-x-auto pb-6 pt-2 hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-              {justwatchTop10Query.data.map((item) => (
-                <div
-                  key={`jw-${item.rank}-${item.tmdbId}`}
-                  onClick={() => setSelectedCandidate(item)}
-                  className="relative flex items-end shrink-0 select-none group/jw cursor-pointer focus:outline-none"
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      setSelectedCandidate(item);
-                    }
-                  }}
-                  title={`Ver características de ${item.title}`}
-                  aria-label={`Ver características de ${item.title}`}
-                >
-                  {/* Número de ranking amplio y visible a la izquierda con sutil solapamiento */}
-                  <span className="justwatch-rank-number font-sans font-black text-[130px] sm:text-[165px] leading-[0.8] tracking-tighter select-none -mr-2 sm:-mr-3 z-0 transition-all duration-200 group-hover/jw:scale-105 pointer-events-none">
-                    {item.rank}
-                  </span>
-
-                  {/* Tarjeta de póster */}
-                  <div className="relative z-10 w-[135px] sm:w-[160px] aspect-[2/3] overflow-hidden rounded-lg bg-mist shadow-md transition-all duration-200 group-hover/jw:scale-105 group-hover/jw:shadow-xl ring-1 ring-black/5 dark:ring-white/10">
-                    {item.posterUrl ? (
-                      <img src={item.posterUrl} alt={item.title} className="h-full w-full object-cover" loading="lazy" />
-                    ) : (
-                      <div className="grid h-full place-items-center text-aqua/50">
-                        {item.type === 'movie' ? <Film className="h-8 w-8" /> : <Tv className="h-8 w-8" />}
-                      </div>
-                    )}
-
-                    {/* Cinta / Bookmark superior izquierda */}
-                    <div className="absolute top-0 left-2 z-20 pointer-events-none drop-shadow-sm opacity-80 group-hover/jw:opacity-100 transition-opacity">
-                      <svg viewBox="0 0 24 32" className="w-4 h-6 sm:w-5 sm:h-7 fill-black/45 text-white/90">
-                        <path d="M0 0h24v32l-12-7-12 7z" />
-                      </svg>
-                    </div>
-
-                    {/* Badges inferiores izquierdos */}
-                    <div className="absolute bottom-2 left-2 z-20 flex flex-col items-start gap-1 pointer-events-none">
-                      {item.subBadge && (
-                        <span className="bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-tight shadow">
-                          {item.subBadge}
-                        </span>
-                      )}
-                      <span className="bg-black/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-tight shadow">
-                        {item.badge || (item.type === 'series' ? 'TV' : 'PELÍCULA')}
-                      </span>
-                    </div>
-
-                    {/* Botón inferior derecho: Agregar a biblioteca (+) o ya agregado (tilde verde) */}
-                    <div className="absolute bottom-2 right-2 z-20">
-                      <CoverAddButton
-                        item={item}
-                        isAdded={isMovieInLibrary(item)}
-                        isAdding={isItemAdding(item)}
-                        onAdd={(cand) => importMutation.mutate(cand)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <Top10FeaturedSection
+              items={justwatchTop10Query.data}
+              onSelect={setSelectedCandidate}
+              isMovieInLibrary={isMovieInLibrary}
+              isItemAdding={isItemAdding}
+              onAdd={(cand) => importMutation.mutate(cand)}
+            />
           ) : (
             <p className="text-sm text-slate-400 py-6">No se pudieron cargar los títulos destacados.</p>
           )}

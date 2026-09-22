@@ -17,6 +17,7 @@ import {
   X,
 } from 'lucide-react';
 import { api } from '@/services/api';
+import { MovieDetailModal } from '@/components/MovieDetailModal';
 import type { ImdbSearchCandidate, MovieItem, TmdbSuggestionCandidate } from '@/types/movie';
 
 const MAX_NAMES = 50;
@@ -42,6 +43,55 @@ const PosterThumbnail = ({ candidate }: { candidate: ImdbSearchCandidate }) => {
   return <img src={candidate.posterUrl} alt="" className="h-24 w-16 shrink-0 rounded-sm object-cover" onError={() => setFailed(true)} />;
 };
 
+const CoverAddButton = ({
+  isAdded,
+  isAdding,
+  onAdd,
+  size = 'md',
+}: {
+  isAdded: boolean;
+  isAdding: boolean;
+  onAdd: () => void;
+  size?: 'sm' | 'md';
+}) => {
+  const isSm = size === 'sm';
+  const sizeClasses = isSm ? 'h-4 w-4' : 'h-5 w-5';
+  const iconSize = isSm ? 'h-2.5 w-2.5' : 'h-3 w-3';
+
+  if (isAdded) {
+    return (
+      <div
+        className={`grid ${sizeClasses} place-items-center rounded-sm bg-[#2cbc63] text-white shadow-md cursor-default pointer-events-auto transition-transform hover:scale-105`}
+        title="En tu biblioteca"
+        aria-label="En tu biblioteca"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Check className={iconSize} strokeWidth={3} />
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      disabled={isAdding}
+      onClick={(e) => {
+        e.stopPropagation();
+        onAdd();
+      }}
+      className={`grid ${sizeClasses} place-items-center rounded-sm bg-red-600 text-white shadow-md hover:bg-red-500 hover:scale-110 active:scale-95 transition-all disabled:opacity-50 pointer-events-auto`}
+      title="Agregar a la biblioteca"
+      aria-label="Agregar a la biblioteca"
+    >
+      {isAdding ? (
+        <Loader2 className={`${iconSize} animate-spin`} />
+      ) : (
+        <Plus className={iconSize} strokeWidth={2.8} />
+      )}
+    </button>
+  );
+};
+
 interface AddMovieModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -54,6 +104,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
   const [appliedSearch, setAppliedSearch] = useState('');
   const [bulkMenuOpen, setBulkMenuOpen] = useState(false);
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState<TmdbSuggestionCandidate | null>(null);
 
   // Bulk search states
   const [bulkQuery, setBulkQuery] = useState('');
@@ -93,10 +144,165 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
     return match?.id || null;
   };
 
+  const existingMovie = useMemo(() => {
+    if (!selectedCandidate || !library.data) return null;
+    return library.data.find(
+      (m) => (selectedCandidate.tmdbId && m.tmdbId === selectedCandidate.tmdbId) ||
+             (selectedCandidate.imdbId && m.imdbId === selectedCandidate.imdbId)
+    ) || null;
+  }, [selectedCandidate, library.data]);
+
+  const candidateDetails = useQuery({
+    queryKey: ['candidateDetails', selectedCandidate?.imdbId],
+    queryFn: () => (selectedCandidate?.imdbId ? api.imdb.import({ imdbId: selectedCandidate.imdbId, type: selectedCandidate.type }) : null),
+    enabled: Boolean(selectedCandidate?.imdbId && !existingMovie),
+    staleTime: 1000 * 60 * 30,
+  });
+
+  const activeMovie: MovieItem | null = useMemo(() => {
+    if (!selectedCandidate) return null;
+    if (existingMovie) return existingMovie;
+
+    const details = candidateDetails.data;
+    return {
+      id: 'preview-' + selectedCandidate.tmdbId,
+      userId: 'preview',
+      type: selectedCandidate.type,
+      originalTitle: details?.originalTitle || selectedCandidate.title,
+      spanishTitle: details?.spanishTitle || selectedCandidate.title,
+      year: details?.year || selectedCandidate.year || null,
+      synopsis: details?.synopsis || selectedCandidate.overview || 'Sin descripción disponible.',
+      durationMinutes: details?.durationMinutes ?? null,
+      seasons: details?.seasons ?? null,
+      totalEpisodes: details?.totalEpisodes ?? null,
+      watched: false,
+      favorite: false,
+      watchlist: false,
+      instagramRecommendation: false,
+      personalRating: null,
+      imdbRating: details?.imdbRating || selectedCandidate.rating || null,
+      tmdbId: selectedCandidate.tmdbId || null,
+      imdbId: selectedCandidate.imdbId || null,
+      imdbUrl: selectedCandidate.imdbId ? `https://www.imdb.com/title/${selectedCandidate.imdbId}` : null,
+      tmdbUrl: selectedCandidate.tmdbId ? `https://www.themoviedb.org/${selectedCandidate.type === 'movie' ? 'movie' : 'tv'}/${selectedCandidate.tmdbId}` : null,
+      justwatchUrl: null,
+      trailerUrl: details?.trailerUrl || null,
+      tmdbCollectionId: details?.tmdbCollectionId ?? null,
+      tmdbCollectionName: details?.tmdbCollectionName ?? null,
+      tmdbImportedAt: null,
+      tmdbLastSyncedAt: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      images: details?.images?.length
+        ? details.images.map((img, i) => ({ id: String(i), url: img.url, localPath: null, tmdbFilePath: null, order: i, isPrimary: i === 0, altText: null }))
+        : selectedCandidate.posterUrl
+          ? [{ id: '1', url: selectedCandidate.posterUrl, localPath: null, tmdbFilePath: null, order: 0, isPrimary: true, altText: null }]
+          : [],
+      genres: (details?.genres || (selectedCandidate.genres || []).map((g) => ({ name: g }))).map((g, i) => ({
+        id: String(i),
+        name: typeof g === 'string' ? g : g.name,
+        normalizedName: (typeof g === 'string' ? g : g.name).toLowerCase(),
+        tmdbGenreId: null,
+        tmdbMediaType: selectedCandidate.type,
+        imagePath: null,
+        order: i,
+      })),
+      platforms: [],
+      keywords: [],
+      credits: (details?.credits || []).map((cr, i) => ({
+        id: String(i),
+        name: cr.name,
+        creditType: cr.creditType,
+        order: cr.order ?? i,
+        characterName: cr.characterName ?? null,
+        tmdbPersonId: cr.tmdbPersonId ?? null,
+        profilePath: cr.profilePath ?? null,
+        tmdbCreditId: null,
+      })),
+      countries: (details?.countries || []).map((c, i) => ({
+        id: String(i),
+        name: typeof c === 'string' ? c : c.name,
+        normalizedName: (typeof c === 'string' ? c : c.name).toLowerCase(),
+        isoCode: typeof c === 'string' ? null : ((c as any).isoCode ?? null),
+        order: i,
+      })),
+      collections: [],
+    };
+  }, [selectedCandidate, existingMovie, candidateDetails.data]);
+
+  const updatePersonal = useMutation({
+    mutationFn: ({ movie, field }: { movie: MovieItem; field: 'favorite' | 'watched' | 'watchlist' }) =>
+      api.movies.updatePersonal(movie.id, { [field]: !movie[field] }),
+    onSuccess: (updated) => {
+      queryClient.setQueryData<MovieItem[]>(['movies'], (current = []) =>
+        current.map((item) => (item.id === updated.id ? updated : item))
+      );
+      queryClient.invalidateQueries({ queryKey: ['movies'] });
+    },
+  });
+
+  const updateRating = useMutation({
+    mutationFn: ({ movie, rating }: { movie: MovieItem; rating: number | null }) =>
+      api.movies.updatePersonal(movie.id, { personalRating: rating }),
+    onSuccess: (updated) => {
+      queryClient.setQueryData<MovieItem[]>(['movies'], (current = []) =>
+        current.map((item) => (item.id === updated.id ? updated : item))
+      );
+      queryClient.invalidateQueries({ queryKey: ['movies'] });
+    },
+  });
+
   const importSuggestion = useMutation({
     mutationFn: async (candidate: TmdbSuggestionCandidate) => {
-      const data = await api.imdb.import({ imdbId: candidate.imdbId, type: candidate.type });
-      return api.movies.create({ ...data, favorite: false, watched: false, watchlist: false, personalRating: null, collectionIds: [] });
+      let data = (candidateDetails.data && candidateDetails.data.imdbId === candidate.imdbId) ? candidateDetails.data : null;
+      if (!data && candidate.imdbId) {
+        try {
+          data = await api.imdb.import({ imdbId: candidate.imdbId, type: candidate.type });
+        } catch {
+          // fallback to manual creation below
+        }
+      }
+      if (data) {
+        return api.movies.create({
+          ...data,
+          favorite: false,
+          watched: false,
+          watchlist: false,
+          personalRating: null,
+          collectionIds: [],
+        });
+      }
+      return api.movies.create({
+        type: candidate.type,
+        originalTitle: candidate.title,
+        spanishTitle: candidate.title,
+        year: candidate.year || null,
+        synopsis: candidate.overview || 'Sin descripción disponible.',
+        durationMinutes: null,
+        seasons: null,
+        totalEpisodes: null,
+        watched: false,
+        favorite: false,
+        watchlist: false,
+        instagramRecommendation: false,
+        personalRating: null,
+        imdbRating: candidate.rating || null,
+        tmdbId: candidate.tmdbId || null,
+        imdbId: candidate.imdbId || null,
+        imdbUrl: candidate.imdbId ? `https://www.imdb.com/title/${candidate.imdbId}` : null,
+        tmdbUrl: candidate.tmdbId ? `https://www.themoviedb.org/${candidate.type === 'movie' ? 'movie' : 'tv'}/${candidate.tmdbId}` : null,
+        justwatchUrl: (candidate as any).justwatchUrl || null,
+        trailerUrl: null,
+        tmdbCollectionId: null,
+        tmdbCollectionName: null,
+        images: candidate.posterUrl ? [{ url: candidate.posterUrl, isPrimary: true, order: 0 }] : [],
+        genres: (candidate.genres || []).map((g) => ({ name: g })),
+        platforms: [],
+        keywords: [],
+        credits: [],
+        countries: [],
+        collectionIds: [],
+      });
     },
     onSuccess: (saved, candidate) => {
       setAddedMovieIds((current) => ({ ...current, [suggestionKey(candidate)]: saved.id }));
@@ -297,8 +503,9 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
   if (!isOpen) return null;
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-ink/60 backdrop-blur-sm"
+    <>
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-ink/60 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="add-movie-modal-title"
@@ -327,7 +534,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
               </button>
             )}
             <div className="min-w-0">
-              <h2 id="add-movie-modal-title" className="font-bebas text-2xl sm:text-3xl uppercase tracking-wide text-ink truncate">
+              <h2 id="add-movie-modal-title" className="font-bebas text-2xl sm:text-3xl uppercase tracking-wide text-ink dark:text-white truncate">
                 {bulkDialogOpen ? 'Buscar varios títulos' : 'Agregar títulos'}
               </h2>
               <p className="truncate text-xs text-slate-500">
@@ -632,23 +839,30 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                           importSuggestion.variables &&
                           suggestionKey(importSuggestion.variables) === suggestionKey(candidate);
 
-                        const typeBadge =
-                          candidate.type === 'movie' ? (
-                            <span className="rounded border border-coral/20 bg-red-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-coral">
-                              Película
-                            </span>
-                          ) : (
-                            <span className="rounded border border-aqua/20 bg-[#f0fbfb] px-1.5 py-0.5 text-[10px] font-bold uppercase text-[#1c646b]">
-                              Serie
-                            </span>
-                          );
+                        const typeBadge = (
+                          <span className={`rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase text-white shadow-sm ${candidate.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>
+                            {candidate.type === 'movie' ? 'Película' : 'Serie'}
+                          </span>
+                        );
 
                         return (
                           <article
                             key={suggestionKey(candidate)}
                             className="movie-card group flex flex-col overflow-hidden rounded-md border border-slate-200 bg-white transition-shadow hover:shadow-md"
                           >
-                            <div className="relative aspect-[2/3] w-full overflow-hidden bg-slate-100">
+                            <div
+                              className="relative aspect-[2/3] w-full overflow-hidden bg-slate-100 cursor-pointer"
+                              onClick={() => setSelectedCandidate(candidate)}
+                              title={`Ver características de ${candidate.title}`}
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  setSelectedCandidate(candidate);
+                                }
+                              }}
+                            >
                               {candidate.posterUrl ? (
                                 <img
                                   src={candidate.posterUrl}
@@ -661,12 +875,23 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                                   {candidate.type === 'movie' ? <Film className="h-10 w-10" /> : <Tv className="h-10 w-10" />}
                                 </div>
                               )}
-                              <div className="absolute left-2 top-2">{typeBadge}</div>
+                              <div className="absolute left-2 top-2 pointer-events-none">{typeBadge}</div>
+                              <div className="absolute bottom-2 right-2 z-10">
+                                <CoverAddButton
+                                  isAdded={Boolean(inLibraryId)}
+                                  isAdding={Boolean(isAddingThis)}
+                                  onAdd={() => importSuggestion.mutate(candidate)}
+                                />
+                              </div>
                             </div>
 
                             <div className="flex flex-1 flex-col justify-between p-3">
                               <div>
-                                <h4 className="font-bebas text-lg uppercase leading-5 text-ink line-clamp-1" title={candidate.title}>
+                                <h4
+                                  className="font-bebas text-lg uppercase leading-5 text-ink dark:text-white line-clamp-1 cursor-pointer hover:text-coral transition-colors"
+                                  title={candidate.title}
+                                  onClick={() => setSelectedCandidate(candidate)}
+                                >
                                   {candidate.title}
                                 </h4>
                                 {candidate.originalTitle && candidate.originalTitle !== candidate.title && (
@@ -683,39 +908,6 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                                     </span>
                                   ) : null}
                                 </div>
-                              </div>
-
-                              <div className="mt-3">
-                                {inLibraryId ? (
-                                  <button
-                                    type="button"
-                                    disabled
-                                    className="secondary-button w-full justify-center gap-1.5 border-[#2cbc63]/40 text-xs font-semibold text-[#2cbc63]"
-                                    title="Título ya incorporado a la biblioteca"
-                                  >
-                                    <Check className="h-4 w-4" />
-                                    En biblioteca
-                                  </button>
-                                ) : isAddingThis ? (
-                                  <button
-                                    type="button"
-                                    disabled
-                                    className="primary-button w-full justify-center gap-1.5 text-xs opacity-75"
-                                  >
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    Agregando...
-                                  </button>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() => importSuggestion.mutate(candidate)}
-                                    disabled={importSuggestion.isPending}
-                                    className="primary-button w-full justify-center gap-1.5 text-xs"
-                                  >
-                                    <Plus className="h-4 w-4" />
-                                    Agregar
-                                  </button>
-                                )}
                               </div>
                             </div>
                           </article>
@@ -744,7 +936,18 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
           )}
         </div>
       </div>
-    </div>,
-    document.body
-  );
+    </div>
+    {activeMovie && (
+      <MovieDetailModal
+        movie={activeMovie}
+        onClose={() => setSelectedCandidate(null)}
+        onAdd={!existingMovie ? () => selectedCandidate && importSuggestion.mutate(selectedCandidate) : undefined}
+        onPersonal={(movie, field) => updatePersonal.mutate({ movie, field })}
+        onRating={(movie, rating) => updateRating.mutate({ movie, rating })}
+        onCollections={() => {}}
+      />
+    )}
+  </>,
+  document.body
+);
 };

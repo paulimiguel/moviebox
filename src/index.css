@@ -516,6 +516,7 @@ body {
 :root[data-theme="dark"] .movie-detail-modal h1,
 :root[data-theme="dark"] .movie-detail-modal h2,
 :root[data-theme="dark"] .movie-detail-modal h3,
+:root[data-theme="dark"] .movie-detail-modal h4,
 :root[data-theme="dark"] .movie-detail-modal dt,
 :root[data-theme="dark"] .movie-detail-modal dd,
 :root[data-theme="dark"] .movie-detail-modal p,
