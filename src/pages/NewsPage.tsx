@@ -794,7 +794,7 @@ export const NewsPage = () => {
     <main className="news-page min-h-screen bg-canvas pb-20 relative">
       <Header />
       {/* Sección principal superior: Populares por plataforma (JustWatch) */}
-      <section id="populares-plataforma" className="scroll-mt-20 mx-auto max-w-[1500px] px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-14 border-b border-slate-200/50">
+      <section id="populares-plataforma" className="scroll-mt-20 w-full px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-14 border-b border-slate-200/50">
         <h1 className="font-bebas text-3xl sm:text-4xl font-normal text-ink uppercase text-center mb-4">
           Populares por plataforma
         </h1>
@@ -917,7 +917,7 @@ export const NewsPage = () => {
         )}
       </section>
 
-      <section id="top-10-plataforma" className="scroll-mt-20 mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8">
+      <section id="top-10-plataforma" className="scroll-mt-20 w-full px-4 py-6 sm:px-6 sm:py-8">
         <h1 className="font-bebas text-3xl font-normal text-ink uppercase text-center mb-4">
           Top 10 por plataforma
         </h1>
