@@ -198,12 +198,12 @@ const Top10FeaturedSection = ({
   };
 
   return (
-    <div className="relative group/carousel">
+    <div className="relative group/carousel -mx-4 sm:-mx-6">
       {canScrollLeft && (
         <button
           type="button"
           onClick={() => scrollByAmount(-400)}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
           aria-label="Anterior"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -213,7 +213,7 @@ const Top10FeaturedSection = ({
         <button
           type="button"
           onClick={() => scrollByAmount(400)}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
           aria-label="Siguiente"
         >
           <ChevronRight className="h-5 w-5" />
@@ -221,7 +221,7 @@ const Top10FeaturedSection = ({
       )}
       <div
         ref={containerRef}
-        className="flex gap-6 sm:gap-10 overflow-x-auto pb-6 pt-2 hide-scrollbar scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        className="flex gap-6 sm:gap-10 overflow-x-auto pb-6 pt-2 px-4 sm:px-6 hide-scrollbar scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       >
         {items.map((item) => (
           <div
@@ -332,12 +332,12 @@ const HorizontalScrollSection = ({
   };
 
   return (
-    <div className="relative group/carousel">
+    <div className="relative group/carousel -mx-4 sm:-mx-6">
       {canScrollLeft && (
         <button
           type="button"
           onClick={() => scrollByAmount(-400)}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
           aria-label="Anterior"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -347,7 +347,7 @@ const HorizontalScrollSection = ({
         <button
           type="button"
           onClick={() => scrollByAmount(400)}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
           aria-label="Siguiente"
         >
           <ChevronRight className="h-5 w-5" />
@@ -355,7 +355,7 @@ const HorizontalScrollSection = ({
       )}
       <div
         ref={containerRef}
-        className="flex gap-4 overflow-x-auto pb-4 pt-2 hide-scrollbar scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        className="flex gap-4 overflow-x-auto pb-4 pt-2 px-4 sm:px-6 hide-scrollbar scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
       >
         {items.map((item, idx) => (
           <div
@@ -950,12 +950,12 @@ export const NewsPage = () => {
         </div>
 
         {/* Carrusel de contenido: 4 columnas por página en desktop */}
-        <div className="relative group/carousel">
+        <div className="relative group/carousel -mx-4 sm:-mx-6">
           {canScrollLeft && (
             <button
               type="button"
               onClick={scrollLeft}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
               aria-label="Anterior"
             >
               <ChevronLeft className="h-5 w-5" />
@@ -965,7 +965,7 @@ export const NewsPage = () => {
             <button
               type="button"
               onClick={scrollRight}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
               aria-label="Siguiente"
             >
               <ChevronRight className="h-5 w-5" />
@@ -973,7 +973,7 @@ export const NewsPage = () => {
           )}
           <div
             ref={contentScrollRef}
-            className="flex gap-6 overflow-x-auto pt-6 pb-8 snap-x snap-mandatory hide-scrollbar relative [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            className="flex gap-6 overflow-x-auto pt-6 pb-8 px-4 sm:px-6 snap-x snap-mandatory hide-scrollbar relative [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           >
             {PLATFORMS.map((platform, index) => {
               const query = queries[index];
