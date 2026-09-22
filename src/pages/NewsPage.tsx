@@ -203,20 +203,20 @@ const Top10FeaturedSection = ({
         <button
           type="button"
           onClick={() => scrollByAmount(-400)}
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-30 grid h-8 w-8 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
           aria-label="Anterior"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-4 w-4" />
         </button>
       )}
       {canScrollRight && (
         <button
           type="button"
           onClick={() => scrollByAmount(400)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-30 grid h-8 w-8 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
           aria-label="Siguiente"
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight className="h-4 w-4" />
         </button>
       )}
       <div
@@ -337,20 +337,20 @@ const HorizontalScrollSection = ({
         <button
           type="button"
           onClick={() => scrollByAmount(-400)}
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-30 grid h-8 w-8 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
           aria-label="Anterior"
         >
-          <ChevronLeft className="h-5 w-5" />
+          <ChevronLeft className="h-4 w-4" />
         </button>
       )}
       {canScrollRight && (
         <button
           type="button"
           onClick={() => scrollByAmount(400)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-30 grid h-8 w-8 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
           aria-label="Siguiente"
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight className="h-4 w-4" />
         </button>
       )}
       <div
@@ -955,20 +955,20 @@ export const NewsPage = () => {
             <button
               type="button"
               onClick={scrollLeft}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-30 grid h-8 w-8 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
               aria-label="Anterior"
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-4 w-4" />
             </button>
           )}
           {canScrollRight && (
             <button
               type="button"
               onClick={scrollRight}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-30 grid h-10 w-10 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-30 grid h-8 w-8 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
               aria-label="Siguiente"
             >
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-4 w-4" />
             </button>
           )}
           <div
