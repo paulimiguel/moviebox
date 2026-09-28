@@ -198,6 +198,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
               </label>
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
+              <button type="button" aria-pressed={props.type === 'all'} onClick={() => { setOpenMenu(null); props.onTypeChange('all'); }} className={quickTypeButtonClass(props.type === 'all')}>Todos</button>
               <button type="button" aria-pressed={props.type === 'movie'} onClick={() => { setOpenMenu(null); props.onTypeChange(props.type === 'movie' ? 'all' : 'movie'); }} className={quickTypeButtonClass(props.type === 'movie')}>Películas</button>
               <button type="button" aria-pressed={props.type === 'series'} onClick={() => { setOpenMenu(null); props.onTypeChange(props.type === 'series' ? 'all' : 'series'); }} className={quickTypeButtonClass(props.type === 'series')}>Series</button>
             </div>

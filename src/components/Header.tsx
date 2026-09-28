@@ -238,7 +238,6 @@ export const Header = () => {
               AGREGAR
             </button>
           </nav>
-          <button type="button" onClick={() => filterLibrary('all')} className="header-all-button inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md bg-coral px-3 text-xs font-semibold text-white transition-colors hover:bg-[#e7473d]" title="Mostrar todos los títulos"><Film className="h-4 w-4" />TODOS</button>
           <div ref={menuRef} className="relative">
           <button
             type="button"
