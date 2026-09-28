@@ -244,7 +244,7 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/55 sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="movie-edit-title">
-      <form onSubmit={(event) => { event.preventDefault(); setError(''); save.mutate(); }} className="movie-detail-modal max-h-[96vh] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-5xl sm:rounded-md">
+      <form onSubmit={(event) => { event.preventDefault(); setError(''); save.mutate(); }} className="movie-detail-modal max-h-[85vh] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-5xl sm:rounded-md">
         <header className="flex h-16 items-center gap-3 border-b border-slate-200 bg-white px-4 sm:px-6">
           <div className="min-w-0 flex-1">
             <h2 id="movie-edit-title" className="truncate text-lg font-semibold text-ink">Editar {movie.originalTitle}</h2>
@@ -257,7 +257,7 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
           </div>
         </header>
 
-        <div className="flex max-h-[calc(96vh-128px)] flex-col overflow-y-auto p-4 sm:p-6">
+        <div className="flex max-h-[calc(85vh-128px)] flex-col overflow-y-auto p-4 sm:p-6">
           <section>
             <h3 className="field-label">Estado</h3>
             <div className="grid gap-2 sm:grid-cols-3">

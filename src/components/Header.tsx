@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Bookmark, ChevronDown, Eye, EyeOff, Film, Heart, LayoutGrid, LogOut, Moon, Sun, Tv } from 'lucide-react';
+import { Bookmark, ChevronDown, Eye, EyeOff, Film, Heart, LayoutGrid, LogOut, Moon, Plus, Sun, Tv } from 'lucide-react';
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/services/api';
@@ -32,7 +32,14 @@ export const Header = () => {
   const [genreMenuOpen, setGenreMenuOpen] = useState(false);
   const [newsMenuOpen, setNewsMenuOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileSubmenu, setMobileSubmenu] = useState<'library' | 'news' | 'platforms' | 'genres' | 'collections' | null>(null);
   const [profilePhotoFailed, setProfilePhotoFailed] = useState(false);
+
+  useEffect(() => {
+    if (!menuOpen) {
+      setMobileSubmenu(null);
+    }
+  }, [menuOpen]);
 
   useEffect(() => {
     if (searchParams.get('agregar') === '1') {
@@ -134,7 +141,7 @@ export const Header = () => {
 
   return (
     <>
-      <header className="moviebox-header sticky top-0 z-40 border-b border-slate-200 bg-canvas/95 backdrop-blur">
+      <header className="moviebox-header sticky top-0 z-40 w-full border-b border-slate-200 bg-canvas/95 backdrop-blur">
       <div className="mx-auto flex h-[72px] max-w-[1500px] items-center gap-5 px-4 sm:px-6">
         <Link to="/" className="shrink-0"><img src={theme === 'dark' ? '/moviebox-logo-white.png' : '/moviebox-logo-red.png'} alt="MovieBox" className="h-10 w-auto max-w-[190px] object-contain sm:h-11" /></Link>
         <div className="ml-auto flex h-full min-w-0 items-center gap-2 sm:gap-4">
@@ -245,60 +252,209 @@ export const Header = () => {
             <ChevronDown className="h-4 w-4" />
           </button>
           {menuOpen && (
-            <div className="header-dropdown absolute right-0 top-12 w-60 rounded-md border border-slate-200 bg-white p-1.5 shadow-card">
+            <div className="header-dropdown absolute right-0 top-12 w-64 sm:w-72 max-h-[calc(100vh-80px)] overflow-y-auto rounded-md border border-slate-200 bg-white p-1.5 shadow-card">
               <div className="border-b border-slate-100 px-3 py-2.5">
                 <p className="truncate text-sm font-semibold text-ink">{user?.name}</p>
                 <p className="truncate text-xs text-slate-500">{user?.email}</p>
               </div>
+
+              {/* Biblioteca (colapsable) */}
               <div className="mt-1 border-b border-slate-100 py-1 xl:hidden">
-                <p className="px-3 py-1.5 text-xs font-semibold uppercase text-slate-400">Biblioteca</p>
-                {libraryOptions.map((option) => <button key={`mobile-library-${option.preset}`} type="button" onClick={() => filterLibrary(option.preset)} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50">{option.icon}<span>{option.label}</span></button>)}
-              </div>
-              <div className="mt-1 border-b border-slate-100 py-1 xl:hidden">
-                <p className="px-3 py-1.5 text-xs font-semibold uppercase text-slate-400">Novedades</p>
                 <button
                   type="button"
-                  onClick={() => navigateToNewsSection('top-10-plataforma')}
-                  className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"
+                  onClick={() => setMobileSubmenu((c) => c === 'library' ? null : 'library')}
+                  className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500 hover:bg-slate-50 hover:text-ink transition-colors"
+                  aria-expanded={mobileSubmenu === 'library'}
                 >
-                  Top 10 por plataforma
+                  <span>Biblioteca</span>
+                  <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${mobileSubmenu === 'library' ? 'rotate-180' : ''}`} />
                 </button>
-                <button
-                  type="button"
-                  onClick={() => navigateToNewsSection('top-10-ar')}
-                  className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"
-                >
-                  Top 10 en AR
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigateToNewsSection('sugerencias-plataforma')}
-                  className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"
-                >
-                  Sugerencias por plataforma
-                </button>
+                {mobileSubmenu === 'library' && (
+                  <div className="space-y-0.5 pb-1 pl-2">
+                    {libraryOptions.map((option) => (
+                      <button
+                        key={`mobile-library-${option.preset}`}
+                        type="button"
+                        onClick={() => filterLibrary(option.preset)}
+                        className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                      >
+                        {option.icon}
+                        <span>{option.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div className="mt-1 border-t border-slate-100 py-1 xl:hidden">
-                <p className="px-3 py-1.5 text-xs font-semibold uppercase text-slate-400">Plataformas</p>
-                <div className="max-h-40 overflow-y-auto">
-                  {(metadataQuery.data?.platforms || []).length ? (metadataQuery.data?.platforms || []).map((platform) => <button key={`mobile-platform-${platform.id}`} type="button" onClick={() => filterLibraryByPlatform(platform.id)} className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50">{platform.name}</button>) : <p className="px-3 py-2 text-sm text-slate-400">No hay plataformas.</p>}
-                </div>
-                <Link to="/plataformas" onClick={() => setMenuOpen(false)} className="mt-1 flex w-full items-center gap-2 border-t border-slate-100 px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"><LayoutGrid className="h-4 w-4" />Mostrar plataformas</Link>
-              </div>
-              <div className="mt-1 border-y border-slate-100 py-1 xl:hidden">
-                <p className="px-3 py-1.5 text-xs font-semibold uppercase text-slate-400">Géneros</p>
-                <div className="max-h-40 overflow-y-auto">
-                  {(metadataQuery.data?.genres || []).length ? (metadataQuery.data?.genres || []).map((genre) => <button key={`mobile-${genre.id}`} type="button" onClick={() => filterLibraryByGenre(genre.id)} className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50">{genre.name}</button>) : <p className="px-3 py-2 text-sm text-slate-400">No hay géneros.</p>}
-                </div>
-                <Link to="/generos" onClick={() => setMenuOpen(false)} className="mt-1 flex w-full items-center gap-2 border-t border-slate-100 px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"><LayoutGrid className="h-4 w-4" />Mostrar géneros</Link>
-              </div>
+
+              {/* Novedades (colapsable) */}
               <div className="mt-1 border-b border-slate-100 py-1 xl:hidden">
-                <p className="px-3 py-1.5 text-xs font-semibold uppercase text-slate-400">Colecciones</p>
-                <div className="max-h-40 overflow-y-auto">
-                  {(collectionsQuery.data || []).length ? (collectionsQuery.data || []).map((collection) => <Link key={`mobile-collection-${collection.id}`} to={`/colecciones/${collection.id}`} onClick={() => setMenuOpen(false)} className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50">{collection.name}</Link>) : <p className="px-3 py-2 text-sm text-slate-400">No hay colecciones.</p>}
-                </div>
-                <Link to="/colecciones" onClick={() => setMenuOpen(false)} className="mt-1 flex w-full items-center gap-2 border-t border-slate-100 px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"><LayoutGrid className="h-4 w-4" />Mostrar colecciones</Link>
+                <button
+                  type="button"
+                  onClick={() => setMobileSubmenu((c) => c === 'news' ? null : 'news')}
+                  className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500 hover:bg-slate-50 hover:text-ink transition-colors"
+                  aria-expanded={mobileSubmenu === 'news'}
+                >
+                  <span>Novedades</span>
+                  <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${mobileSubmenu === 'news' ? 'rotate-180' : ''}`} />
+                </button>
+                {mobileSubmenu === 'news' && (
+                  <div className="space-y-0.5 pb-1 pl-2">
+                    <button
+                      type="button"
+                      onClick={() => navigateToNewsSection('populares-plataforma')}
+                      className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                    >
+                      Populares por plataforma
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigateToNewsSection('top-10-plataforma')}
+                      className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                    >
+                      Top 10 por plataforma
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigateToNewsSection('top-10-ar')}
+                      className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                    >
+                      Top 10 en AR
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigateToNewsSection('sugerencias-plataforma')}
+                      className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                    >
+                      Sugerencias por plataforma
+                    </button>
+                  </div>
+                )}
               </div>
+
+              {/* Plataformas (colapsable) */}
+              <div className="mt-1 border-b border-slate-100 py-1 xl:hidden">
+                <button
+                  type="button"
+                  onClick={() => setMobileSubmenu((c) => c === 'platforms' ? null : 'platforms')}
+                  className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500 hover:bg-slate-50 hover:text-ink transition-colors"
+                  aria-expanded={mobileSubmenu === 'platforms'}
+                >
+                  <span>Plataformas</span>
+                  <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${mobileSubmenu === 'platforms' ? 'rotate-180' : ''}`} />
+                </button>
+                {mobileSubmenu === 'platforms' && (
+                  <div className="space-y-0.5 pb-1 pl-2">
+                    <div className="max-h-48 overflow-y-auto">
+                      {(metadataQuery.data?.platforms || []).length ? (
+                        (metadataQuery.data?.platforms || []).map((platform) => (
+                          <button
+                            key={`mobile-platform-${platform.id}`}
+                            type="button"
+                            onClick={() => filterLibraryByPlatform(platform.id)}
+                            className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                          >
+                            {platform.name}
+                          </button>
+                        ))
+                      ) : (
+                        <p className="px-3 py-2 text-sm text-slate-400">No hay plataformas.</p>
+                      )}
+                    </div>
+                    <Link
+                      to="/plataformas"
+                      onClick={() => setMenuOpen(false)}
+                      className="mt-1 flex w-full items-center gap-2 border-t border-slate-100 px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink"
+                    >
+                      <LayoutGrid className="h-4 w-4" />
+                      Mostrar plataformas
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* Géneros (colapsable) */}
+              <div className="mt-1 border-b border-slate-100 py-1 xl:hidden">
+                <button
+                  type="button"
+                  onClick={() => setMobileSubmenu((c) => c === 'genres' ? null : 'genres')}
+                  className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500 hover:bg-slate-50 hover:text-ink transition-colors"
+                  aria-expanded={mobileSubmenu === 'genres'}
+                >
+                  <span>Géneros</span>
+                  <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${mobileSubmenu === 'genres' ? 'rotate-180' : ''}`} />
+                </button>
+                {mobileSubmenu === 'genres' && (
+                  <div className="space-y-0.5 pb-1 pl-2">
+                    <div className="max-h-48 overflow-y-auto">
+                      {(metadataQuery.data?.genres || []).length ? (
+                        (metadataQuery.data?.genres || []).map((genre) => (
+                          <button
+                            key={`mobile-${genre.id}`}
+                            type="button"
+                            onClick={() => filterLibraryByGenre(genre.id)}
+                            className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                          >
+                            {genre.name}
+                          </button>
+                        ))
+                      ) : (
+                        <p className="px-3 py-2 text-sm text-slate-400">No hay géneros.</p>
+                      )}
+                    </div>
+                    <Link
+                      to="/generos"
+                      onClick={() => setMenuOpen(false)}
+                      className="mt-1 flex w-full items-center gap-2 border-t border-slate-100 px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink"
+                    >
+                      <LayoutGrid className="h-4 w-4" />
+                      Mostrar géneros
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* Colecciones (colapsable) */}
+              <div className="mt-1 border-b border-slate-100 py-1 xl:hidden">
+                <button
+                  type="button"
+                  onClick={() => setMobileSubmenu((c) => c === 'collections' ? null : 'collections')}
+                  className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500 hover:bg-slate-50 hover:text-ink transition-colors"
+                  aria-expanded={mobileSubmenu === 'collections'}
+                >
+                  <span>Colecciones</span>
+                  <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${mobileSubmenu === 'collections' ? 'rotate-180' : ''}`} />
+                </button>
+                {mobileSubmenu === 'collections' && (
+                  <div className="space-y-0.5 pb-1 pl-2">
+                    <div className="max-h-48 overflow-y-auto">
+                      {(collectionsQuery.data || []).length ? (
+                        (collectionsQuery.data || []).map((collection) => (
+                          <Link
+                            key={`mobile-collection-${collection.id}`}
+                            to={`/colecciones/${collection.id}`}
+                            onClick={() => setMenuOpen(false)}
+                            className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                          >
+                            {collection.name}
+                          </Link>
+                        ))
+                      ) : (
+                        <p className="px-3 py-2 text-sm text-slate-400">No hay colecciones.</p>
+                      )}
+                    </div>
+                    <Link
+                      to="/colecciones"
+                      onClick={() => setMenuOpen(false)}
+                      className="mt-1 flex w-full items-center gap-2 border-t border-slate-100 px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink"
+                    >
+                      <LayoutGrid className="h-4 w-4" />
+                      Mostrar colecciones
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* Temas */}
               <div className="border-b border-slate-100 px-3 py-2">
                 <p className="mb-2 text-xs font-semibold uppercase text-slate-400">Temas</p>
                 <div className="grid grid-cols-2 gap-2">
@@ -306,16 +462,21 @@ export const Header = () => {
                   <button type="button" onClick={() => { setTheme('dark'); setMenuOpen(false); }} className={`flex items-center justify-center gap-2 rounded-md border px-2 py-2 text-sm ${theme === 'dark' ? 'border-coral text-ink' : 'border-slate-200 text-slate-600'}`}><Moon className="h-4 w-4" />Oscuro</button>
                 </div>
               </div>
+
+              {/* Agregar título */}
               <button
                 type="button"
                 onClick={() => {
                   setMenuOpen(false);
                   setAddModalOpen(true);
                 }}
-                className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 xl:hidden"
+                className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink xl:hidden"
               >
-                Agregar
+                <Plus className="h-4 w-4 text-aqua" />
+                <span>Agregar</span>
               </button>
+
+              {/* Cerrar sesión */}
               <button type="button" onClick={logout} className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50">
                 <LogOut className="h-4 w-4" />
                 Cerrar sesion
