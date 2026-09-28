@@ -49,7 +49,7 @@ interface ToolbarProps {
   onClearEmptyFields: () => void;
 }
 
-const menuButton = 'library-toolbar-menu-button inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-white px-2 text-xs font-semibold uppercase text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50';
+const menuButton = 'library-toolbar-menu-button inline-flex h-9 w-full items-center justify-center gap-1 rounded-md border border-slate-200 bg-white px-1.5 text-[11px] font-semibold uppercase text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50';
 const searchScopeOptions: { value: MovieSearchScope; label: string }[] = [
   { value: 'name', label: 'Nombre' },
   { value: 'actor', label: 'Actor' },
@@ -100,14 +100,14 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
     { value: 'details', label: 'Detalles', icon: <ListChecks className="h-4 w-4" /> },
   ];
   const activeViewIcon = props.viewMode === 'medium'
-    ? <LayoutGrid className="h-5 w-5 shrink-0" />
+    ? <LayoutGrid className="h-3.5 w-3.5 shrink-0" />
     : props.viewMode === 'mediumIcons'
-      ? <LayoutGrid className="h-4 w-4 shrink-0" />
+      ? <LayoutGrid className="h-3.5 w-3.5 shrink-0" />
     : props.viewMode === 'small'
-      ? <Grid2X2 className="h-5 w-5 shrink-0" />
+      ? <Grid2X2 className="h-3.5 w-3.5 shrink-0" />
       : props.viewMode === 'list'
-        ? <List className="h-5 w-5 shrink-0" />
-        : <ListChecks className="h-5 w-5 shrink-0" />;
+        ? <List className="h-3.5 w-3.5 shrink-0" />
+        : <ListChecks className="h-3.5 w-3.5 shrink-0" />;
   const sortOptions: { value: MovieLibrarySort; label: string }[] = [
     { value: 'title', label: 'Título' },
     { value: 'createdAt', label: 'Fecha' },
@@ -133,7 +133,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
     && props.watchlist === 'all'
     && props.emptyFieldsCount === 0;
   const filterButtonClass = (active: boolean) => `library-filter-button moviebox-translucent-action inline-flex h-9 w-[104px] items-center justify-center gap-1.5 rounded-md border px-1.5 text-xs font-semibold transition-colors ${active ? 'border-coral bg-coral text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`;
-  const quickTypeButtonClass = (active: boolean) => `library-filter-button moviebox-translucent-action inline-flex h-8 w-full items-center justify-center rounded-md border px-2 text-[11px] font-semibold uppercase transition-colors ${active ? 'border-coral bg-coral text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`;
+  const quickTypeButtonClass = (active: boolean) => `library-filter-button moviebox-translucent-action inline-flex h-8 items-center justify-center rounded-md border px-2.5 text-[10px] font-semibold uppercase transition-colors shrink-0 ${active ? 'border-coral bg-coral text-white shadow-sm' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`;
   const toggleGenre = (genreId: string) => {
     props.onGenreChange(
       props.genreIds.includes(genreId)
@@ -169,8 +169,8 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
 
   return (
     <section ref={toolbarRef} className="library-toolbar sticky top-[72px] z-30 border-b border-slate-200 bg-white shadow-sm">
-      <div className="mx-auto flex flex-col gap-3 px-4 py-3 sm:px-6 xl:flex-row xl:items-start xl:justify-between">
-        <div className="min-w-0 xl:w-[280px] xl:shrink-0 xl:self-center">
+      <div className="mx-auto flex flex-col gap-3 px-4 py-3 sm:px-6 md:flex-row md:items-start md:justify-between">
+        <div className="min-w-0 md:w-[220px] lg:w-[260px] xl:w-[280px] md:shrink-0 md:self-center">
           <h1 className="font-bebas truncate text-xl font-normal text-ink sm:text-2xl">{props.title || `Títulos de ${props.ownerName}`}</h1>
           <p className="mt-0.5 truncate text-xs text-slate-500">Mostrando {props.visibleCount} de {props.totalCount} títulos</p>
           {!props.hideActiveFilters && (selectedGenreNames.length > 0 || selectedPlatformNames.length > 0 || props.years.length > 0 || props.type !== 'all' || props.watched !== 'all' || props.favorite !== 'all' || props.watchlist !== 'all' || props.emptyFieldsCount > 0) && (
@@ -188,14 +188,44 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
           )}
         </div>
 
-        <div className="flex flex-1 flex-col gap-3 min-w-0 md:flex-row md:items-start md:gap-4 xl:ml-4">
-          <div className="min-w-0 flex-1">
-            <label className="relative block">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input ref={searchInputRef} type="search" value={props.search} onChange={(event) => props.onSearchChange(event.target.value)} className={`control w-full pl-9 ${props.search ? '' : 'pr-16'}`} placeholder="Buscar" />
-              {!props.search && <button type="button" onClick={() => void pasteSearch()} className="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-slate-100 px-2 py-1 text-[10px] font-semibold uppercase text-slate-600 transition-colors hover:bg-slate-200 hover:text-ink">Pegar</button>}
-            </label>
-            <div className="search-scope-selector mt-1.5 inline-flex items-center rounded-md border border-slate-200 bg-slate-100 p-0.5" role="radiogroup" aria-label="Campo de búsqueda">
+        <div className="flex flex-1 flex-col gap-2 min-w-0 md:ml-4">
+          <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <label className="relative block">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input ref={searchInputRef} type="search" value={props.search} onChange={(event) => props.onSearchChange(event.target.value)} className={`control w-full pl-9 ${props.search ? '' : 'pr-16'}`} placeholder="Buscar" />
+                {!props.search && <button type="button" onClick={() => void pasteSearch()} className="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-slate-100 px-2 py-1 text-[10px] font-semibold uppercase text-slate-600 transition-colors hover:bg-slate-200 hover:text-ink">Pegar</button>}
+              </label>
+            </div>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <button type="button" aria-pressed={props.type === 'movie'} onClick={() => { setOpenMenu(null); props.onTypeChange(props.type === 'movie' ? 'all' : 'movie'); }} className={quickTypeButtonClass(props.type === 'movie')}>Películas</button>
+              <button type="button" aria-pressed={props.type === 'series'} onClick={() => { setOpenMenu(null); props.onTypeChange(props.type === 'series' ? 'all' : 'series'); }} className={quickTypeButtonClass(props.type === 'series')}>Series</button>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="grid grid-cols-4 gap-1.5 flex-1 min-w-0">
+              <div className="relative">
+                <button type="button" onClick={() => setOpenMenu(openMenu === 'view' ? null : 'view')} className={menuButton} aria-expanded={openMenu === 'view'}>{activeViewIcon}<span className="truncate">Ver</span><ChevronDown className="h-3.5 w-3.5 shrink-0" /></button>
+                {openMenu === 'view' && <div className="library-toolbar-dropdown absolute left-0 top-full z-40 mt-1.5 w-52 rounded-md border border-slate-200 bg-white p-1.5 shadow-card">{viewOptions.map((option) => <button key={option.value} type="button" onClick={() => { props.onViewModeChange(option.value); setOpenMenu(null); }} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${props.viewMode === option.value ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`}>{option.icon}<span className="flex-1">{option.label}</span>{props.viewMode === option.value && <Check className="h-4 w-4 text-coral" />}</button>)}</div>}
+              </div>
+              <div className="relative">
+                <button type="button" onClick={() => setOpenMenu(openMenu === 'sort' ? null : 'sort')} className={menuButton} aria-expanded={openMenu === 'sort'}><ArrowUpDown className="h-3.5 w-3.5 shrink-0" /><span className="truncate">Ordenar</span><ChevronDown className="h-3.5 w-3.5 shrink-0" /></button>
+                {openMenu === 'sort' && <div className="library-toolbar-dropdown absolute left-0 sm:left-1/2 sm:-translate-x-1/2 top-full z-40 mt-1.5 w-52 rounded-md border border-slate-200 bg-white p-1.5 shadow-card">{sortOptions.map((option) => { const active = props.sortKey === option.value; return <button key={option.value} type="button" onClick={() => { props.onSortChange(option.value); setOpenMenu(null); }} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${active ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`}><Check className={`h-4 w-4 ${active ? 'text-coral' : 'text-transparent'}`} /><span className="flex-1">{option.label}</span>{active ? (props.sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />) : <ArrowUpDown className="h-4 w-4 opacity-30" />}</button>; })}</div>}
+              </div>
+              <div className="relative">
+                <button type="button" onClick={() => { setOpenMenu(null); props.onFiltersToggle(); }} className={`${menuButton} ${props.filtersOpen ? 'border-coral bg-red-50 text-coral' : ''}`}><Filter className="h-3.5 w-3.5 shrink-0" /><span className="truncate">Filtrar</span><ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${props.filtersOpen ? 'rotate-180' : ''}`} /></button>
+              </div>
+              <div className="relative">
+                <button type="button" onClick={() => setOpenMenu(openMenu === 'actions' ? null : 'actions')} className={`${menuButton} ${props.emptyFieldsCount ? 'border-coral bg-red-50 text-coral' : ''}`} aria-expanded={openMenu === 'actions'}><ListChecks className="h-3.5 w-3.5 shrink-0" /><span className="truncate">Acciones</span><ChevronDown className="h-3.5 w-3.5 shrink-0" /></button>
+                {openMenu === 'actions' && <div className="library-toolbar-dropdown absolute right-0 top-full z-40 mt-1.5 w-64 rounded-md border border-slate-200 bg-white p-1.5 shadow-card">
+                  <button type="button" onClick={() => { setOpenMenu(null); props.onBulkModeChange('edit'); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><Edit3 className="h-4 w-4" />Editar campos comunes</button>
+                  <button type="button" onClick={() => { setOpenMenu(null); props.onEmptyFieldsSearch(); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><Search className="h-4 w-4" />Buscar campos vacíos</button>
+                </div>}
+              </div>
+            </div>
+
+            <div className="search-scope-selector shrink-0 inline-flex items-center rounded-md border border-slate-200 bg-slate-100 p-0.5" role="radiogroup" aria-label="Campo de búsqueda">
               {searchScopeOptions.map((option) => {
                 const active = props.searchScope === option.value;
                 return (
@@ -205,39 +235,12 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
                     role="radio"
                     aria-checked={active}
                     onClick={() => props.onSearchScopeChange(option.value)}
-                    className={`search-scope-option min-w-[62px] rounded px-2 py-1 text-[10px] font-semibold uppercase transition-all ${active ? 'search-scope-option-active bg-coral text-white shadow-sm' : 'text-slate-600 hover:bg-white hover:text-ink'}`}
+                    className={`search-scope-option min-w-[50px] sm:min-w-[58px] rounded px-1.5 py-1 text-[10px] font-semibold uppercase transition-all ${active ? 'search-scope-option-active bg-coral text-white shadow-sm' : 'text-slate-600 hover:bg-white hover:text-ink'}`}
                   >
                     {option.label}
                   </button>
                 );
               })}
-            </div>
-          </div>
-
-          <div className="w-full shrink-0 md:w-[440px] xl:w-[480px]">
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <div className="relative">
-                <button type="button" onClick={() => setOpenMenu(openMenu === 'view' ? null : 'view')} className={menuButton} aria-expanded={openMenu === 'view'}>{activeViewIcon}<span className="truncate">Ver</span><ChevronDown className="h-4 w-4 shrink-0" /></button>
-                {openMenu === 'view' && <div className="library-toolbar-dropdown absolute left-0 top-full z-40 mt-1.5 w-52 rounded-md border border-slate-200 bg-white p-1.5 shadow-card">{viewOptions.map((option) => <button key={option.value} type="button" onClick={() => { props.onViewModeChange(option.value); setOpenMenu(null); }} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${props.viewMode === option.value ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`}>{option.icon}<span className="flex-1">{option.label}</span>{props.viewMode === option.value && <Check className="h-4 w-4 text-coral" />}</button>)}</div>}
-              </div>
-              <div className="relative">
-                <button type="button" onClick={() => setOpenMenu(openMenu === 'sort' ? null : 'sort')} className={menuButton} aria-expanded={openMenu === 'sort'}><ArrowUpDown className="h-5 w-5 shrink-0" /><span className="truncate">Ordenar</span><ChevronDown className="h-4 w-4 shrink-0" /></button>
-                {openMenu === 'sort' && <div className="library-toolbar-dropdown absolute left-1/2 -translate-x-1/2 sm:translate-x-0 sm:left-0 top-full z-40 mt-1.5 w-52 rounded-md border border-slate-200 bg-white p-1.5 shadow-card">{sortOptions.map((option) => { const active = props.sortKey === option.value; return <button key={option.value} type="button" onClick={() => { props.onSortChange(option.value); setOpenMenu(null); }} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${active ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`}><Check className={`h-4 w-4 ${active ? 'text-coral' : 'text-transparent'}`} /><span className="flex-1">{option.label}</span>{active ? (props.sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />) : <ArrowUpDown className="h-4 w-4 opacity-30" />}</button>; })}</div>}
-              </div>
-              <div className="relative">
-                <button type="button" onClick={() => { setOpenMenu(null); props.onFiltersToggle(); }} className={`${menuButton} ${props.filtersOpen ? 'border-coral bg-red-50 text-coral' : ''}`}><Filter className="h-5 w-5 shrink-0" /><span className="truncate">Filtrar</span><ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${props.filtersOpen ? 'rotate-180' : ''}`} /></button>
-              </div>
-              <div className="relative">
-                <button type="button" onClick={() => setOpenMenu(openMenu === 'actions' ? null : 'actions')} className={`${menuButton} ${props.emptyFieldsCount ? 'border-coral bg-red-50 text-coral' : ''}`} aria-expanded={openMenu === 'actions'}><ListChecks className="h-5 w-5 shrink-0" /><span className="truncate">Acciones</span><ChevronDown className="h-4 w-4 shrink-0" /></button>
-                {openMenu === 'actions' && <div className="library-toolbar-dropdown absolute right-0 top-full z-40 mt-1.5 w-64 rounded-md border border-slate-200 bg-white p-1.5 shadow-card">
-                  <button type="button" onClick={() => { setOpenMenu(null); props.onBulkModeChange('edit'); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><Edit3 className="h-4 w-4" />Editar campos comunes</button>
-                  <button type="button" onClick={() => { setOpenMenu(null); props.onEmptyFieldsSearch(); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><Search className="h-4 w-4" />Buscar campos vacíos</button>
-                </div>}
-              </div>
-            </div>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <button type="button" aria-pressed={props.type === 'movie'} onClick={() => { setOpenMenu(null); props.onTypeChange(props.type === 'movie' ? 'all' : 'movie'); }} className={quickTypeButtonClass(props.type === 'movie')}>Películas</button>
-              <button type="button" aria-pressed={props.type === 'series'} onClick={() => { setOpenMenu(null); props.onTypeChange(props.type === 'series' ? 'all' : 'series'); }} className={quickTypeButtonClass(props.type === 'series')}>Series</button>
             </div>
           </div>
         </div>
