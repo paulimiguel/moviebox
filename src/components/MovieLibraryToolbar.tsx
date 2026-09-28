@@ -49,7 +49,7 @@ interface ToolbarProps {
   onClearEmptyFields: () => void;
 }
 
-const menuButton = 'library-toolbar-menu-button inline-flex h-9 w-full items-center justify-center gap-1 rounded-md border border-slate-200 bg-white px-1.5 text-[11px] font-semibold uppercase text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50';
+const menuButton = 'library-toolbar-menu-button inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-white px-2 text-xs font-semibold uppercase text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50';
 const searchScopeOptions: { value: MovieSearchScope; label: string }[] = [
   { value: 'name', label: 'Nombre' },
   { value: 'actor', label: 'Actor' },
@@ -222,7 +222,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
               })}
             </div>
 
-            <div className="grid grid-cols-4 gap-1.5 w-full sm:w-[380px] md:w-[400px] shrink-0 ml-auto">
+            <div className="grid grid-cols-4 gap-2 w-full sm:w-[430px] md:w-[450px] lg:w-[480px] shrink-0 ml-auto">
               <div className="relative w-full">
                 <button type="button" onClick={() => setOpenMenu(openMenu === 'view' ? null : 'view')} className={menuButton} aria-expanded={openMenu === 'view'}>{activeViewIcon}<span className="truncate">Ver</span><ChevronDown className="h-3.5 w-3.5 shrink-0" /></button>
                 {openMenu === 'view' && <div className="library-toolbar-dropdown absolute left-0 top-full z-40 mt-1.5 w-52 rounded-md border border-slate-200 bg-white p-1.5 shadow-card">{viewOptions.map((option) => <button key={option.value} type="button" onClick={() => { props.onViewModeChange(option.value); setOpenMenu(null); }} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${props.viewMode === option.value ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`}>{option.icon}<span className="flex-1">{option.label}</span>{props.viewMode === option.value && <Check className="h-4 w-4 text-coral" />}</button>)}</div>}
