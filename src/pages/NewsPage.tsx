@@ -801,7 +801,7 @@ export const NewsPage = () => {
         </h1>
 
         {/* Iconos de plataformas */}
-        <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3 mb-8">
+        <div className="w-fit mx-auto grid grid-cols-4 gap-2.5 sm:gap-3 sm:w-auto sm:flex sm:flex-wrap sm:items-center sm:justify-center mb-8">
           {SUGGESTION_PLATFORMS.map((p) => {
             const active = activePopularPlatform === p.id;
             const logoUrl = resolvePlatformLogoUrl({ name: p.name, logoPath: null });
@@ -1040,7 +1040,7 @@ export const NewsPage = () => {
             <div className="text-center">
               <h2 className="font-bebas text-2xl uppercase text-ink sm:text-3xl">Sugerencias por plataforma</h2>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
+            <div className="w-fit mx-auto grid grid-cols-4 gap-2.5 sm:gap-3 sm:w-auto sm:flex sm:flex-wrap sm:items-center sm:justify-center">
               {SUGGESTION_PLATFORMS.map((p) => {
                 const active = activeSuggestionPlatform === p.id;
                 const logoUrl = resolvePlatformLogoUrl({ name: p.name, logoPath: null });
