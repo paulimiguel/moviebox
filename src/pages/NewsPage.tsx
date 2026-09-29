@@ -297,7 +297,7 @@ const HorizontalScrollSection = ({
   isItemAdding,
   onAdd,
 }: {
-  items: JustWatchTop10Item[];
+  items: (JustWatchTop10Item | (TmdbSuggestionCandidate & { subBadge?: string | null; jwId?: string }))[];
   onSelect: (item: TmdbSuggestionCandidate) => void;
   isMovieInLibrary: (item: TmdbSuggestionCandidate) => boolean;
   isItemAdding: (item: TmdbSuggestionCandidate) => boolean;
@@ -467,6 +467,25 @@ export const NewsPage = () => {
     return SUGGESTION_PLATFORMS.find((p) => p.id === activePopularPlatform)?.name || 'la plataforma';
   }, [activePopularPlatform]);
 
+  const platformNewReleasesQuery = useQuery({
+    queryKey: ['newReleases', activePopularPlatform],
+    queryFn: () => api.tmdb.newReleases(activePopularPlatform),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const currentPlatformNewReleases = useMemo(() => {
+    if (!platformNewReleasesQuery.data) return [];
+    const movies = platformNewReleasesQuery.data.movies || [];
+    const series = platformNewReleasesQuery.data.series || [];
+    const combined: (TmdbSuggestionCandidate & { subBadge?: string | null })[] = [];
+    const maxLen = Math.max(movies.length, series.length);
+    for (let i = 0; i < maxLen; i++) {
+      if (i < movies.length) combined.push({ ...movies[i], subBadge: 'Novedad' });
+      if (i < series.length) combined.push({ ...series[i], subBadge: 'Novedad' });
+    }
+    return combined;
+  }, [platformNewReleasesQuery.data]);
+
   const [activeSuggestionPlatform, setActiveSuggestionPlatform] = useState('netflix');
   const [suggestionSeed, setSuggestionSeed] = useState(0);
   const [addedSuggestionMovieIds, setAddedSuggestionMovieIds] = useState<Record<string, string>>({});
@@ -622,6 +641,7 @@ export const NewsPage = () => {
       const all = [
         ...(platformPopularQuery.data.featuredMovies || []),
         ...(platformPopularQuery.data.featuredSeries || []),
+        ...currentPlatformNewReleases,
         ...(platformPopularQuery.data.popularMovies || []),
         ...(platformPopularQuery.data.popularSeries || []),
       ];
@@ -639,7 +659,7 @@ export const NewsPage = () => {
       }
     }
     return [];
-  }, [selectedCandidate, platformPopularQuery.data, queries, justwatchTop10Query.data]);
+  }, [selectedCandidate, platformPopularQuery.data, currentPlatformNewReleases, queries, justwatchTop10Query.data]);
 
   const activeIndex = useMemo(() => {
     if (!selectedCandidate || !allCandidatesInActivePlatform.length) return -1;
@@ -873,7 +893,34 @@ export const NewsPage = () => {
               />
             </div>
 
-            {/* 3. Todas las películas de la plataforma (las 50 más populares) */}
+            {/* 3. Novedades en la plataforma seleccionada (últimas incorporaciones) */}
+            <div>
+              <div className="relative flex items-center justify-between mb-3">
+                <div>
+                  <h2 className="font-bebas text-2xl sm:text-3xl text-ink uppercase tracking-wide">
+                    Novedades en {currentPopularPlatformName}
+                  </h2>
+                  <p className="text-xs text-slate-500">Últimas incorporaciones</p>
+                </div>
+              </div>
+              {platformNewReleasesQuery.isLoading ? (
+                <div className="grid h-40 place-items-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-aqua" />
+                </div>
+              ) : currentPlatformNewReleases.length > 0 ? (
+                <HorizontalScrollSection
+                  items={currentPlatformNewReleases}
+                  onSelect={setSelectedCandidate}
+                  isMovieInLibrary={isMovieInLibrary}
+                  isItemAdding={isItemAdding}
+                  onAdd={(cand) => importMutation.mutate(cand)}
+                />
+              ) : (
+                <p className="text-sm text-slate-400 py-4">No hay novedades recientes para mostrar en esta plataforma.</p>
+              )}
+            </div>
+
+            {/* 4. Todas las películas de la plataforma (las 50 más populares) */}
             <div>
               <div className="relative flex items-center justify-between mb-3">
                 <div>

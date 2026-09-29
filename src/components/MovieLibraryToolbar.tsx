@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronsUpDown, Edit3, Eye, EyeOff, FileText, Film, Filter, Grid2X2, Heart, LayoutGrid, List, ListChecks, Search, Tv, X } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { ArrowDown, ArrowUp, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronsUpDown, Edit3, Eye, EyeOff, FileText, Film, Filter, Grid2X2, Heart, LayoutGrid, List, ListChecks, Plus, Search, Tv, X } from 'lucide-react';
 import type { MovieViewMode } from '@/components/MovieCard';
 import type { FavoriteFilter, MovieTypeFilter, SortDirection, WatchedFilter, WatchlistFilter } from '@/types/movie';
 
@@ -8,6 +9,7 @@ export type MovieBulkMode = 'edit' | 'print' | 'delete' | 'exportTxt' | null;
 export type MovieSearchScope = 'name' | 'actor' | 'genre';
 
 interface ToolbarProps {
+  onAddClick?: () => void;
   title?: string;
   titleExtras?: React.ReactNode;
   ownerName?: string;
@@ -60,6 +62,7 @@ const searchScopeOptions: { value: MovieSearchScope; label: string }[] = [
 ];
 
 export const MovieLibraryToolbar = (props: ToolbarProps) => {
+  const [, setSearchParams] = useSearchParams();
   const [openMenu, setOpenMenu] = useState<'view' | 'sort' | 'genre' | 'platform' | 'collection' | 'actions' | null>(null);
   const [genreSearch, setGenreSearch] = useState('');
   const [platformSearch, setPlatformSearch] = useState('');
@@ -272,6 +275,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
               <div className="relative w-full hidden md:block">
                 <button type="button" onClick={() => setOpenMenu(openMenu === 'actions' ? null : 'actions')} className={`${menuButton} ${props.emptyFieldsCount ? 'border-coral bg-red-50 text-coral' : ''}`} aria-expanded={openMenu === 'actions'}><ListChecks className="h-3.5 w-3.5 shrink-0" /><span className="whitespace-nowrap">Acciones</span><ChevronDown className="h-3.5 w-3.5 shrink-0" /></button>
                 {openMenu === 'actions' && <div className="library-toolbar-dropdown absolute right-0 top-full z-40 mt-1.5 w-64 rounded-md border border-slate-200 bg-white p-1.5 shadow-card">
+                  <button type="button" onClick={() => { setOpenMenu(null); if (props.onAddClick) props.onAddClick(); else setSearchParams((prev) => { const next = new URLSearchParams(prev); next.set('agregar', '1'); return next; }); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><Plus className="h-4 w-4" />Agregar</button>
                   <button type="button" onClick={() => { setOpenMenu(null); props.onBulkModeChange('edit'); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><Edit3 className="h-4 w-4" />Editar campos comunes</button>
                   <button type="button" onClick={() => { setOpenMenu(null); props.onEmptyFieldsSearch(); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><Search className="h-4 w-4" />Buscar campos vacíos</button>
                   <button type="button" onClick={() => { setOpenMenu(null); props.onBulkModeChange('exportTxt'); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><FileText className="h-4 w-4" />Exportar títulos a TXT</button>

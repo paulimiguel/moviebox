@@ -940,6 +940,17 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
             </div>
           )}
         </div>
+
+        {/* Footer */}
+        <footer className="flex h-16 shrink-0 items-center justify-end border-t border-slate-200 bg-white px-4 sm:px-6">
+          <button
+            type="button"
+            onClick={handleClose}
+            className="primary-button min-w-28"
+          >
+            Finalizar
+          </button>
+        </footer>
       </div>
     </div>
     {activeMovie && (
