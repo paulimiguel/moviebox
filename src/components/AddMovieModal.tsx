@@ -772,7 +772,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                         className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-ink"
                       >
                         <Plus className="h-4 w-4 text-aqua shrink-0" />
-                        <span>Pegar texto con títulos</span>
+                        <span>Pegar texto</span>
                       </button>
                       <button
                         type="button"
@@ -783,7 +783,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                         className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-ink"
                       >
                         <FileText className="h-4 w-4 text-slate-400 shrink-0" />
-                        <span>Cargar archivo de texto (.txt)</span>
+                        <span>Importar archivo de texto</span>
                       </button>
                       <button
                         type="button"
@@ -794,7 +794,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                         className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-ink"
                       >
                         <FileSpreadsheet className="h-4 w-4 text-emerald-500 shrink-0" />
-                        <span>Cargar archivo Excel (.xlsx, .xls)</span>
+                        <span>Importar archivo de excel</span>
                       </button>
                     </div>
                   )}

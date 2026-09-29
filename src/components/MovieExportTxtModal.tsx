@@ -85,7 +85,7 @@ export const MovieExportTxtModal = ({ movies, onClose }: MovieExportTxtModalProp
 
   return (
     <div className="fixed inset-0 z-[80] grid place-items-center bg-ink/55 p-4" role="dialog" aria-modal="true" aria-labelledby="export-txt-title">
-      <div className="movie-detail-modal flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-md bg-canvas shadow-xl">
+      <div className="movie-detail-modal flex max-h-[92vh] sm:min-h-[580px] md:min-h-[620px] w-full max-w-3xl flex-col overflow-hidden rounded-xl bg-canvas shadow-2xl border border-slate-200">
         <header className="flex min-h-16 items-center justify-between border-b border-slate-200 bg-white px-5">
           <div>
             <h2 id="export-txt-title" className="text-lg font-semibold text-ink">Exportar títulos a TXT</h2>
@@ -98,8 +98,8 @@ export const MovieExportTxtModal = ({ movies, onClose }: MovieExportTxtModalProp
           </button>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-5 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="flex-1 flex flex-col overflow-y-auto p-5 space-y-4 min-h-0">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-xs shrink-0">
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-medium text-slate-600">Formato:</span>
               <div className="inline-flex rounded-md border border-slate-200 bg-white p-0.5">
@@ -138,23 +138,22 @@ export const MovieExportTxtModal = ({ movies, onClose }: MovieExportTxtModalProp
             </label>
           </div>
 
-          <div>
-            <div className="mb-1.5 flex items-center justify-between text-xs text-slate-500">
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="mb-1.5 flex items-center justify-between text-xs text-slate-500 shrink-0">
               <span>Contenido del archivo TXT (editable):</span>
               <span>{lineCount} {lineCount === 1 ? 'línea' : 'líneas'}</span>
             </div>
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
-              rows={12}
-              className="control w-full font-mono text-sm leading-6 resize-y"
+              className="control w-full flex-1 min-h-[300px] sm:min-h-[360px] font-mono text-sm leading-6 resize-y"
               placeholder="Títulos..."
               aria-label="Títulos a exportar"
             />
           </div>
         </div>
 
-        <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 bg-white px-5 py-3.5">
+        <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 bg-white px-5 py-3.5 shrink-0">
           <button type="button" onClick={onClose} className="secondary-button">
             Cerrar
           </button>
@@ -183,7 +182,7 @@ export const MovieExportTxtModal = ({ movies, onClose }: MovieExportTxtModalProp
             <button
               type="button"
               onClick={handleWhatsApp}
-              className="primary-button bg-[#25D366] hover:bg-[#20bd5a] border-transparent text-white gap-1.5 shadow-sm"
+              className="secondary-button gap-1.5"
               title="Compartir por WhatsApp"
             >
               <WhatsAppIcon />

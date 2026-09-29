@@ -1,4 +1,4 @@
-import type { CreateMovieCollectionInput, CreateMovieInput, GenreCatalogItem, ImdbImportedMovieData, ImdbImportRequest, ImdbSearchCandidate, JustWatchPlatformPopularResponse, JustWatchTop10Item, MovieCollection, MovieItem, MoviePersonalUpdate, PlatformCatalogItem, TmdbSuggestionCandidate } from '@/types/movie';
+import type { CreateMovieCollectionInput, CreateMovieInput, GenreCatalogItem, ImdbImportedMovieData, ImdbImportRequest, ImdbSearchCandidate, JustWatchPlatformPopularResponse, JustWatchTop10Item, MovieCollection, MovieItem, MoviePersonalUpdate, PlatformCatalogItem, TitlePlatformResult, TmdbSuggestionCandidate } from '@/types/movie';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:3003/api');
 const TOKEN_KEY = 'moviebox_auth_token';
@@ -117,6 +117,7 @@ export const api = {
       recommendations: (type: 'movie' | 'series', id: number) => request<TmdbSuggestionCandidate[]>(`/tmdb/recommendations?type=${type}&id=${id}`),
       justwatchTop10: () => request<JustWatchTop10Item[]>('/tmdb/justwatch-top10'),
       justwatchPlatformPopular: (platform: string) => request<JustWatchPlatformPopularResponse>(`/tmdb/justwatch-platform-popular?platform=${encodeURIComponent(platform)}`),
+      searchPlatforms: (query: string) => request<TitlePlatformResult[]>(`/tmdb/search-platforms?query=${encodeURIComponent(query)}`),
     },
 };
 

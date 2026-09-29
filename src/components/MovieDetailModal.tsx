@@ -82,8 +82,8 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/55 sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="movie-detail-title">
-      <div ref={modalRef} className="movie-detail-modal max-h-[85vh] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-5xl sm:rounded-md" style={{ transform: `translate3d(${modalOffset.x}px, ${modalOffset.y}px, 0)` }}>
-        <header onPointerDown={startDragging} onPointerMove={dragModal} onPointerUp={stopDragging} onPointerCancel={stopDragging} className="flex min-h-16 touch-none select-none items-center gap-4 border-b border-slate-200 bg-white px-4 py-3 sm:cursor-move sm:px-6">
+      <div ref={modalRef} className="movie-detail-modal flex flex-col max-h-[85vh] sm:max-h-[92vh] sm:min-h-[560px] md:min-h-[600px] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-5xl sm:rounded-md" style={{ transform: `translate3d(${modalOffset.x}px, ${modalOffset.y}px, 0)` }}>
+        <header onPointerDown={startDragging} onPointerMove={dragModal} onPointerUp={stopDragging} onPointerCancel={stopDragging} className="flex min-h-16 shrink-0 touch-none select-none items-center gap-4 border-b border-slate-200 bg-white px-4 py-3 sm:cursor-move sm:px-6">
           <div className="min-w-0 flex-1">
             <h2 id="movie-detail-title" className="font-bebas truncate text-[24px] font-normal uppercase leading-7 text-ink text-left">{title}</h2>
           </div>
@@ -107,7 +107,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
           </div>
         </header>
 
-        <div className="max-h-[calc(85vh-64px)] overflow-y-auto p-4 sm:p-6">
+        <div className="max-h-[calc(85vh-64px)] sm:max-h-[calc(92vh-64px)] flex-1 overflow-y-auto p-4 sm:p-6">
           <div className="grid gap-6 md:grid-cols-[250px_minmax(0,1fr)]">
             <div className="mx-auto w-full max-w-[250px]">
               <div className="relative aspect-[2/3] overflow-hidden rounded-md bg-mist">

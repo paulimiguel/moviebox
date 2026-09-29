@@ -100,7 +100,7 @@ export const PopcornCursor = () => {
       }}
       aria-hidden="true"
     >
-      <div className="relative h-12 w-10">
+      <div className="relative h-12 w-10 origin-top-left scale-[1.28]">
         {/* Animated Popcorn Kernels jumping out */}
         <div className="absolute inset-0 overflow-visible">
           {/* Palomita 1 (Izquierda) */}

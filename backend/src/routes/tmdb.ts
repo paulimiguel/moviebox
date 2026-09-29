@@ -92,6 +92,99 @@ router.get('/search', async (req, res) => {
   }
 });
 
+router.get('/search-platforms', async (req, res) => {
+  if (!token) return res.status(503).json({ error: 'TMDB todavía no está configurado' });
+  const query = String(req.query.query || '').trim();
+  if (!query) return res.json([]);
+
+  try {
+    const payload = await tmdbRequest<{ results?: any[] }>(
+      `/search/multi?language=es-AR&include_adult=false&query=${encodeURIComponent(query)}`
+    );
+    const rawItems = (payload.results || [])
+      .filter((item) => item.media_type === 'movie' || item.media_type === 'tv')
+      .slice(0, 8);
+
+    const results = await allSettledInBatches(rawItems, async (item) => {
+      const type = item.media_type === 'movie' ? 'movie' : 'series';
+      const resource = type === 'movie' ? 'movie' : 'tv';
+
+      const [external, providers] = await Promise.all([
+        tmdbRequest<{ imdb_id?: string | null }>(`/${resource}/${item.id}/external_ids`).catch(() => null),
+        tmdbRequest<{
+          results?: Record<string, {
+            link?: string;
+            flatrate?: Array<{ provider_id: number; provider_name: string; logo_path?: string | null; display_priority?: number }>;
+            free?: Array<{ provider_id: number; provider_name: string; logo_path?: string | null; display_priority?: number }>;
+            ads?: Array<{ provider_id: number; provider_name: string; logo_path?: string | null; display_priority?: number }>;
+            buy?: Array<{ provider_id: number; provider_name: string; logo_path?: string | null; display_priority?: number }>;
+            rent?: Array<{ provider_id: number; provider_name: string; logo_path?: string | null; display_priority?: number }>;
+          }>;
+        }>(`/${resource}/${item.id}/watch/providers`).catch(() => null),
+      ]);
+
+      const ar = providers?.results?.AR;
+      const streamingRaw = [
+        ...(ar?.flatrate || []).map((p) => ({ ...p, accessType: 'flatrate' as const })),
+        ...(ar?.free || []).map((p) => ({ ...p, accessType: 'free' as const })),
+        ...(ar?.ads || []).map((p) => ({ ...p, accessType: 'ads' as const })),
+      ];
+
+      const streamingMap = new Map<number, { id: number; name: string; logoUrl: string | null; accessType: 'flatrate' | 'free' | 'ads'; priority: number }>();
+      streamingRaw.forEach((p) => {
+        if (!streamingMap.has(p.provider_id)) {
+          streamingMap.set(p.provider_id, {
+            id: p.provider_id,
+            name: p.provider_name,
+            logoUrl: p.logo_path ? `https://image.tmdb.org/t/p/original${p.logo_path}` : null,
+            accessType: p.accessType,
+            priority: p.display_priority ?? 100,
+          });
+        }
+      });
+      const streamingPlatforms = Array.from(streamingMap.values()).sort((a, b) => a.priority - b.priority);
+
+      const buyRentRaw = [
+        ...(ar?.rent || []).map((p) => ({ ...p, accessType: 'rent' as const })),
+        ...(ar?.buy || []).map((p) => ({ ...p, accessType: 'buy' as const })),
+      ];
+      const buyRentMap = new Map<number, { id: number; name: string; logoUrl: string | null; accessType: 'buy' | 'rent'; priority: number }>();
+      buyRentRaw.forEach((p) => {
+        if (!buyRentMap.has(p.provider_id) && !streamingMap.has(p.provider_id)) {
+          buyRentMap.set(p.provider_id, {
+            id: p.provider_id,
+            name: p.provider_name,
+            logoUrl: p.logo_path ? `https://image.tmdb.org/t/p/original${p.logo_path}` : null,
+            accessType: p.accessType,
+            priority: p.display_priority ?? 100,
+          });
+        }
+      });
+      const buyRentPlatforms = Array.from(buyRentMap.values()).sort((a, b) => a.priority - b.priority);
+
+      return {
+        tmdbId: item.id,
+        imdbId: external?.imdb_id || null,
+        type,
+        title: item.title || item.name,
+        originalTitle: item.original_title || item.original_name,
+        year: Number((item.release_date || item.first_air_date || '').slice(0, 4)) || null,
+        posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
+        overview: item.overview || '',
+        rating: Number.isFinite(Number(item.vote_average)) ? Number(item.vote_average) : null,
+        justwatchUrl: ar?.link || `https://www.justwatch.com/ar/buscar?q=${encodeURIComponent(item.title || item.name)}`,
+        streamingPlatforms,
+        buyRentPlatforms,
+      };
+    });
+
+    const items = results.flatMap((r) => r.status === 'fulfilled' && r.value ? [r.value] : []);
+    return res.json(items);
+  } catch (error) {
+    return res.status(502).json({ error: 'No se pudieron consultar las plataformas para el título' });
+  }
+});
+
 router.get('/suggestions', async (req, res) => {
   if (!token) return res.status(503).json({ error: 'TMDB todavia no esta configurado' });
   const query = String(req.query.query || '').trim();

@@ -400,3 +400,28 @@ export interface ImdbImportRequest {
   imdbId: string;
   type: MovieType;
 }
+
+export interface TitlePlatformResult {
+  tmdbId: number;
+  imdbId: string | null;
+  type: 'movie' | 'series';
+  title: string;
+  originalTitle: string;
+  year: number | null;
+  posterUrl: string | null;
+  overview: string;
+  rating: number | null;
+  justwatchUrl: string;
+  streamingPlatforms: Array<{
+    id: number;
+    name: string;
+    logoUrl: string | null;
+    accessType: 'flatrate' | 'free' | 'ads';
+  }>;
+  buyRentPlatforms: Array<{
+    id: number;
+    name: string;
+    logoUrl: string | null;
+    accessType: 'buy' | 'rent';
+  }>;
+}

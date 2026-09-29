@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Bookmark, ChevronDown, Eye, EyeOff, Film, Heart, LayoutGrid, LogOut, Moon, Plus, Sun, Tv } from 'lucide-react';
+import { Bookmark, ChevronDown, Edit3, Eye, EyeOff, FileText, Film, Heart, LayoutGrid, LogOut, Moon, Plus, Search, Sun, Tv } from 'lucide-react';
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/services/api';
 import { useTheme } from '@/contexts/ThemeContext';
 import { AddMovieModal } from '@/components/AddMovieModal';
+import { MoviePlatformSearchModal } from '@/components/MoviePlatformSearchModal';
 
 type LibraryFilterPreset = 'all' | 'movie' | 'series' | 'watchlist' | 'favorite' | 'watched' | 'unwatched';
 
@@ -31,8 +32,10 @@ export const Header = () => {
   const [platformMenuOpen, setPlatformMenuOpen] = useState(false);
   const [genreMenuOpen, setGenreMenuOpen] = useState(false);
   const [newsMenuOpen, setNewsMenuOpen] = useState(false);
+  const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
+  const [platformSearchOpen, setPlatformSearchOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [mobileSubmenu, setMobileSubmenu] = useState<'library' | 'news' | 'platforms' | 'genres' | 'collections' | null>(null);
+  const [mobileSubmenu, setMobileSubmenu] = useState<'library' | 'news' | 'platforms' | 'genres' | 'collections' | 'actions' | null>(null);
   const [profilePhotoFailed, setProfilePhotoFailed] = useState(false);
 
   useEffect(() => {
@@ -60,6 +63,7 @@ export const Header = () => {
   const platformMenuRef = useRef<HTMLDivElement>(null);
   const genreMenuRef = useRef<HTMLDivElement>(null);
   const newsMenuRef = useRef<HTMLDivElement>(null);
+  const actionsMenuRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const metadataQuery = useQuery({ queryKey: ['metadata'], queryFn: api.metadata.getAll });
   const collectionsQuery = useQuery({ queryKey: ['collections'], queryFn: api.collections.getAll });
@@ -71,6 +75,7 @@ export const Header = () => {
       if (!platformMenuRef.current?.contains(event.target as Node)) setPlatformMenuOpen(false);
       if (!genreMenuRef.current?.contains(event.target as Node)) setGenreMenuOpen(false);
       if (!newsMenuRef.current?.contains(event.target as Node)) setNewsMenuOpen(false);
+      if (!actionsMenuRef.current?.contains(event.target as Node)) setActionsMenuOpen(false);
       if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
     };
     document.addEventListener('mousedown', close);
@@ -139,6 +144,31 @@ export const Header = () => {
     }
   };
 
+  const handleTriggerAction = (action: 'add' | 'search-platform' | 'bulk-edit' | 'empty-fields' | 'export-txt') => {
+    setActionsMenuOpen(false);
+    setMenuOpen(false);
+    if (action === 'add') {
+      setAddModalOpen(true);
+      return;
+    }
+    if (action === 'search-platform') {
+      setPlatformSearchOpen(true);
+      return;
+    }
+    if (location.pathname !== '/') {
+      navigate('/');
+    }
+    window.setTimeout(() => {
+      if (action === 'bulk-edit') {
+        window.dispatchEvent(new CustomEvent('moviebox:action-bulk-edit'));
+      } else if (action === 'empty-fields') {
+        window.dispatchEvent(new CustomEvent('moviebox:action-empty-fields'));
+      } else if (action === 'export-txt') {
+        window.dispatchEvent(new CustomEvent('moviebox:action-export-txt'));
+      }
+    }, 60);
+  };
+
   return (
     <>
       <header className="moviebox-header sticky top-0 z-40 w-full border-b border-slate-200 bg-canvas/95 backdrop-blur">
@@ -147,7 +177,7 @@ export const Header = () => {
         <div className="ml-auto flex h-full min-w-0 items-center gap-1 sm:gap-2 lg:gap-4">
           <nav className="main-navigation hidden h-full items-end md:flex">
             <div ref={libraryMenuRef} className="relative h-full" onMouseEnter={() => setLibraryMenuOpen(true)} onMouseLeave={() => setLibraryMenuOpen(false)}>
-              <button type="button" onClick={() => { filterLibrary('all'); setPlatformMenuOpen(false); setGenreMenuOpen(false); setCollectionMenuOpen(false); setNewsMenuOpen(false); }} className={`flex h-full items-center gap-1 xl:gap-1.5 border-b-2 px-2 xl:px-3 text-xs xl:text-sm font-semibold whitespace-nowrap ${libraryMenuOpen || location.pathname === '/' ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={libraryMenuOpen}>BIBLIOTECA<ChevronDown className="h-3.5 w-3.5 xl:h-4 xl:w-4" /></button>
+              <button type="button" onClick={() => { filterLibrary('all'); setPlatformMenuOpen(false); setGenreMenuOpen(false); setCollectionMenuOpen(false); setNewsMenuOpen(false); setActionsMenuOpen(false); }} className={`flex h-full items-center gap-1 xl:gap-1.5 border-b-2 px-2 xl:px-3 text-xs xl:text-sm font-semibold whitespace-nowrap ${libraryMenuOpen || location.pathname === '/' ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={libraryMenuOpen}>BIBLIOTECA<ChevronDown className="h-3.5 w-3.5 xl:h-4 xl:w-4" /></button>
               {libraryMenuOpen && <div className="header-dropdown absolute left-0 top-full w-52 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
                 {libraryOptions.map((option) => <button key={option.preset} type="button" onClick={() => filterLibrary(option.preset)} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink">{option.icon}<span>{option.label}</span></button>)}
               </div>}
@@ -161,6 +191,7 @@ export const Header = () => {
                   setPlatformMenuOpen(false);
                   setGenreMenuOpen(false);
                   setCollectionMenuOpen(false);
+                  setActionsMenuOpen(false);
                   if (location.pathname !== '/novedades') {
                     navigate('/novedades');
                   }
@@ -204,7 +235,7 @@ export const Header = () => {
               )}
             </div>
             <div ref={platformMenuRef} className="relative h-full">
-              <button type="button" onClick={() => { setPlatformMenuOpen((current) => !current); setLibraryMenuOpen(false); setCollectionMenuOpen(false); setGenreMenuOpen(false); setNewsMenuOpen(false); }} className={`flex h-full items-center gap-1 xl:gap-1.5 border-b-2 px-2 xl:px-3 text-xs xl:text-sm font-semibold whitespace-nowrap ${platformMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={platformMenuOpen}>PLATAFORMAS<ChevronDown className="h-3.5 w-3.5 xl:h-4 xl:w-4" /></button>
+              <button type="button" onClick={() => { setPlatformMenuOpen((current) => !current); setLibraryMenuOpen(false); setCollectionMenuOpen(false); setGenreMenuOpen(false); setNewsMenuOpen(false); setActionsMenuOpen(false); }} className={`flex h-full items-center gap-1 xl:gap-1.5 border-b-2 px-2 xl:px-3 text-xs xl:text-sm font-semibold whitespace-nowrap ${platformMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={platformMenuOpen}>PLATAFORMAS<ChevronDown className="h-3.5 w-3.5 xl:h-4 xl:w-4" /></button>
               {platformMenuOpen && <div className="header-dropdown absolute left-0 top-full w-56 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
                 <div className="max-h-72 overflow-y-auto">
                   {(metadataQuery.data?.platforms || []).length ? (metadataQuery.data?.platforms || []).map((platform) => <button key={platform.id} type="button" onClick={() => filterLibraryByPlatform(platform.id)} className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink">{platform.name}</button>) : <p className="px-3 py-3 text-sm text-slate-400">No hay plataformas.</p>}
@@ -213,7 +244,7 @@ export const Header = () => {
               </div>}
             </div>
             <div ref={genreMenuRef} className="relative h-full">
-              <button type="button" onClick={() => { setGenreMenuOpen((current) => !current); setLibraryMenuOpen(false); setCollectionMenuOpen(false); setPlatformMenuOpen(false); setNewsMenuOpen(false); }} className={`flex h-full items-center gap-1 xl:gap-1.5 border-b-2 px-2 xl:px-3 text-xs xl:text-sm font-semibold whitespace-nowrap ${genreMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={genreMenuOpen}>GÉNEROS<ChevronDown className="h-3.5 w-3.5 xl:h-4 xl:w-4" /></button>
+              <button type="button" onClick={() => { setGenreMenuOpen((current) => !current); setLibraryMenuOpen(false); setCollectionMenuOpen(false); setPlatformMenuOpen(false); setNewsMenuOpen(false); setActionsMenuOpen(false); }} className={`flex h-full items-center gap-1 xl:gap-1.5 border-b-2 px-2 xl:px-3 text-xs xl:text-sm font-semibold whitespace-nowrap ${genreMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={genreMenuOpen}>GÉNEROS<ChevronDown className="h-3.5 w-3.5 xl:h-4 xl:w-4" /></button>
               {genreMenuOpen && <div className="header-dropdown absolute left-0 top-full w-56 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
                 <div className="max-h-72 overflow-y-auto">
                   {(metadataQuery.data?.genres || []).length ? (metadataQuery.data?.genres || []).map((genre) => <button key={genre.id} type="button" onClick={() => filterLibraryByGenre(genre.id)} className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink">{genre.name}</button>) : <p className="px-3 py-3 text-sm text-slate-400">No hay géneros.</p>}
@@ -222,7 +253,7 @@ export const Header = () => {
               </div>}
             </div>
             <div ref={collectionMenuRef} className="relative h-full">
-              <button type="button" onClick={() => { setCollectionMenuOpen((current) => !current); setLibraryMenuOpen(false); setPlatformMenuOpen(false); setGenreMenuOpen(false); setNewsMenuOpen(false); }} className={`flex h-full items-center gap-1 xl:gap-1.5 border-b-2 px-2 xl:px-3 text-xs xl:text-sm font-semibold whitespace-nowrap ${collectionMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={collectionMenuOpen}>COLECCIONES<ChevronDown className="h-3.5 w-3.5 xl:h-4 xl:w-4" /></button>
+              <button type="button" onClick={() => { setCollectionMenuOpen((current) => !current); setLibraryMenuOpen(false); setPlatformMenuOpen(false); setGenreMenuOpen(false); setNewsMenuOpen(false); setActionsMenuOpen(false); }} className={`flex h-full items-center gap-1 xl:gap-1.5 border-b-2 px-2 xl:px-3 text-xs xl:text-sm font-semibold whitespace-nowrap ${collectionMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={collectionMenuOpen}>COLECCIONES<ChevronDown className="h-3.5 w-3.5 xl:h-4 xl:w-4" /></button>
               {collectionMenuOpen && <div className="header-dropdown absolute left-0 top-full w-64 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
                 <div className="max-h-72 overflow-y-auto">
                   {(collectionsQuery.data || []).length ? (collectionsQuery.data || []).map((collection) => <Link key={collection.id} to={`/colecciones/${collection.id}`} onClick={() => setCollectionMenuOpen(false)} className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink">{collection.name}</Link>) : <p className="px-3 py-3 text-sm text-slate-400">No hay colecciones.</p>}
@@ -230,13 +261,82 @@ export const Header = () => {
                 <Link to="/colecciones" onClick={() => setCollectionMenuOpen(false)} className="mt-1 flex w-full items-center gap-2 border-t border-slate-100 px-3 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink"><LayoutGrid className="h-4 w-4" />Mostrar colecciones</Link>
               </div>}
             </div>
-            <button
-              type="button"
-              onClick={() => setAddModalOpen(true)}
-              className={`flex h-full items-center gap-1 xl:gap-1.5 border-b-2 px-2 xl:px-3 text-xs xl:text-sm font-semibold whitespace-nowrap transition-colors ${addModalOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`}
-            >
-              AGREGAR
-            </button>
+
+            {/* ACCIONES */}
+            <div ref={actionsMenuRef} className="relative h-full" onMouseEnter={() => setActionsMenuOpen(true)} onMouseLeave={() => setActionsMenuOpen(false)}>
+              <button
+                type="button"
+                onClick={() => {
+                  setActionsMenuOpen((c) => !c);
+                  setLibraryMenuOpen(false);
+                  setCollectionMenuOpen(false);
+                  setPlatformMenuOpen(false);
+                  setGenreMenuOpen(false);
+                  setNewsMenuOpen(false);
+                }}
+                className={`flex h-full items-center gap-1 xl:gap-1.5 border-b-2 px-2 xl:px-3 text-xs xl:text-sm font-semibold whitespace-nowrap ${actionsMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`}
+                aria-expanded={actionsMenuOpen}
+              >
+                ACCIONES<ChevronDown className="h-3.5 w-3.5 xl:h-4 xl:w-4" />
+              </button>
+              {actionsMenuOpen && (
+                <div className="header-dropdown absolute left-0 top-full w-64 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
+                  <button
+                    type="button"
+                    onClick={() => handleTriggerAction('add')}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                  >
+                    <Plus className="h-4 w-4 text-aqua" />
+                    <span>Agregar títulos</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTriggerAction('search-platform')}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                  >
+                    <Tv className="h-4 w-4" />
+                    <span>Buscar título en plataforma</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTriggerAction('bulk-edit')}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                  >
+                    <Edit3 className="h-4 w-4" />
+                    <span>Editar campos comunes</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTriggerAction('empty-fields')}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                  >
+                    <Search className="h-4 w-4" />
+                    <span>Buscar campos vacíos</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTriggerAction('export-txt')}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                  >
+                    <FileText className="h-4 w-4" />
+                    <span>Exportar títulos a TXT</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Botón + después de acciones */}
+            <div className="flex h-full items-center pl-1 xl:pl-1.5">
+              <button
+                type="button"
+                onClick={() => setAddModalOpen(true)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-coral text-white shadow-sm hover:bg-red-600 transition-colors"
+                title="Agregar títulos"
+                aria-label="Agregar títulos"
+              >
+                <Plus className="h-4 w-4" strokeWidth={2.5} />
+              </button>
+            </div>
           </nav>
           <div ref={menuRef} className="relative">
           <button
@@ -453,6 +553,63 @@ export const Header = () => {
                 )}
               </div>
 
+              {/* Acciones (colapsable) */}
+              <div className="mt-1 border-b border-slate-100 py-1 md:hidden">
+                <button
+                  type="button"
+                  onClick={() => setMobileSubmenu((c) => c === 'actions' ? null : 'actions')}
+                  className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500 hover:bg-slate-50 hover:text-ink transition-colors"
+                  aria-expanded={mobileSubmenu === 'actions'}
+                >
+                  <span>Acciones</span>
+                  <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${mobileSubmenu === 'actions' ? 'rotate-180' : ''}`} />
+                </button>
+                {mobileSubmenu === 'actions' && (
+                  <div className="space-y-0.5 pb-1 pl-2">
+                    <button
+                      type="button"
+                      onClick={() => handleTriggerAction('add')}
+                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                    >
+                      <Plus className="h-4 w-4 text-aqua" />
+                      <span>Agregar títulos</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleTriggerAction('search-platform')}
+                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                    >
+                      <Tv className="h-4 w-4" />
+                      <span>Buscar título en plataforma</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleTriggerAction('bulk-edit')}
+                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                    >
+                      <Edit3 className="h-4 w-4" />
+                      <span>Editar campos comunes</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleTriggerAction('empty-fields')}
+                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                    >
+                      <Search className="h-4 w-4" />
+                      <span>Buscar campos vacíos</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleTriggerAction('export-txt')}
+                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                    >
+                      <FileText className="h-4 w-4" />
+                      <span>Exportar títulos a TXT</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
               {/* Temas */}
               <div className="border-b border-slate-100 px-3 py-2">
                 <p className="mb-2 text-xs font-semibold uppercase text-slate-400">Temas</p>
@@ -472,7 +629,7 @@ export const Header = () => {
                 className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink md:hidden"
               >
                 <Plus className="h-4 w-4 text-aqua" />
-                <span>Agregar</span>
+                <span>Agregar títulos</span>
               </button>
 
               {/* Cerrar sesión */}
@@ -487,6 +644,7 @@ export const Header = () => {
       </div>
     </header>
     <AddMovieModal isOpen={addModalOpen} onClose={handleCloseAddModal} />
+    <MoviePlatformSearchModal isOpen={platformSearchOpen} onClose={() => setPlatformSearchOpen(false)} />
   </>
 );
 };

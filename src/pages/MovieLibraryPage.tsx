@@ -7,6 +7,7 @@ import { MovieCard, type MovieViewMode } from '@/components/MovieCard';
 import { MovieDetailModal } from '@/components/MovieDetailModal';
 import { MovieEditModal } from '@/components/MovieEditModal';
 import { MovieExportTxtModal } from '@/components/MovieExportTxtModal';
+import { MoviePlatformSearchModal } from '@/components/MoviePlatformSearchModal';
 import { EmptyFieldsModal, type EmptyMovieField } from '@/components/EmptyFieldsModal';
 import { MovieLibraryToolbar, type MovieBulkMode, type MovieLibrarySort, type MovieSearchScope } from '@/components/MovieLibraryToolbar';
 import { useAuth } from '@/contexts/AuthContext';
@@ -77,6 +78,7 @@ export const MovieLibraryPage = () => {
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [exportTxtOpen, setExportTxtOpen] = useState(false);
+  const [platformSearchOpen, setPlatformSearchOpen] = useState(false);
   const [emptyFieldsOpen, setEmptyFieldsOpen] = useState(false);
   const [emptyFields, setEmptyFields] = useState<EmptyMovieField[]>([]);
 
@@ -156,10 +158,24 @@ export const MovieLibraryPage = () => {
       }
     };
     const handleCollectionFilter = (event: Event) => applyCollectionFilter((event as CustomEvent<string>).detail);
+    const handleActionBulkEdit = () => {
+      setBulkMode('edit');
+      setSelectedIds(new Set());
+    };
+    const handleActionExportTxt = () => {
+      setBulkMode('exportTxt');
+      setSelectedIds(new Set());
+    };
+    const handleActionEmptyFields = () => {
+      setEmptyFieldsOpen(true);
+    };
     window.addEventListener('moviebox:filter-library', handleLibraryFilter);
     window.addEventListener('moviebox:filter-genre', handleGenreFilter);
     window.addEventListener('moviebox:filter-platform', handlePlatformFilter);
     window.addEventListener('moviebox:filter-collection', handleCollectionFilter);
+    window.addEventListener('moviebox:action-bulk-edit', handleActionBulkEdit);
+    window.addEventListener('moviebox:action-export-txt', handleActionExportTxt);
+    window.addEventListener('moviebox:action-empty-fields', handleActionEmptyFields);
     try {
       const storedLibraryFilter = window.sessionStorage.getItem('moviebox:library-filter') as LibraryFilterPreset | null;
       if (storedLibraryFilter && LIBRARY_FILTER_PRESETS.includes(storedLibraryFilter)) applyLibraryFilter(storedLibraryFilter);
@@ -177,6 +193,9 @@ export const MovieLibraryPage = () => {
       window.removeEventListener('moviebox:filter-genre', handleGenreFilter);
       window.removeEventListener('moviebox:filter-platform', handlePlatformFilter);
       window.removeEventListener('moviebox:filter-collection', handleCollectionFilter);
+      window.removeEventListener('moviebox:action-bulk-edit', handleActionBulkEdit);
+      window.removeEventListener('moviebox:action-export-txt', handleActionExportTxt);
+      window.removeEventListener('moviebox:action-empty-fields', handleActionEmptyFields);
     };
   }, []);
 
@@ -327,7 +346,7 @@ export const MovieLibraryPage = () => {
         sortDirection={sortDirection}
         onSortChange={handleSortChange}
         filtersOpen={filtersOpen}
-        onFiltersToggle={() => { setFiltersOpen((current) => !current); setBulkMode(null); setSelectedIds(new Set()); }}
+        onFiltersToggle={() => setFiltersOpen((current) => !current)}
         bulkMode={bulkMode}
         onBulkModeChange={handleBulkModeChange}
         genreIds={genreIds}
@@ -353,29 +372,30 @@ export const MovieLibraryPage = () => {
         emptyFieldsCount={emptyFields.length}
         onEmptyFieldsSearch={() => setEmptyFieldsOpen(true)}
         onClearEmptyFields={() => setEmptyFields([])}
-      />
-
-      {bulkMode && (
-        <section className="library-toolbar sticky top-[72px] z-20 border-b border-slate-200 bg-white shadow-card">
-          <div className="mx-auto flex min-h-16 max-w-[1500px] flex-wrap sm:flex-nowrap items-center gap-2 px-4 py-3 sm:px-6">
-            <button type="button" onClick={() => setSelectedIds(new Set(filteredMovies.map((movie) => movie.id)))} className="secondary-button gap-2 shrink-0"><CheckSquare className="h-4 w-4" />Seleccionar todas</button>
-            <button type="button" onClick={() => { setSelectedIds(new Set()); selectionAnchorId.current = null; }} className="secondary-button gap-2 shrink-0"><Square className="h-4 w-4" />Quitar seleccion</button>
-            <span className="text-sm text-slate-500 whitespace-nowrap">{selectedMovies.length} seleccionadas <span className="bulk-shift-hint hidden 2xl:inline">· Shift + clic selecciona un rango</span></span>
-            <div className="ml-auto flex items-center gap-2 shrink-0">
-              {bulkMode === 'edit' && <button type="button" onClick={() => setBulkEditOpen(true)} disabled={!selectedMovies.length} className="primary-button"><Edit3 className="h-4 w-4" />Editar campos comunes</button>}
-              {bulkMode === 'print' && <><button type="button" onClick={() => printMovies(selectedMovies, 'cards')} disabled={!selectedMovies.length} className="secondary-button gap-2"><Printer className="h-4 w-4" />Imprimir tarjetas</button><button type="button" onClick={() => printMovies(selectedMovies, 'list')} disabled={!selectedMovies.length} className="secondary-button gap-2"><Printer className="h-4 w-4" />Imprimir lista</button></>}
-              {bulkMode === 'delete' && <button type="button" onClick={() => setDeleteConfirmOpen(true)} disabled={!selectedMovies.length} className="primary-button bg-red-600 hover:bg-red-700"><Trash2 className="h-4 w-4" />Eliminar movies</button>}
-              {bulkMode === 'exportTxt' && (
-                <button type="button" onClick={() => setExportTxtOpen(true)} disabled={!selectedMovies.length} className="primary-button gap-2">
-                  <FileText className="h-4 w-4" />
-                  Exportar títulos a TXT
-                </button>
-              )}
-              <button type="button" onClick={() => handleBulkModeChange(null)} className="icon-button" title="Cerrar" aria-label="Cerrar"><X className="h-4 w-4" /></button>
+        onSearchPlatformOpen={() => setPlatformSearchOpen(true)}
+      >
+        {bulkMode && (
+          <div className="border-t border-slate-200 bg-white shadow-card">
+            <div className="mx-auto flex min-h-16 max-w-[1500px] flex-wrap sm:flex-nowrap items-center gap-2 px-4 py-3 sm:px-6">
+              <button type="button" onClick={() => setSelectedIds(new Set(filteredMovies.map((movie) => movie.id)))} className="secondary-button gap-2 shrink-0"><CheckSquare className="h-4 w-4" />Seleccionar todas</button>
+              <button type="button" onClick={() => { setSelectedIds(new Set()); selectionAnchorId.current = null; }} className="secondary-button gap-2 shrink-0"><Square className="h-4 w-4" />Quitar seleccion</button>
+              <span className="text-sm text-slate-500 whitespace-nowrap">{selectedMovies.length} seleccionadas <span className="bulk-shift-hint hidden 2xl:inline">· Shift + clic selecciona un rango</span></span>
+              <div className="ml-auto flex items-center gap-2 shrink-0">
+                {bulkMode === 'edit' && <button type="button" onClick={() => setBulkEditOpen(true)} disabled={!selectedMovies.length} className="primary-button"><Edit3 className="h-4 w-4" />Editar campos comunes</button>}
+                {bulkMode === 'print' && <><button type="button" onClick={() => printMovies(selectedMovies, 'cards')} disabled={!selectedMovies.length} className="secondary-button gap-2"><Printer className="h-4 w-4" />Imprimir tarjetas</button><button type="button" onClick={() => printMovies(selectedMovies, 'list')} disabled={!selectedMovies.length} className="secondary-button gap-2"><Printer className="h-4 w-4" />Imprimir lista</button></>}
+                {bulkMode === 'delete' && <button type="button" onClick={() => setDeleteConfirmOpen(true)} disabled={!selectedMovies.length} className="primary-button bg-red-600 hover:bg-red-700"><Trash2 className="h-4 w-4" />Eliminar movies</button>}
+                {bulkMode === 'exportTxt' && (
+                  <button type="button" onClick={() => setExportTxtOpen(true)} disabled={!selectedMovies.length} className="primary-button gap-2">
+                    <FileText className="h-4 w-4" />
+                    Exportar títulos a TXT
+                  </button>
+                )}
+                <button type="button" onClick={() => handleBulkModeChange(null)} className="icon-button" title="Cerrar" aria-label="Cerrar"><X className="h-4 w-4" /></button>
+              </div>
             </div>
           </div>
-        </section>
-      )}
+        )}
+      </MovieLibraryToolbar>
 
       <div className="mx-auto max-w-[1500px] px-3 py-5 sm:px-6 sm:py-7">
         {moviesQuery.isLoading ? <div className="grid min-h-[45vh] place-items-center"><Loader2 className="h-8 w-8 animate-spin text-aqua" /></div>
@@ -388,8 +408,9 @@ export const MovieLibraryPage = () => {
       {detailMovie && <MovieDetailModal movie={detailMovie} onClose={() => setDetailMovie(null)} onEdit={(movie) => { setDetailMovie(null); setEditingMovie(movie); }} onDelete={(movie) => { setSelectedIds(new Set([movie.id])); setDetailMovie(null); setDeleteConfirmOpen(true); }} onPersonal={(movie, field) => personalMutation.mutate({ movie, field })} onRating={(movie, rating) => ratingMutation.mutate({ movie, rating })} onCollections={(movie, collectionIds) => collectionsMutation.mutate({ movie, collectionIds })} onPrevious={adjacentMovie(detailMovie, -1) ? () => setDetailMovie(adjacentMovie(detailMovie, -1)) : undefined} onNext={adjacentMovie(detailMovie, 1) ? () => setDetailMovie(adjacentMovie(detailMovie, 1)) : undefined} />}
       {editingMovie && <MovieEditModal key={editingMovie.id} movie={editingMovie} onClose={() => setEditingMovie(null)} onSaved={() => { refreshLibrary(); setEditingMovie(null); }} onPrevious={adjacentMovie(editingMovie, -1) ? () => setEditingMovie(adjacentMovie(editingMovie, -1)) : undefined} onNext={adjacentMovie(editingMovie, 1) ? () => setEditingMovie(adjacentMovie(editingMovie, 1)) : undefined} />}
       {emptyFieldsOpen && <EmptyFieldsModal selected={emptyFields} onClose={() => setEmptyFieldsOpen(false)} onApply={(fields) => { setEmptyFields(fields); setEmptyFieldsOpen(false); }} />}
-      {bulkEditOpen && <MovieBulkEditModal movies={selectedMovies} genres={metadataQuery.data?.genres || []} platforms={metadataQuery.data?.platforms || []} countries={metadataQuery.data?.countries || []} collections={collectionsQuery.data || []} onClose={() => setBulkEditOpen(false)} onSaved={() => { refreshLibrary(); setBulkEditOpen(false); setSelectedIds(new Set()); setBulkMode(null); }} />}
+      {bulkEditOpen && <MovieBulkEditModal movies={selectedMovies} genres={metadataQuery.data?.genres || []} platforms={metadataQuery.data?.platforms || []} countries={metadataQuery.data?.countries || []} collections={collectionsQuery.data || []} onClose={() => setBulkEditOpen(false)} onSaved={() => { refreshLibrary(); setBulkEditOpen(false); setSelectedIds(new Set()); }} />}
       {exportTxtOpen && <MovieExportTxtModal movies={selectedMovies} onClose={() => setExportTxtOpen(false)} />}
+      {platformSearchOpen && <MoviePlatformSearchModal isOpen={platformSearchOpen} onClose={() => setPlatformSearchOpen(false)} />}
       {deleteConfirmOpen && (
         <div className="fixed inset-0 z-[70] grid place-items-center bg-ink/55 p-4" role="dialog" aria-modal="true" aria-labelledby="delete-movies-title">
           <div className="movie-detail-modal w-full max-w-md overflow-hidden rounded-md bg-canvas shadow-xl">
