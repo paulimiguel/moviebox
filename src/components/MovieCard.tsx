@@ -111,8 +111,8 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
 
   if (mode === 'list') {
     return (
-      <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card relative grid min-h-[140px] cursor-pointer grid-cols-[92px_minmax(0,1fr)] items-stretch gap-x-4 gap-y-3 border-b border-slate-200 bg-white p-3 transition-colors hover:bg-slate-50 lg:grid-cols-[100px_minmax(240px,1fr)_minmax(230px,auto)] lg:items-center ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40' : ''} ${selected ? 'movie-card-selected' : ''}`}>
-        <div className="group/poster relative row-span-2 w-[92px] aspect-[2/3] shrink-0 self-start overflow-hidden rounded bg-slate-100 lg:row-span-1 lg:w-auto lg:h-full lg:self-center">
+      <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card relative grid min-h-[140px] cursor-pointer grid-cols-[116px_minmax(0,1fr)] items-stretch gap-x-4 gap-y-3 border-b border-slate-200 bg-white p-3 transition-colors hover:bg-slate-50 lg:grid-cols-[100px_minmax(240px,1fr)_minmax(230px,auto)] lg:items-center ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40' : ''} ${selected ? 'movie-card-selected' : ''}`}>
+        <div className="group/poster relative row-span-2 w-[116px] aspect-[2/3] shrink-0 self-start overflow-hidden rounded bg-slate-100 lg:row-span-1 lg:w-auto lg:h-full lg:self-center">
           {selectionMark(true)}
           {poster('h-full w-full object-contain md:object-cover transition-transform duration-300 ease-out group-hover/poster:scale-105')}
         </div>
