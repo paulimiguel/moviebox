@@ -132,7 +132,6 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
     && props.favorite === 'all'
     && props.watchlist === 'all'
     && props.emptyFieldsCount === 0;
-  const filterButtonClass = (active: boolean) => `library-filter-button moviebox-translucent-action inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-md border px-2.5 text-xs font-semibold whitespace-nowrap transition-colors ${active ? 'border-coral bg-coral text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`;
   const filterButtonClass = (active: boolean) => `library-filter-button moviebox-translucent-action inline-flex h-10 w-full items-center justify-center gap-1 sm:gap-1.5 rounded-md border px-1 sm:px-1.5 text-xs font-semibold whitespace-nowrap transition-colors ${active ? 'border-coral bg-coral text-white shadow-sm' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`;
   const quickTypeButtonClass = (active: boolean) => `library-filter-button moviebox-translucent-action inline-flex h-8 items-center justify-center rounded-md border px-2.5 text-[10px] font-semibold uppercase transition-colors shrink-0 ${active ? 'border-coral bg-coral text-white shadow-sm' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`;
   const toggleGenre = (genreId: string) => {
@@ -252,8 +251,6 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
         <div className="relative border-t border-slate-100 bg-canvas">
           <button type="button" onClick={() => { setGenreSearch(''); setPlatformSearch(''); setOpenMenu(null); props.onFiltersToggle(); }} className="absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-md text-slate-400 hover:bg-slate-200 hover:text-ink" title="Cerrar filtros" aria-label="Cerrar filtros"><X className="h-4 w-4" /></button>
           <div className="mx-auto flex max-w-[1500px] flex-col gap-3 px-4 py-3.5 pr-12 sm:px-6 sm:pr-14 2xl:flex-row 2xl:items-end 2xl:pr-14">
-            <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-end sm:gap-3">
-              <div className="relative min-w-0 flex-1 sm:max-w-xs">
             <div className="flex flex-col sm:flex-row sm:items-end gap-1.5 sm:gap-2 w-full max-w-[960px]">
               <div className="relative min-w-0 flex-1">
                 <span className="field-label">Género</span>
@@ -277,7 +274,6 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
                 )}
               </div>
 
-              <div className="relative min-w-0 flex-1 sm:max-w-xs">
               <div className="relative min-w-0 flex-1">
                 <span className="field-label">Plataforma</span>
                 <button type="button" onClick={() => { setPlatformSearch(''); setOpenMenu(openMenu === 'platform' ? null : 'platform'); }} className={`control flex w-full items-center justify-between gap-2 text-left ${openMenu === 'platform' ? 'border-coral' : ''}`} aria-haspopup="listbox" aria-expanded={openMenu === 'platform'}>
@@ -300,21 +296,12 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
                 )}
               </div>
 
-              <div className="w-full sm:w-28 md:w-32 shrink-0">
               <div className="w-full sm:w-36 md:w-44 shrink-0">
                 <label htmlFor="movie-year-filter" className="field-label">Año</label>
                 <input id="movie-year-filter" className="control w-full" type="text" inputMode="numeric" value={yearDraft} onChange={(event) => setYearDraft(event.target.value.replace(/\D/g, '').slice(0, 4))} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addYear(); } }} placeholder="Escribir y Enter" aria-label="Agregar año" />
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 shrink-0 2xl:flex-nowrap">
-              <button type="button" aria-pressed={props.type === 'movie'} onClick={() => props.onTypeChange(props.type === 'movie' ? 'all' : 'movie')} className={filterButtonClass(props.type === 'movie')}><Film className="h-4 w-4" />Película</button>
-              <button type="button" aria-pressed={props.type === 'series'} onClick={() => props.onTypeChange(props.type === 'series' ? 'all' : 'series')} className={filterButtonClass(props.type === 'series')}><Tv className="h-4 w-4" />Serie</button>
-              <button type="button" aria-pressed={props.watched === 'watched'} onClick={() => props.onWatchedChange(props.watched === 'watched' ? 'all' : 'watched')} className={filterButtonClass(props.watched === 'watched')}><Eye className="h-4 w-4" />Watched</button>
-              <button type="button" aria-pressed={props.watched === 'unwatched'} onClick={() => props.onWatchedChange(props.watched === 'unwatched' ? 'all' : 'unwatched')} className={filterButtonClass(props.watched === 'unwatched')}><EyeOff className="h-4 w-4" />Unwatched</button>
-              <button type="button" aria-pressed={props.favorite === 'favorites'} onClick={() => props.onFavoriteChange(props.favorite === 'favorites' ? 'all' : 'favorites')} className={filterButtonClass(props.favorite === 'favorites')}><Heart className={`h-4 w-4 ${props.favorite === 'favorites' ? 'fill-current' : ''}`} />Like</button>
-              <button type="button" aria-pressed={props.watchlist === 'watchlist'} onClick={() => props.onWatchlistChange(props.watchlist === 'watchlist' ? 'all' : 'watchlist')} className={filterButtonClass(props.watchlist === 'watchlist')}><Bookmark className={`h-4 w-4 ${props.watchlist === 'watchlist' ? 'fill-current' : ''}`} />Watchlist</button>
-              <button type="button" aria-pressed={allFiltersClear} onClick={() => { props.onClearFilters(); setGenreSearch(''); setPlatformSearch(''); setYearDraft(''); setOpenMenu(null); }} className={filterButtonClass(allFiltersClear)}>Todos</button>
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-1.5 sm:gap-2 w-full max-w-[960px]">
               <button type="button" aria-pressed={props.type === 'movie'} onClick={() => props.onTypeChange(props.type === 'movie' ? 'all' : 'movie')} className={filterButtonClass(props.type === 'movie')}><Film className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">Película</span></button>
               <button type="button" aria-pressed={props.type === 'series'} onClick={() => props.onTypeChange(props.type === 'series' ? 'all' : 'series')} className={filterButtonClass(props.type === 'series')}><Tv className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">Serie</span></button>
