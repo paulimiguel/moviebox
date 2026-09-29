@@ -315,14 +315,14 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-1.5 sm:gap-2 w-full max-w-[960px]">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-1.5 sm:gap-2 w-full max-w-[960px]">
               <button type="button" aria-pressed={props.type === 'movie'} onClick={() => props.onTypeChange(props.type === 'movie' ? 'all' : 'movie')} className={filterButtonClass(props.type === 'movie')}><Film className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">Película</span></button>
               <button type="button" aria-pressed={props.type === 'series'} onClick={() => props.onTypeChange(props.type === 'series' ? 'all' : 'series')} className={filterButtonClass(props.type === 'series')}><Tv className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">Serie</span></button>
               <button type="button" aria-pressed={props.watched === 'watched'} onClick={() => props.onWatchedChange(props.watched === 'watched' ? 'all' : 'watched')} className={filterButtonClass(props.watched === 'watched')}><Eye className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">Watched</span></button>
               <button type="button" aria-pressed={props.watched === 'unwatched'} onClick={() => props.onWatchedChange(props.watched === 'unwatched' ? 'all' : 'unwatched')} className={filterButtonClass(props.watched === 'unwatched')}><EyeOff className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">Unwatched</span></button>
               <button type="button" aria-pressed={props.favorite === 'favorites'} onClick={() => props.onFavoriteChange(props.favorite === 'favorites' ? 'all' : 'favorites')} className={filterButtonClass(props.favorite === 'favorites')}><Heart className={`h-4 w-4 shrink-0 ${props.favorite === 'favorites' ? 'fill-current' : ''}`} /><span className="whitespace-nowrap">Like</span></button>
               <button type="button" aria-pressed={props.watchlist === 'watchlist'} onClick={() => props.onWatchlistChange(props.watchlist === 'watchlist' ? 'all' : 'watchlist')} className={filterButtonClass(props.watchlist === 'watchlist')}><Bookmark className={`h-4 w-4 shrink-0 ${props.watchlist === 'watchlist' ? 'fill-current' : ''}`} /><span className="whitespace-nowrap">Watchlist</span></button>
-              <button type="button" aria-pressed={allFiltersClear} onClick={() => { props.onClearFilters(); setGenreSearch(''); setPlatformSearch(''); setYearDraft(''); setOpenMenu(null); }} className={filterButtonClass(allFiltersClear)}><span className="whitespace-nowrap">Todos</span></button>
+              <button type="button" aria-pressed={allFiltersClear} onClick={() => { props.onClearFilters(); setGenreSearch(''); setPlatformSearch(''); setYearDraft(''); setOpenMenu(null); }} className={`${filterButtonClass(allFiltersClear)} col-start-2 sm:col-start-auto`}><span className="whitespace-nowrap">Todos</span></button>
             </div>
           </div>
         </div>

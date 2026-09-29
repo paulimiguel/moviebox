@@ -286,7 +286,7 @@ export const MovieLibraryPage = () => {
     return index >= 0 ? filteredMovies[index + offset] || null : null;
   };
   const gridClass = viewMode === 'small'
-    ? 'grid grid-cols-2 gap-2 min-[520px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-9'
+    ? 'grid grid-cols-3 gap-2 min-[520px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-8 2xl:grid-cols-9'
     : viewMode === 'mediumIcons'
       ? 'grid grid-cols-2 gap-3 min-[520px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 sm:gap-4 2xl:grid-cols-7'
     : 'grid grid-cols-1 gap-4 min-[520px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 sm:gap-5 2xl:grid-cols-5';

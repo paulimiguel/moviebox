@@ -112,29 +112,29 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
   if (mode === 'list') {
     return (
       <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card relative grid min-h-[140px] cursor-pointer grid-cols-[92px_minmax(0,1fr)] items-stretch gap-x-4 gap-y-3 border-b border-slate-200 bg-white p-3 transition-colors hover:bg-slate-50 lg:grid-cols-[100px_minmax(240px,1fr)_minmax(230px,auto)] lg:items-center ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40' : ''} ${selected ? 'movie-card-selected' : ''}`}>
-        <div className="group/poster relative row-span-2 min-h-[140px] overflow-hidden bg-slate-100 lg:row-span-1 lg:h-full">
+        <div className="group/poster relative row-span-2 w-[92px] aspect-[2/3] shrink-0 self-start overflow-hidden rounded bg-slate-100 lg:row-span-1 lg:w-auto lg:h-full lg:self-center">
           {selectionMark(true)}
-          {poster('h-full w-full object-cover transition-transform duration-300 ease-out group-hover/poster:scale-105')}
+          {poster('h-full w-full object-contain md:object-cover transition-transform duration-300 ease-out group-hover/poster:scale-105')}
         </div>
 
-        <div className="min-w-0 self-center">
+        <div className="min-w-0 self-center text-right lg:text-left">
           <h2 className="font-bebas line-clamp-2 text-[28px] font-normal uppercase leading-8 text-ink">{title}</h2>
           {spanishTitle && <p className="mt-0.5 text-sm font-medium text-slate-600">{spanishTitle}</p>}
           {(movie.year || movie.imdbRating != null) && (
-            <div className="mt-1 flex items-center justify-between gap-2 text-slate-500">
-              <div className="flex flex-wrap items-center gap-3">
+            <div className="mt-1 flex items-center justify-end lg:justify-between gap-2 text-slate-500">
+              <div className="flex flex-wrap items-center justify-end lg:justify-start gap-3">
                 {movie.year && <span className="text-base font-bold">{movie.year}</span>}
                 {movie.imdbRating != null && <span className="inline-flex items-center gap-1 text-sm font-semibold"><Star className="h-4 w-4 fill-amber-400 text-amber-400" />{movie.imdbRating}</span>}
               </div>
             </div>
           )}
           {genres && <p className="mt-2 text-sm leading-5 text-slate-500">{genres}</p>}
-          <div className="mt-2">
+          <div className="mt-2 flex justify-end lg:justify-start">
             <span className={`inline-flex ${typeBadgeStyle}`}>{typeLabel}</span>
           </div>
         </div>
 
-        <div className="flex min-w-0 flex-col items-start self-center gap-2.5 text-xs lg:items-end">
+        <div className="flex min-w-0 flex-col items-end self-center gap-2.5 text-xs">
           <PlatformLogos platforms={movie.platforms} limit={3} />
           {catalogLinks(true, true)}
           {actionControls(false, true)}
@@ -237,12 +237,12 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
   }
 
   return (
-    <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card group relative min-w-0 cursor-pointer rounded-md border bg-white shadow-card transition-transform hover:-translate-y-0.5 ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40' : ''} ${selected ? 'movie-card-selected' : 'border-slate-200'}`}>
+    <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card group relative min-w-0 cursor-pointer overflow-hidden rounded-md border bg-white shadow-card transition-transform hover:-translate-y-0.5 ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40' : ''} ${selected ? 'movie-card-selected' : 'border-slate-200'}`}>
       {selectionMark()}
       <div className="relative aspect-[2/3]">
-        <div className="h-full overflow-hidden rounded-t-md bg-slate-100">{poster('h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]')}</div>
+        <div className="h-full overflow-hidden rounded-md md:rounded-b-none bg-slate-100">{poster('h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]')}</div>
       </div>
-      <div className="p-2">
+      <div className="p-2 hidden md:block">
         <h2 className="font-bebas line-clamp-2 text-[18px] font-normal uppercase leading-5 text-ink">{title}</h2>
         <div className="mt-1 flex justify-end">{actionControls(false, true, true)}</div>
       </div>
