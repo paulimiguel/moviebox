@@ -285,8 +285,8 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
         <div className="relative border-t border-slate-100 bg-canvas">
           <button type="button" onClick={() => { setGenreSearch(''); setPlatformSearch(''); setOpenMenu(null); props.onFiltersToggle(); }} className="absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-md text-slate-400 hover:bg-slate-200 hover:text-ink" title="Cerrar filtros" aria-label="Cerrar filtros"><X className="h-4 w-4" /></button>
           <div className="mx-auto flex max-w-[1500px] flex-col gap-3 px-4 py-3.5 pr-12 sm:px-6 sm:pr-14 2xl:flex-row 2xl:items-end 2xl:pr-14">
-            <div className="flex flex-col sm:flex-row sm:items-end gap-1.5 sm:gap-2 w-full max-w-[960px]">
-              <div className="relative min-w-0 flex-1">
+            <div className="grid grid-cols-2 sm:flex sm:flex-row sm:items-end gap-1.5 sm:gap-2 w-full max-w-[960px]">
+              <div className={`relative min-w-0 flex-1 ${openMenu === 'genre' ? 'z-50' : ''}`}>
                 <span className="field-label">Género</span>
                 <button type="button" onClick={() => { setGenreSearch(''); setOpenMenu(openMenu === 'genre' ? null : 'genre'); }} className={`control flex w-full items-center justify-between gap-2 text-left ${openMenu === 'genre' ? 'border-coral' : ''}`} aria-haspopup="listbox" aria-expanded={openMenu === 'genre'}>
                   <span className={`truncate ${props.genreIds.length ? 'text-ink' : 'text-slate-400'}`}>{props.genreIds.length ? `${props.genreIds.length} seleccionado${props.genreIds.length > 1 ? 's' : ''}` : 'Filtrar por género'}</span>
@@ -308,14 +308,14 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
                 )}
               </div>
 
-              <div className="relative min-w-0 flex-1">
+              <div className={`relative min-w-0 flex-1 ${openMenu === 'platform' ? 'z-50' : ''}`}>
                 <span className="field-label">Plataforma</span>
                 <button type="button" onClick={() => { setPlatformSearch(''); setOpenMenu(openMenu === 'platform' ? null : 'platform'); }} className={`control flex w-full items-center justify-between gap-2 text-left ${openMenu === 'platform' ? 'border-coral' : ''}`} aria-haspopup="listbox" aria-expanded={openMenu === 'platform'}>
                   <span className={`truncate ${props.platformIds.length ? 'text-ink' : 'text-slate-400'}`}>{props.platformIds.length ? `${props.platformIds.length} seleccionada${props.platformIds.length > 1 ? 's' : ''}` : 'Filtrar por plataforma'}</span>
                   <ChevronsUpDown className="h-4 w-4 shrink-0 text-slate-400" />
                 </button>
                 {openMenu === 'platform' && (
-                  <div className="library-toolbar-dropdown absolute left-0 top-full z-50 mt-1 w-full min-w-[220px] overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
+                  <div className="library-toolbar-dropdown absolute right-0 sm:right-auto sm:left-0 top-full z-50 mt-1 w-full min-w-[220px] overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
                     <label className="relative block border-b border-slate-200">
                       <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                       <input autoFocus type="search" value={platformSearch} onChange={(event) => setPlatformSearch(event.target.value)} className="h-11 w-full pl-9 pr-3 text-sm outline-none" placeholder="Buscar plataforma..." />
@@ -331,7 +331,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
               </div>
 
               {props.onCollectionChange && (
-                <div className="relative min-w-0 flex-1">
+                <div className={`relative min-w-0 flex-1 ${openMenu === 'collection' ? 'z-50' : ''}`}>
                   <span className="field-label">Colección</span>
                   <button type="button" onClick={() => { setCollectionSearch(''); setOpenMenu(openMenu === 'collection' ? null : 'collection'); }} className={`control flex w-full items-center justify-between gap-2 text-left ${openMenu === 'collection' ? 'border-coral' : ''}`} aria-haspopup="listbox" aria-expanded={openMenu === 'collection'}>
                     <span className={`truncate ${collectionIds.length ? 'text-ink' : 'text-slate-400'}`}>{collectionIds.length ? `${collectionIds.length} seleccionada${collectionIds.length > 1 ? 's' : ''}` : 'Filtrar por colección'}</span>
