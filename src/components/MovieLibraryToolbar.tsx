@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronsUpDown, Edit3, Eye, EyeOff, Film, Filter, Grid2X2, Heart, LayoutGrid, List, ListChecks, Search, Tv, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronsUpDown, Edit3, Eye, EyeOff, FileText, Film, Filter, Grid2X2, Heart, LayoutGrid, List, ListChecks, Search, Tv, X } from 'lucide-react';
 import type { MovieViewMode } from '@/components/MovieCard';
 import type { FavoriteFilter, MovieTypeFilter, SortDirection, WatchedFilter, WatchlistFilter } from '@/types/movie';
 
 export type MovieLibrarySort = 'title' | 'createdAt' | 'year' | 'collection' | 'genre' | 'imdbRating';
-export type MovieBulkMode = 'edit' | 'print' | 'delete' | null;
+export type MovieBulkMode = 'edit' | 'print' | 'delete' | 'exportTxt' | null;
 export type MovieSearchScope = 'name' | 'actor' | 'genre';
 
 interface ToolbarProps {
@@ -274,6 +274,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
                 {openMenu === 'actions' && <div className="library-toolbar-dropdown absolute right-0 top-full z-40 mt-1.5 w-64 rounded-md border border-slate-200 bg-white p-1.5 shadow-card">
                   <button type="button" onClick={() => { setOpenMenu(null); props.onBulkModeChange('edit'); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><Edit3 className="h-4 w-4" />Editar campos comunes</button>
                   <button type="button" onClick={() => { setOpenMenu(null); props.onEmptyFieldsSearch(); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><Search className="h-4 w-4" />Buscar campos vacíos</button>
+                  <button type="button" onClick={() => { setOpenMenu(null); props.onBulkModeChange('exportTxt'); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50"><FileText className="h-4 w-4" />Exportar títulos a TXT</button>
                 </div>}
               </div>
             </div>
