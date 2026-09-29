@@ -11,6 +11,7 @@ import { GenresPage } from '@/pages/GenresPage';
 import { NewsPage } from '@/pages/NewsPage';
 import { PlatformNewsPage } from '@/pages/PlatformNewsPage';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { PopcornCursor } from '@/components/PopcornCursor';
 
 const AppContent = () => {
   const { user, isLoading } = useAuth();
@@ -42,7 +43,10 @@ const AppContent = () => {
 const App = () => (
   <ThemeProvider>
     <AuthProvider>
-      <BrowserRouter><AppContent /></BrowserRouter>
+      <BrowserRouter>
+        <AppContent />
+        <PopcornCursor />
+      </BrowserRouter>
     </AuthProvider>
   </ThemeProvider>
 );
