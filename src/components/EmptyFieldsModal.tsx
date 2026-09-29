@@ -14,7 +14,7 @@ export const emptyMovieFieldOptions: Array<{ id: EmptyMovieField; label: string 
   { id: 'durationMinutes', label: 'Duración' },
   { id: 'seasons', label: 'Temporadas (series)' },
   { id: 'totalEpisodes', label: 'Episodios (series)' },
-  { id: 'personalRating', label: 'Puntuación personal' },
+  { id: 'personalRating', label: 'Rate' },
   { id: 'imdbRating', label: 'Puntuación IMDb' },
   { id: 'imdbId', label: 'ID de IMDb' },
   { id: 'imdbUrl', label: 'Link de IMDb' },

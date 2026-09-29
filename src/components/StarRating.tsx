@@ -26,7 +26,7 @@ export const StarRating = ({ value, onChange, disabled = false, allowClear = tru
       );
     })}
     {allowClear && value != null && (
-      <button type="button" disabled={disabled} onClick={() => onChange(null)} className={`${compact ? 'ml-0 h-5 w-4' : 'ml-1 h-8 w-8'} grid place-items-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-ink`} title="Quitar puntuación" aria-label="Quitar puntuación">
+      <button type="button" disabled={disabled} onClick={() => onChange(null)} className={`${compact ? 'ml-0 h-5 w-4' : 'ml-1 h-8 w-8'} grid place-items-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-ink`} title="Quitar rate" aria-label="Quitar rate">
         <X className={compact ? 'h-2.5 w-2.5' : 'h-4 w-4'} />
       </button>
     )}

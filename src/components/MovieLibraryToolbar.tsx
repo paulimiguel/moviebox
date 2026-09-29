@@ -140,6 +140,8 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
         ? props.genreIds.filter((id) => id !== genreId)
         : [...props.genreIds, genreId],
     );
+    setOpenMenu(null);
+    setGenreSearch('');
   };
   const togglePlatform = (platformId: string) => {
     props.onPlatformChange(
@@ -147,6 +149,8 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
         ? props.platformIds.filter((id) => id !== platformId)
         : [...props.platformIds, platformId],
     );
+    setOpenMenu(null);
+    setPlatformSearch('');
   };
   const addYear = () => {
     const value = yearDraft.trim();
