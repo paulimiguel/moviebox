@@ -57,6 +57,7 @@ export const MovieLibraryPage = () => {
   const [type, setType] = useState<MovieTypeFilter>('all');
   const [genreIds, setGenreIds] = useState<string[]>([]);
   const [platformIds, setPlatformIds] = useState<string[]>([]);
+  const [collectionIds, setCollectionIds] = useState<string[]>([]);
   const [years, setYears] = useState<string[]>([]);
   const [watched, setWatched] = useState<WatchedFilter>('all');
   const [favorite, setFavorite] = useState<FavoriteFilter>('all');
@@ -104,6 +105,7 @@ export const MovieLibraryPage = () => {
       setType(preset === 'movie' ? 'movie' : preset === 'series' ? 'series' : 'all');
       setGenreIds([]);
       setPlatformIds([]);
+      setCollectionIds([]);
       setYears([]);
       setWatched(preset === 'watched' ? 'watched' : preset === 'unwatched' ? 'unwatched' : 'all');
       setFavorite(preset === 'favorite' ? 'favorites' : 'all');
@@ -142,9 +144,20 @@ export const MovieLibraryPage = () => {
       }
     };
     const handlePlatformFilter = (event: Event) => applyPlatformFilter((event as CustomEvent<string>).detail);
+    const applyCollectionFilter = (collectionId: string) => {
+      setCollectionIds([collectionId]);
+      setFiltersOpen(false);
+      try {
+        window.sessionStorage.removeItem('moviebox:collection-filter');
+      } catch {
+        // The selected collection was still applied.
+      }
+    };
+    const handleCollectionFilter = (event: Event) => applyCollectionFilter((event as CustomEvent<string>).detail);
     window.addEventListener('moviebox:filter-library', handleLibraryFilter);
     window.addEventListener('moviebox:filter-genre', handleGenreFilter);
     window.addEventListener('moviebox:filter-platform', handlePlatformFilter);
+    window.addEventListener('moviebox:filter-collection', handleCollectionFilter);
     try {
       const storedLibraryFilter = window.sessionStorage.getItem('moviebox:library-filter') as LibraryFilterPreset | null;
       if (storedLibraryFilter && LIBRARY_FILTER_PRESETS.includes(storedLibraryFilter)) applyLibraryFilter(storedLibraryFilter);
@@ -152,6 +165,8 @@ export const MovieLibraryPage = () => {
       if (storedGenreId) applyGenreFilter(storedGenreId);
       const storedPlatformId = window.sessionStorage.getItem('moviebox:platform-filter');
       if (storedPlatformId) applyPlatformFilter(storedPlatformId);
+      const storedCollectionId = window.sessionStorage.getItem('moviebox:collection-filter');
+      if (storedCollectionId) applyCollectionFilter(storedCollectionId);
     } catch {
       // Genre selection remains available from the library filters.
     }
@@ -159,6 +174,7 @@ export const MovieLibraryPage = () => {
       window.removeEventListener('moviebox:filter-library', handleLibraryFilter);
       window.removeEventListener('moviebox:filter-genre', handleGenreFilter);
       window.removeEventListener('moviebox:filter-platform', handlePlatformFilter);
+      window.removeEventListener('moviebox:filter-collection', handleCollectionFilter);
     };
   }, []);
 
@@ -212,6 +228,7 @@ export const MovieLibraryPage = () => {
       if (type !== 'all' && movie.type !== type) return false;
       if (genreIds.length && !movie.genres.some((item) => genreIds.includes(item.id))) return false;
       if (platformIds.length && !movie.platforms.some((item) => platformIds.includes(item.id))) return false;
+      if (collectionIds.length && !movie.collections.some((item) => collectionIds.includes(item.id))) return false;
       if (years.length && (!movie.year || !years.includes(String(movie.year)))) return false;
       if (watched === 'watched' && !movie.watched) return false;
       if (watched === 'unwatched' && movie.watched) return false;
@@ -238,7 +255,7 @@ export const MovieLibraryPage = () => {
       }
       return factor * textValue(left).localeCompare(textValue(right), 'es');
     });
-  }, [emptyFields, favorite, genreIds, moviesQuery.data, platformIds, search, searchScope, sortDirection, sortKey, type, watched, watchlist, years]);
+  }, [collectionIds, emptyFields, favorite, genreIds, moviesQuery.data, platformIds, search, searchScope, sortDirection, sortKey, type, watched, watchlist, years]);
 
   const selectedMovies = (moviesQuery.data || []).filter((movie) => selectedIds.has(movie.id));
   const refreshLibrary = () => {
@@ -317,6 +334,9 @@ export const MovieLibraryPage = () => {
         platformIds={platformIds}
         platforms={metadataQuery.data?.platforms || []}
         onPlatformChange={setPlatformIds}
+        collectionIds={collectionIds}
+        collections={collectionsQuery.data || []}
+        onCollectionChange={setCollectionIds}
         type={type}
         onTypeChange={setType}
         watched={watched}
@@ -327,7 +347,7 @@ export const MovieLibraryPage = () => {
         onWatchlistChange={setWatchlist}
         years={years}
         onYearChange={setYears}
-        onClearFilters={() => { setGenreIds([]); setPlatformIds([]); setType('all'); setWatched('all'); setFavorite('all'); setWatchlist('all'); setYears([]); setEmptyFields([]); }}
+        onClearFilters={() => { setGenreIds([]); setPlatformIds([]); setCollectionIds([]); setType('all'); setWatched('all'); setFavorite('all'); setWatchlist('all'); setYears([]); setEmptyFields([]); }}
         emptyFieldsCount={emptyFields.length}
         onEmptyFieldsSearch={() => setEmptyFieldsOpen(true)}
         onClearEmptyFields={() => setEmptyFields([])}

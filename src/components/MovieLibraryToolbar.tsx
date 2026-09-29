@@ -33,6 +33,9 @@ interface ToolbarProps {
   platformIds: string[];
   platforms: { id: string; name: string }[];
   onPlatformChange: (value: string[]) => void;
+  collectionIds?: string[];
+  collections?: { id: string; name: string }[];
+  onCollectionChange?: (value: string[]) => void;
   type: MovieTypeFilter;
   onTypeChange: (value: MovieTypeFilter) => void;
   watched: WatchedFilter;
@@ -57,9 +60,10 @@ const searchScopeOptions: { value: MovieSearchScope; label: string }[] = [
 ];
 
 export const MovieLibraryToolbar = (props: ToolbarProps) => {
-  const [openMenu, setOpenMenu] = useState<'view' | 'sort' | 'genre' | 'platform' | 'actions' | null>(null);
+  const [openMenu, setOpenMenu] = useState<'view' | 'sort' | 'genre' | 'platform' | 'collection' | 'actions' | null>(null);
   const [genreSearch, setGenreSearch] = useState('');
   const [platformSearch, setPlatformSearch] = useState('');
+  const [collectionSearch, setCollectionSearch] = useState('');
   const [yearDraft, setYearDraft] = useState('');
   const toolbarRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -122,10 +126,17 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
   const filteredPlatforms = props.platforms.filter((platform) =>
     platform.name.toLocaleLowerCase('es').includes(platformSearch.trim().toLocaleLowerCase('es')),
   );
+  const collectionIds = props.collectionIds || [];
+  const collections = props.collections || [];
+  const filteredCollections = collections.filter((collection) =>
+    collection.name.toLocaleLowerCase('es').includes(collectionSearch.trim().toLocaleLowerCase('es')),
+  );
   const selectedGenreNames = props.genres.filter((genre) => props.genreIds.includes(genre.id));
   const selectedPlatformNames = props.platforms.filter((platform) => props.platformIds.includes(platform.id));
+  const selectedCollectionNames = collections.filter((collection) => collectionIds.includes(collection.id));
   const allFiltersClear = props.genreIds.length === 0
     && props.platformIds.length === 0
+    && collectionIds.length === 0
     && props.years.length === 0
     && props.type === 'all'
     && props.watched === 'all'
@@ -152,6 +163,15 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
     setOpenMenu(null);
     setPlatformSearch('');
   };
+  const toggleCollection = (collectionId: string) => {
+    props.onCollectionChange?.(
+      collectionIds.includes(collectionId)
+        ? collectionIds.filter((id) => id !== collectionId)
+        : [...collectionIds, collectionId],
+    );
+    setOpenMenu(null);
+    setCollectionSearch('');
+  };
   const addYear = () => {
     const value = yearDraft.trim();
     const numericYear = Number(value);
@@ -177,17 +197,18 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
         <div className="min-w-0 md:w-[220px] lg:w-[260px] xl:w-[280px] md:shrink-0 md:self-center">
           <h1 className="font-bebas truncate text-xl font-normal text-ink sm:text-2xl">{props.title || `Títulos de ${props.ownerName}`}</h1>
           <p className="mt-0.5 truncate text-xs text-slate-500">Mostrando {props.visibleCount} de {props.totalCount} títulos</p>
-          {!props.hideActiveFilters && (selectedGenreNames.length > 0 || selectedPlatformNames.length > 0 || props.years.length > 0 || props.type !== 'all' || props.watched !== 'all' || props.favorite !== 'all' || props.watchlist !== 'all' || props.emptyFieldsCount > 0) && (
+          {!props.hideActiveFilters && (selectedGenreNames.length > 0 || selectedPlatformNames.length > 0 || selectedCollectionNames.length > 0 || props.years.length > 0 || props.type !== 'all' || props.watched !== 'all' || props.favorite !== 'all' || props.watchlist !== 'all' || props.emptyFieldsCount > 0) && (
             <div className="mt-2 flex flex-wrap gap-1">
               {selectedGenreNames.map((genre) => <button key={`active-genre-${genre.id}`} type="button" onClick={() => toggleGenre(genre.id)} className="inline-flex max-w-full items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar género ${genre.name}`}><span className="truncate">{genre.name}</span><X className="h-3 w-3 shrink-0" /></button>)}
               {selectedPlatformNames.map((platform) => <button key={`active-platform-${platform.id}`} type="button" onClick={() => props.onPlatformChange(props.platformIds.filter((id) => id !== platform.id))} className="inline-flex max-w-full items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar plataforma ${platform.name}`}><span className="truncate">{platform.name}</span><X className="h-3 w-3 shrink-0" /></button>)}
+              {selectedCollectionNames.map((collection) => <button key={`active-collection-${collection.id}`} type="button" onClick={() => props.onCollectionChange?.(collectionIds.filter((id) => id !== collection.id))} className="inline-flex max-w-full items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar colección ${collection.name}`}><span className="truncate">{collection.name}</span><X className="h-3 w-3 shrink-0" /></button>)}
               {props.years.map((year) => <button key={`active-year-${year}`} type="button" onClick={() => props.onYearChange(props.years.filter((value) => value !== year))} className="inline-flex items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar año ${year}`}>{year}<X className="h-3 w-3" /></button>)}
               {props.type !== 'all' && <button type="button" onClick={() => props.onTypeChange('all')} className="inline-flex items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title="Quitar filtro de tipo">{props.type === 'movie' ? 'Película' : 'Serie'}<X className="h-3 w-3" /></button>}
               {props.watched !== 'all' && <button type="button" onClick={() => props.onWatchedChange('all')} className="inline-flex items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar filtro ${props.watched === 'watched' ? 'Watched' : 'Unwatched'}`}>{props.watched === 'watched' ? 'Watched' : 'Unwatched'}<X className="h-3 w-3" /></button>}
               {props.favorite === 'favorites' && <button type="button" onClick={() => props.onFavoriteChange('all')} className="inline-flex items-center gap-1 rounded bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-coral" title="Quitar filtro Like">Like<X className="h-3 w-3" /></button>}
               {props.watchlist === 'watchlist' && <button type="button" onClick={() => props.onWatchlistChange('all')} className="inline-flex items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title="Quitar filtro Watchlist">Watchlist<X className="h-3 w-3" /></button>}
               {props.emptyFieldsCount > 0 && <button type="button" onClick={props.onClearEmptyFields} className="inline-flex items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title="Quitar búsqueda de campos vacíos">Campos vacíos: {props.emptyFieldsCount}<X className="h-3 w-3" /></button>}
-              <button type="button" onClick={() => { props.onClearFilters(); setGenreSearch(''); setPlatformSearch(''); setYearDraft(''); setOpenMenu(null); }} className="ml-1 px-1 py-0.5 text-[11px] font-semibold uppercase text-coral hover:underline">Limpiar</button>
+              <button type="button" onClick={() => { props.onClearFilters(); setGenreSearch(''); setPlatformSearch(''); setCollectionSearch(''); setYearDraft(''); setOpenMenu(null); }} className="ml-1 px-1 py-0.5 text-[11px] font-semibold uppercase text-coral hover:underline">Limpiar</button>
             </div>
           )}
         </div>
@@ -309,6 +330,30 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
                 )}
               </div>
 
+              {props.onCollectionChange && (
+                <div className="relative min-w-0 flex-1">
+                  <span className="field-label">Colección</span>
+                  <button type="button" onClick={() => { setCollectionSearch(''); setOpenMenu(openMenu === 'collection' ? null : 'collection'); }} className={`control flex w-full items-center justify-between gap-2 text-left ${openMenu === 'collection' ? 'border-coral' : ''}`} aria-haspopup="listbox" aria-expanded={openMenu === 'collection'}>
+                    <span className={`truncate ${collectionIds.length ? 'text-ink' : 'text-slate-400'}`}>{collectionIds.length ? `${collectionIds.length} seleccionada${collectionIds.length > 1 ? 's' : ''}` : 'Filtrar por colección'}</span>
+                    <ChevronsUpDown className="h-4 w-4 shrink-0 text-slate-400" />
+                  </button>
+                  {openMenu === 'collection' && (
+                    <div className="library-toolbar-dropdown absolute left-0 top-full z-50 mt-1 w-full min-w-[220px] overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
+                      <label className="relative block border-b border-slate-200">
+                        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <input autoFocus type="search" value={collectionSearch} onChange={(event) => setCollectionSearch(event.target.value)} className="h-11 w-full pl-9 pr-3 text-sm outline-none" placeholder="Buscar colección..." />
+                      </label>
+                      <div className="max-h-64 overflow-y-auto p-1.5" role="listbox" aria-multiselectable="true">
+                        {filteredCollections.length ? filteredCollections.map((collection) => {
+                          const selected = collectionIds.includes(collection.id);
+                          return <button key={collection.id} type="button" onClick={() => toggleCollection(collection.id)} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${selected ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`} role="option" aria-selected={selected}><Check className={`h-4 w-4 shrink-0 ${selected ? 'text-coral' : 'text-transparent'}`} /><span className="min-w-0 flex-1 truncate">{collection.name}</span></button>;
+                        }) : <p className="px-3 py-4 text-center text-sm text-slate-400">Sin resultados.</p>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="w-full sm:w-36 md:w-44 shrink-0">
                 <label htmlFor="movie-year-filter" className="field-label">Año</label>
                 <input id="movie-year-filter" className="control w-full" type="text" inputMode="numeric" value={yearDraft} onChange={(event) => setYearDraft(event.target.value.replace(/\D/g, '').slice(0, 4))} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addYear(); } }} placeholder="Escribir y Enter" aria-label="Agregar año" />
@@ -322,7 +367,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
               <button type="button" aria-pressed={props.watched === 'unwatched'} onClick={() => props.onWatchedChange(props.watched === 'unwatched' ? 'all' : 'unwatched')} className={filterButtonClass(props.watched === 'unwatched')}><EyeOff className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">Unwatched</span></button>
               <button type="button" aria-pressed={props.favorite === 'favorites'} onClick={() => props.onFavoriteChange(props.favorite === 'favorites' ? 'all' : 'favorites')} className={filterButtonClass(props.favorite === 'favorites')}><Heart className={`h-4 w-4 shrink-0 ${props.favorite === 'favorites' ? 'fill-current' : ''}`} /><span className="whitespace-nowrap">Like</span></button>
               <button type="button" aria-pressed={props.watchlist === 'watchlist'} onClick={() => props.onWatchlistChange(props.watchlist === 'watchlist' ? 'all' : 'watchlist')} className={filterButtonClass(props.watchlist === 'watchlist')}><Bookmark className={`h-4 w-4 shrink-0 ${props.watchlist === 'watchlist' ? 'fill-current' : ''}`} /><span className="whitespace-nowrap">Watchlist</span></button>
-              <button type="button" aria-pressed={allFiltersClear} onClick={() => { props.onClearFilters(); setGenreSearch(''); setPlatformSearch(''); setYearDraft(''); setOpenMenu(null); }} className={`${filterButtonClass(allFiltersClear)} col-start-2 sm:col-start-auto`}><span className="whitespace-nowrap">Todos</span></button>
+              <button type="button" aria-pressed={allFiltersClear} onClick={() => { props.onClearFilters(); setGenreSearch(''); setPlatformSearch(''); setCollectionSearch(''); setYearDraft(''); setOpenMenu(null); }} className={`${filterButtonClass(allFiltersClear)} col-start-2 sm:col-start-auto`}><span className="whitespace-nowrap">Todos</span></button>
             </div>
           </div>
         </div>
