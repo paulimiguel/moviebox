@@ -22,6 +22,7 @@ const localLogoFor = (name: string) => {
   if (normalizedName.includes('paramount')) return '/platforms/paramount-plus.png';
   if (normalizedName.includes('prime video')) return '/platforms/prime-video.png';
   if (normalizedName.includes('justwatch')) return '/platforms/justwatch.png';
+  if (normalizedName.includes('stremio')) return '/platforms/stremio.png';
   return null;
 };
 

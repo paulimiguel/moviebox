@@ -5,6 +5,7 @@ const router = Router();
 const token = process.env.TMDB_API_TOKEN;
 const TMDB_URL = 'https://api.themoviedb.org/3';
 const JUSTWATCH_URL = 'https://www.justwatch.com';
+const CINEMETA_URL = 'https://v3-cinemeta.strem.io';
 
 const decodeHtml = (value: string) => value
   .replace(/&quot;/g, '"')
@@ -98,9 +99,16 @@ router.get('/search-platforms', async (req, res) => {
   if (!query) return res.json([]);
 
   try {
-    const payload = await tmdbRequest<{ results?: any[] }>(
-      `/search/multi?language=es-AR&include_adult=false&query=${encodeURIComponent(query)}`
-    );
+    const [payload, movieGenresReq, seriesGenresReq] = await Promise.all([
+      tmdbRequest<{ results?: any[] }>(
+        `/search/multi?language=es-AR&include_adult=false&query=${encodeURIComponent(query)}`
+      ),
+      tmdbRequest<{ genres?: Array<{ id: number; name: string }> }>('/genre/movie/list?language=es-AR').catch(() => ({ genres: [] })),
+      tmdbRequest<{ genres?: Array<{ id: number; name: string }> }>('/genre/tv/list?language=es-AR').catch(() => ({ genres: [] })),
+    ]);
+    const movieGenreNames = new Map((movieGenresReq.genres || []).map((g) => [g.id, g.name]));
+    const seriesGenreNames = new Map((seriesGenresReq.genres || []).map((g) => [g.id, g.name]));
+
     const rawItems = (payload.results || [])
       .filter((item) => item.media_type === 'movie' || item.media_type === 'tv')
       .slice(0, 8);
@@ -108,6 +116,8 @@ router.get('/search-platforms', async (req, res) => {
     const results = await allSettledInBatches(rawItems, async (item) => {
       const type = item.media_type === 'movie' ? 'movie' : 'series';
       const resource = type === 'movie' ? 'movie' : 'tv';
+      const gMap = type === 'movie' ? movieGenreNames : seriesGenreNames;
+      const genres = (item.genre_ids || []).map((gid: number) => gMap.get(gid)).filter(Boolean);
 
       const [external, providers] = await Promise.all([
         tmdbRequest<{ imdb_id?: string | null }>(`/${resource}/${item.id}/external_ids`).catch(() => null),
@@ -171,6 +181,7 @@ router.get('/search-platforms', async (req, res) => {
         year: Number((item.release_date || item.first_air_date || '').slice(0, 4)) || null,
         posterUrl: item.poster_path ? `https://image.tmdb.org/t/p/w500${item.poster_path}` : null,
         overview: item.overview || '',
+        genres,
         rating: Number.isFinite(Number(item.vote_average)) ? Number(item.vote_average) : null,
         justwatchUrl: ar?.link || `https://www.justwatch.com/ar/buscar?q=${encodeURIComponent(item.title || item.name)}`,
         streamingPlatforms,
@@ -341,6 +352,92 @@ router.get('/platform-suggestions', async (req, res) => {
       return res.json(candidates.slice(0, 24));
     } catch {
       return res.status(502).json({ error: 'No se pudieron cargar sugerencias de JustWatch' });
+    }
+  }
+
+  if (platform === 'stremio') {
+    try {
+      const skip = (Math.abs(seed) % 3) * 50;
+      const skipParam = skip > 0 ? `/skip=${skip}` : '';
+      const [moviesRes, seriesRes] = await Promise.all([
+        fetch(`${CINEMETA_URL}/catalog/movie/top${skipParam}.json`, {
+          headers: { Accept: 'application/json', 'User-Agent': 'MovieBox/1.0' },
+          signal: AbortSignal.timeout(10_000),
+        }),
+        fetch(`${CINEMETA_URL}/catalog/series/top${skipParam}.json`, {
+          headers: { Accept: 'application/json', 'User-Agent': 'MovieBox/1.0' },
+          signal: AbortSignal.timeout(10_000),
+        }),
+      ]);
+
+      if (moviesRes.ok && seriesRes.ok) {
+        const [moviesData, seriesData] = await Promise.all([
+          moviesRes.json() as Promise<{ metas?: any[] }>,
+          seriesRes.json() as Promise<{ metas?: any[] }>,
+        ]);
+        const mList = (moviesData.metas || []).map((m: any) => ({ ...m, type: 'movie' }));
+        const sList = (seriesData.metas || []).map((s: any) => ({ ...s, type: 'series' }));
+        const pool = [...mList, ...sList].sort(() => Math.random() - 0.5).slice(0, 32);
+
+        const results = await allSettledInBatches(pool, async (item) => {
+          let tmdbId: number | null = null;
+          let title = item.name;
+          let originalTitle = item.name;
+          let overview = item.description || '';
+          let posterUrl = item.poster || null;
+          let rating: number | null = item.imdbRating ? parseFloat(item.imdbRating) || null : null;
+          let genres: string[] = item.genres || [];
+          const year = parseInt(String(item.year || '').slice(0, 4), 10) || null;
+
+          if (token && item.id) {
+            try {
+              const findRes = await tmdbRequest<{
+                movie_results?: any[];
+                tv_results?: any[];
+              }>(`/find/${item.id}?external_source=imdb_id&language=es-AR`);
+              const matched = item.type === 'movie' ? findRes.movie_results?.[0] : findRes.tv_results?.[0];
+              if (matched) {
+                tmdbId = matched.id;
+                title = matched.title || matched.name || item.name;
+                originalTitle = matched.original_title || matched.original_name || item.name;
+                if (matched.overview) overview = matched.overview;
+                if (matched.poster_path) posterUrl = `https://image.tmdb.org/t/p/w500${matched.poster_path}`;
+                if (Number.isFinite(Number(matched.vote_average)) && Number(matched.vote_average) > 0) {
+                  rating = Number(matched.vote_average);
+                }
+              }
+            } catch {
+              // best effort
+            }
+          }
+
+          return {
+            tmdbId: tmdbId || (item.type === 'movie' ? 85000000 : 95000000),
+            imdbId: item.id,
+            type: item.type,
+            title,
+            originalTitle,
+            year,
+            posterUrl,
+            overview,
+            genres: genres.slice(0, 3),
+            rating,
+            popularity: 80,
+          };
+        }, 8);
+
+        const candidates = results.flatMap((r) => r.status === 'fulfilled' && r.value ? [r.value] : []);
+        if (candidates.length > 0) {
+          if (filter === 'novedades') {
+            candidates.sort((a, b) => (b.year || 0) - (a.year || 0));
+          } else if (filter === 'mas_vistos') {
+            candidates.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+          }
+          return res.json(candidates.slice(0, 24));
+        }
+      }
+    } catch {
+      // Si falla Cinemeta, continúa hacia TMDB discover sin provider abajo
     }
   }
 
@@ -647,6 +744,7 @@ const JW_PLATFORM_NAMES: Record<string, string> = {
   flow: 'Flow',
   paramount: 'Paramount+',
   justwatch: 'JustWatch',
+  stremio: 'Stremio',
 };
 
 const justwatchPlatformPopularCache = new Map<string, { data: any; cachedAt: number }>();
@@ -656,6 +754,136 @@ router.get('/justwatch-platform-popular', async (req, res) => {
   const cached = justwatchPlatformPopularCache.get(platform);
   if (cached && Date.now() - cached.cachedAt < JW_CACHE_TTL_MS) {
     return res.json(cached.data);
+  }
+
+  if (platform === 'stremio') {
+    try {
+      const [moviesRes, seriesRes] = await Promise.all([
+        fetch(`${CINEMETA_URL}/catalog/movie/top.json`, {
+          headers: { Accept: 'application/json', 'User-Agent': 'MovieBox/1.0' },
+          signal: AbortSignal.timeout(15_000),
+        }),
+        fetch(`${CINEMETA_URL}/catalog/series/top.json`, {
+          headers: { Accept: 'application/json', 'User-Agent': 'MovieBox/1.0' },
+          signal: AbortSignal.timeout(15_000),
+        }),
+      ]);
+
+      if (!moviesRes.ok || !seriesRes.ok) throw new Error('CINEMETA_CATALOG_FAILED');
+      const [moviesData, seriesData] = await Promise.all([
+        moviesRes.json() as Promise<{ metas?: any[] }>,
+        seriesRes.json() as Promise<{ metas?: any[] }>,
+      ]);
+
+      const movieMetas = (moviesData.metas || []).slice(0, 50);
+      const seriesMetas = (seriesData.metas || []).slice(0, 50);
+
+      let movieGenreNames = new Map<number, string>();
+      let seriesGenreNames = new Map<number, string>();
+      if (token) {
+        try {
+          const [mg, sg] = await Promise.all([
+            tmdbRequest<{ genres?: Array<{ id: number; name: string }> }>('/genre/movie/list?language=es-AR'),
+            tmdbRequest<{ genres?: Array<{ id: number; name: string }> }>('/genre/tv/list?language=es-AR'),
+          ]);
+          movieGenreNames = new Map((mg.genres || []).map((g) => [g.id, g.name]));
+          seriesGenreNames = new Map((sg.genres || []).map((g) => [g.id, g.name]));
+        } catch {
+          // best effort
+        }
+      }
+
+      const processMetas = async (metas: any[], type: 'movie' | 'series') => {
+        const results = await allSettledInBatches(metas, async (meta: any, index: number) => {
+          let tmdbId: number | null = null;
+          let title = meta.name;
+          let originalTitle = meta.name;
+          let overview = meta.description || '';
+          let posterUrl = meta.poster || null;
+          let rating: number | null = meta.imdbRating ? parseFloat(meta.imdbRating) || null : null;
+          let genres: string[] = meta.genres || [];
+          const year = parseInt(String(meta.year || '').slice(0, 4), 10) || null;
+
+          if (token && meta.id) {
+            try {
+              const findRes = await tmdbRequest<{
+                movie_results?: any[];
+                tv_results?: any[];
+              }>(`/find/${meta.id}?external_source=imdb_id&language=es-AR`);
+              const matched = type === 'movie' ? findRes.movie_results?.[0] : findRes.tv_results?.[0];
+              if (matched) {
+                tmdbId = matched.id;
+                title = matched.title || matched.name || meta.name;
+                originalTitle = matched.original_title || matched.original_name || meta.name;
+                if (matched.overview) overview = matched.overview;
+                if (matched.poster_path) posterUrl = `https://image.tmdb.org/t/p/w500${matched.poster_path}`;
+                if (Number.isFinite(Number(matched.vote_average)) && Number(matched.vote_average) > 0) {
+                  rating = Number(matched.vote_average);
+                }
+                const gMap = type === 'movie' ? movieGenreNames : seriesGenreNames;
+                if (matched.genre_ids?.length) {
+                  const mapped = matched.genre_ids.map((gid: number) => gMap.get(gid)).filter(Boolean);
+                  if (mapped.length) genres = mapped;
+                }
+              }
+            } catch {
+              // best effort
+            }
+          }
+
+          let subBadge: string | null = null;
+          if (type === 'series') {
+            if (year === 2026 || year === 2025) {
+              subBadge = 'Nuevo episodio';
+            }
+          }
+
+          return {
+            rank: index + 1,
+            jwId: meta.id,
+            tmdbId: tmdbId || (type === 'movie' ? 80000000 + index : 90000000 + index),
+            imdbId: meta.id,
+            type,
+            title,
+            originalTitle,
+            year,
+            overview,
+            genres,
+            posterUrl,
+            rating,
+            popularity: 100 - index,
+            badge: type === 'series' ? 'TV' : 'PELÍCULA',
+            subBadge,
+            justwatchUrl: `https://www.imdb.com/title/${meta.id}`,
+          };
+        }, 8);
+
+        return results.flatMap((r) => (r.status === 'fulfilled' && r.value ? [r.value] : []));
+      };
+
+      const [popularMovies, popularSeries] = await Promise.all([
+        processMetas(movieMetas, 'movie'),
+        processMetas(seriesMetas, 'series'),
+      ]);
+
+      const featuredMovies = popularMovies.slice(0, 10);
+      const featuredSeries = popularSeries.slice(0, 10);
+
+      const payload = {
+        platform: 'stremio',
+        platformName: 'Stremio',
+        featuredMovies,
+        featuredSeries,
+        popularMovies,
+        popularSeries,
+      };
+
+      justwatchPlatformPopularCache.set('stremio', { data: payload, cachedAt: Date.now() });
+      return res.json(payload);
+    } catch (error) {
+      if (cached) return res.json(cached.data);
+      return res.status(502).json({ error: 'No se pudieron cargar los populares de Stremio' });
+    }
   }
 
   const pkg = platform in JW_PLATFORM_PACKAGES ? JW_PLATFORM_PACKAGES[platform] : JW_PLATFORM_PACKAGES.netflix;

@@ -408,6 +408,7 @@ export interface TitlePlatformResult {
   title: string;
   originalTitle: string;
   year: number | null;
+  genres?: string[];
   posterUrl: string | null;
   overview: string;
   rating: number | null;
