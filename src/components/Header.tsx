@@ -144,10 +144,10 @@ export const Header = () => {
       <header className="moviebox-header sticky top-0 z-40 w-full border-b border-slate-200 bg-canvas/95 backdrop-blur">
       <div className="mx-auto flex h-[72px] max-w-[1500px] items-center gap-5 px-4 sm:px-6">
         <Link to="/" className="shrink-0"><img src={theme === 'dark' ? '/moviebox-logo-white.png' : '/moviebox-logo-red.png'} alt="MovieBox" className="h-10 w-auto max-w-[190px] object-contain sm:h-11" /></Link>
-        <div className="ml-auto flex h-full min-w-0 items-center gap-2 sm:gap-4">
-          <nav className="main-navigation hidden h-full items-end xl:flex">
+        <div className="ml-auto flex h-full min-w-0 items-center gap-1 sm:gap-2 lg:gap-4">
+          <nav className="main-navigation hidden h-full items-end md:flex">
             <div ref={libraryMenuRef} className="relative h-full" onMouseEnter={() => setLibraryMenuOpen(true)} onMouseLeave={() => setLibraryMenuOpen(false)}>
-              <button type="button" onClick={() => { filterLibrary('all'); setPlatformMenuOpen(false); setGenreMenuOpen(false); setCollectionMenuOpen(false); setNewsMenuOpen(false); }} className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${libraryMenuOpen || location.pathname === '/' ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={libraryMenuOpen}>BIBLIOTECA<ChevronDown className="h-4 w-4" /></button>
+              <button type="button" onClick={() => { filterLibrary('all'); setPlatformMenuOpen(false); setGenreMenuOpen(false); setCollectionMenuOpen(false); setNewsMenuOpen(false); }} className={`flex h-full items-center gap-1 xl:gap-1.5 border-b-2 px-2 xl:px-3 text-xs xl:text-sm font-semibold whitespace-nowrap ${libraryMenuOpen || location.pathname === '/' ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={libraryMenuOpen}>BIBLIOTECA<ChevronDown className="h-3.5 w-3.5 xl:h-4 xl:w-4" /></button>
               {libraryMenuOpen && <div className="header-dropdown absolute left-0 top-full w-52 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
                 {libraryOptions.map((option) => <button key={option.preset} type="button" onClick={() => filterLibrary(option.preset)} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink">{option.icon}<span>{option.label}</span></button>)}
               </div>}
@@ -165,10 +165,10 @@ export const Header = () => {
                     navigate('/novedades');
                   }
                 }}
-                className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${newsMenuOpen || location.pathname === '/novedades' ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`}
+                className={`flex h-full items-center gap-1 xl:gap-1.5 border-b-2 px-2 xl:px-3 text-xs xl:text-sm font-semibold whitespace-nowrap ${newsMenuOpen || location.pathname === '/novedades' ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`}
                 aria-expanded={newsMenuOpen}
               >
-                NOVEDADES<ChevronDown className="h-4 w-4" />
+                NOVEDADES<ChevronDown className="h-3.5 w-3.5 xl:h-4 xl:w-4" />
               </button>
               {newsMenuOpen && (
                 <div className="header-dropdown absolute left-0 top-full w-64 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
@@ -204,7 +204,7 @@ export const Header = () => {
               )}
             </div>
             <div ref={platformMenuRef} className="relative h-full">
-              <button type="button" onClick={() => { setPlatformMenuOpen((current) => !current); setLibraryMenuOpen(false); setCollectionMenuOpen(false); setGenreMenuOpen(false); setNewsMenuOpen(false); }} className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${platformMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={platformMenuOpen}>PLATAFORMAS<ChevronDown className="h-4 w-4" /></button>
+              <button type="button" onClick={() => { setPlatformMenuOpen((current) => !current); setLibraryMenuOpen(false); setCollectionMenuOpen(false); setGenreMenuOpen(false); setNewsMenuOpen(false); }} className={`flex h-full items-center gap-1 xl:gap-1.5 border-b-2 px-2 xl:px-3 text-xs xl:text-sm font-semibold whitespace-nowrap ${platformMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={platformMenuOpen}>PLATAFORMAS<ChevronDown className="h-3.5 w-3.5 xl:h-4 xl:w-4" /></button>
               {platformMenuOpen && <div className="header-dropdown absolute left-0 top-full w-56 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
                 <div className="max-h-72 overflow-y-auto">
                   {(metadataQuery.data?.platforms || []).length ? (metadataQuery.data?.platforms || []).map((platform) => <button key={platform.id} type="button" onClick={() => filterLibraryByPlatform(platform.id)} className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink">{platform.name}</button>) : <p className="px-3 py-3 text-sm text-slate-400">No hay plataformas.</p>}
@@ -213,7 +213,7 @@ export const Header = () => {
               </div>}
             </div>
             <div ref={genreMenuRef} className="relative h-full">
-              <button type="button" onClick={() => { setGenreMenuOpen((current) => !current); setLibraryMenuOpen(false); setCollectionMenuOpen(false); setPlatformMenuOpen(false); setNewsMenuOpen(false); }} className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${genreMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={genreMenuOpen}>GÉNEROS<ChevronDown className="h-4 w-4" /></button>
+              <button type="button" onClick={() => { setGenreMenuOpen((current) => !current); setLibraryMenuOpen(false); setCollectionMenuOpen(false); setPlatformMenuOpen(false); setNewsMenuOpen(false); }} className={`flex h-full items-center gap-1 xl:gap-1.5 border-b-2 px-2 xl:px-3 text-xs xl:text-sm font-semibold whitespace-nowrap ${genreMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={genreMenuOpen}>GÉNEROS<ChevronDown className="h-3.5 w-3.5 xl:h-4 xl:w-4" /></button>
               {genreMenuOpen && <div className="header-dropdown absolute left-0 top-full w-56 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
                 <div className="max-h-72 overflow-y-auto">
                   {(metadataQuery.data?.genres || []).length ? (metadataQuery.data?.genres || []).map((genre) => <button key={genre.id} type="button" onClick={() => filterLibraryByGenre(genre.id)} className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink">{genre.name}</button>) : <p className="px-3 py-3 text-sm text-slate-400">No hay géneros.</p>}
@@ -222,7 +222,7 @@ export const Header = () => {
               </div>}
             </div>
             <div ref={collectionMenuRef} className="relative h-full">
-              <button type="button" onClick={() => { setCollectionMenuOpen((current) => !current); setLibraryMenuOpen(false); setPlatformMenuOpen(false); setGenreMenuOpen(false); setNewsMenuOpen(false); }} className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold ${collectionMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={collectionMenuOpen}>COLECCIONES<ChevronDown className="h-4 w-4" /></button>
+              <button type="button" onClick={() => { setCollectionMenuOpen((current) => !current); setLibraryMenuOpen(false); setPlatformMenuOpen(false); setGenreMenuOpen(false); setNewsMenuOpen(false); }} className={`flex h-full items-center gap-1 xl:gap-1.5 border-b-2 px-2 xl:px-3 text-xs xl:text-sm font-semibold whitespace-nowrap ${collectionMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={collectionMenuOpen}>COLECCIONES<ChevronDown className="h-3.5 w-3.5 xl:h-4 xl:w-4" /></button>
               {collectionMenuOpen && <div className="header-dropdown absolute left-0 top-full w-64 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
                 <div className="max-h-72 overflow-y-auto">
                   {(collectionsQuery.data || []).length ? (collectionsQuery.data || []).map((collection) => <Link key={collection.id} to={`/colecciones/${collection.id}`} onClick={() => setCollectionMenuOpen(false)} className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink">{collection.name}</Link>) : <p className="px-3 py-3 text-sm text-slate-400">No hay colecciones.</p>}
@@ -233,7 +233,7 @@ export const Header = () => {
             <button
               type="button"
               onClick={() => setAddModalOpen(true)}
-              className={`flex h-full items-center gap-1.5 border-b-2 px-3 text-sm font-semibold transition-colors ${addModalOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`}
+              className={`flex h-full items-center gap-1 xl:gap-1.5 border-b-2 px-2 xl:px-3 text-xs xl:text-sm font-semibold whitespace-nowrap transition-colors ${addModalOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`}
             >
               AGREGAR
             </button>
@@ -258,7 +258,7 @@ export const Header = () => {
               </div>
 
               {/* Biblioteca (colapsable) */}
-              <div className="mt-1 border-b border-slate-100 py-1 xl:hidden">
+              <div className="mt-1 border-b border-slate-100 py-1 md:hidden">
                 <button
                   type="button"
                   onClick={() => setMobileSubmenu((c) => c === 'library' ? null : 'library')}
@@ -286,7 +286,7 @@ export const Header = () => {
               </div>
 
               {/* Novedades (colapsable) */}
-              <div className="mt-1 border-b border-slate-100 py-1 xl:hidden">
+              <div className="mt-1 border-b border-slate-100 py-1 md:hidden">
                 <button
                   type="button"
                   onClick={() => setMobileSubmenu((c) => c === 'news' ? null : 'news')}
@@ -331,7 +331,7 @@ export const Header = () => {
               </div>
 
               {/* Plataformas (colapsable) */}
-              <div className="mt-1 border-b border-slate-100 py-1 xl:hidden">
+              <div className="mt-1 border-b border-slate-100 py-1 md:hidden">
                 <button
                   type="button"
                   onClick={() => setMobileSubmenu((c) => c === 'platforms' ? null : 'platforms')}
@@ -372,7 +372,7 @@ export const Header = () => {
               </div>
 
               {/* Géneros (colapsable) */}
-              <div className="mt-1 border-b border-slate-100 py-1 xl:hidden">
+              <div className="mt-1 border-b border-slate-100 py-1 md:hidden">
                 <button
                   type="button"
                   onClick={() => setMobileSubmenu((c) => c === 'genres' ? null : 'genres')}
@@ -413,7 +413,7 @@ export const Header = () => {
               </div>
 
               {/* Colecciones (colapsable) */}
-              <div className="mt-1 border-b border-slate-100 py-1 xl:hidden">
+              <div className="mt-1 border-b border-slate-100 py-1 md:hidden">
                 <button
                   type="button"
                   onClick={() => setMobileSubmenu((c) => c === 'collections' ? null : 'collections')}
@@ -469,7 +469,7 @@ export const Header = () => {
                   setMenuOpen(false);
                   setAddModalOpen(true);
                 }}
-                className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink xl:hidden"
+                className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink md:hidden"
               >
                 <Plus className="h-4 w-4 text-aqua" />
                 <span>Agregar</span>

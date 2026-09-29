@@ -606,4 +606,10 @@ textarea:focus-visible {
   .field-label {
     @apply mb-1.5 block text-xs font-semibold uppercase text-slate-500;
   }
+
+  @media (pointer: coarse), (hover: none) {
+    .bulk-shift-hint {
+      display: none !important;
+    }
+  }
 }
