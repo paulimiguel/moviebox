@@ -19,6 +19,7 @@ const SUGGESTION_PLATFORMS = [
   { id: 'paramount', name: 'Paramount+' },
   { id: 'justwatch', name: 'JustWatch' },
   { id: 'stremio', name: 'Stremio' },
+  { id: 'imdb', name: 'IMDb' },
 ];
 
 const PLATFORMS = [
@@ -472,9 +473,16 @@ export const NewsPage = () => {
     queryKey: ['newReleases', activePopularPlatform],
     queryFn: () => api.tmdb.newReleases(activePopularPlatform),
     staleTime: 1000 * 60 * 5,
+    enabled: activePopularPlatform !== 'imdb',
   });
 
   const currentPlatformNewReleases = useMemo(() => {
+    if (activePopularPlatform === 'imdb') {
+      return (platformPopularQuery.data?.popularPicks || []).map((p) => ({
+        ...p,
+        subBadge: 'Selección',
+      }));
+    }
     if (!platformNewReleasesQuery.data) return [];
     const movies = platformNewReleasesQuery.data.movies || [];
     const series = platformNewReleasesQuery.data.series || [];
@@ -485,7 +493,7 @@ export const NewsPage = () => {
       if (i < series.length) combined.push({ ...series[i], subBadge: 'Novedad' });
     }
     return combined;
-  }, [platformNewReleasesQuery.data]);
+  }, [activePopularPlatform, platformPopularQuery.data?.popularPicks, platformNewReleasesQuery.data]);
 
   const [activeSuggestionPlatform, setActiveSuggestionPlatform] = useState('netflix');
   const [suggestionSeed, setSuggestionSeed] = useState(0);
@@ -642,7 +650,9 @@ export const NewsPage = () => {
       const all = [
         ...(platformPopularQuery.data.featuredMovies || []),
         ...(platformPopularQuery.data.featuredSeries || []),
+        ...(platformPopularQuery.data.top10Week || []),
         ...currentPlatformNewReleases,
+        ...(platformPopularQuery.data.fanFavorites || []),
         ...(platformPopularQuery.data.popularMovies || []),
         ...(platformPopularQuery.data.popularSeries || []),
       ];
@@ -894,17 +904,37 @@ export const NewsPage = () => {
               />
             </div>
 
-            {/* 3. Novedades en la plataforma seleccionada (últimas incorporaciones) */}
+            {/* Top 10 en IMDb esta semana (exclusivo IMDb) */}
+            {activePopularPlatform === 'imdb' && (
+              <div>
+                <div className="relative flex items-center justify-between mb-3">
+                  <h2 className="font-bebas text-2xl sm:text-3xl text-ink uppercase tracking-wide">
+                    Top 10 en IMDb esta semana
+                  </h2>
+                </div>
+                <Top10FeaturedSection
+                  items={platformPopularQuery.data.top10Week || []}
+                  onSelect={setSelectedCandidate}
+                  isMovieInLibrary={isMovieInLibrary}
+                  isItemAdding={isItemAdding}
+                  onAdd={(cand) => importMutation.mutate(cand)}
+                />
+              </div>
+            )}
+
+            {/* 3. Novedades en la plataforma seleccionada */}
             <div>
               <div className="relative flex items-center justify-between mb-3">
                 <div>
                   <h2 className="font-bebas text-2xl sm:text-3xl text-ink uppercase tracking-wide">
                     Novedades en {currentPopularPlatformName}
                   </h2>
-                  <p className="text-xs text-slate-500">Últimas incorporaciones</p>
+                  <p className="text-xs text-slate-500">
+                    {activePopularPlatform === 'imdb' ? 'Selecciones populares' : 'Últimas incorporaciones'}
+                  </p>
                 </div>
               </div>
-              {platformNewReleasesQuery.isLoading ? (
+              {activePopularPlatform !== 'imdb' && platformNewReleasesQuery.isLoading ? (
                 <div className="grid h-40 place-items-center">
                   <Loader2 className="h-6 w-6 animate-spin text-aqua" />
                 </div>
@@ -921,43 +951,69 @@ export const NewsPage = () => {
               )}
             </div>
 
-            {/* 4. Todas las películas de la plataforma (las 50 más populares) */}
-            <div>
-              <div className="relative flex items-center justify-between mb-3">
-                <div>
-                  <h2 className="font-bebas text-2xl sm:text-3xl text-ink uppercase tracking-wide">
-                    Todas las películas en {currentPopularPlatformName}
-                  </h2>
-                  <p className="text-xs text-slate-500">Las 50 más populares</p>
+            {/* Favoritos de los seguidores (exclusivo IMDb) */}
+            {activePopularPlatform === 'imdb' && (
+              <div>
+                <div className="relative flex items-center justify-between mb-3">
+                  <div>
+                    <h2 className="font-bebas text-2xl sm:text-3xl text-ink uppercase tracking-wide">
+                      Favoritos de los seguidores
+                    </h2>
+                    <p className="text-xs text-slate-500">Los títulos más aclamados por la audiencia</p>
+                  </div>
                 </div>
+                <HorizontalScrollSection
+                  items={platformPopularQuery.data.fanFavorites || []}
+                  onSelect={setSelectedCandidate}
+                  isMovieInLibrary={isMovieInLibrary}
+                  isItemAdding={isItemAdding}
+                  onAdd={(cand) => importMutation.mutate(cand)}
+                />
               </div>
-              <HorizontalScrollSection
-                items={platformPopularQuery.data.popularMovies || []}
-                onSelect={setSelectedCandidate}
-                isMovieInLibrary={isMovieInLibrary}
-                isItemAdding={isItemAdding}
-                onAdd={(cand) => importMutation.mutate(cand)}
-              />
-            </div>
+            )}
 
-            {/* 4. Todas las series de la plataforma (las 50 más populares) */}
-            <div>
-              <div className="relative flex items-center justify-between mb-3">
+            {/* 4 y 5. Todas las películas y todas las series (ocultas para IMDb) */}
+            {activePopularPlatform !== 'imdb' && (
+              <>
+                {/* 4. Todas las películas de la plataforma (las 50 más populares) */}
                 <div>
-                  <h2 className="font-bebas text-2xl sm:text-3xl text-ink uppercase tracking-wide">
-                    Todas las series en {currentPopularPlatformName}
-                  </h2>
-                  <p className="text-xs text-slate-500">Las 50 más populares</p>
+                  <div className="relative flex items-center justify-between mb-3">
+                    <div>
+                      <h2 className="font-bebas text-2xl sm:text-3xl text-ink uppercase tracking-wide">
+                        Todas las películas en {currentPopularPlatformName}
+                      </h2>
+                      <p className="text-xs text-slate-500">Las 50 más populares</p>
+                    </div>
+                  </div>
+                  <HorizontalScrollSection
+                    items={platformPopularQuery.data.popularMovies || []}
+                    onSelect={setSelectedCandidate}
+                    isMovieInLibrary={isMovieInLibrary}
+                    isItemAdding={isItemAdding}
+                    onAdd={(cand) => importMutation.mutate(cand)}
+                  />
                 </div>
-              </div>
-              <HorizontalScrollSection
-                items={platformPopularQuery.data.popularSeries || []}
-                onSelect={setSelectedCandidate}
-                isMovieInLibrary={isMovieInLibrary}
-                isItemAdding={isItemAdding}
-                onAdd={(cand) => importMutation.mutate(cand)}
-              />
-            </div>
+
+                {/* 5. Todas las series de la plataforma (las 50 más populares) */}
+                <div>
+                  <div className="relative flex items-center justify-between mb-3">
+                    <div>
+                      <h2 className="font-bebas text-2xl sm:text-3xl text-ink uppercase tracking-wide">
+                        Todas las series en {currentPopularPlatformName}
+                      </h2>
+                      <p className="text-xs text-slate-500">Las 50 más populares</p>
+                    </div>
+                  </div>
+                  <HorizontalScrollSection
+                    items={platformPopularQuery.data.popularSeries || []}
+                    onSelect={setSelectedCandidate}
+                    isMovieInLibrary={isMovieInLibrary}
+                    isItemAdding={isItemAdding}
+                    onAdd={(cand) => importMutation.mutate(cand)}
+                  />
+                </div>
+              </>
+            )}
           </div>
         ) : (
           <p className="text-center text-sm text-slate-400 py-8">

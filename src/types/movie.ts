@@ -359,6 +359,9 @@ export interface JustWatchPlatformPopularResponse {
   featuredSeries: JustWatchTop10Item[];
   popularMovies: JustWatchTop10Item[];
   popularSeries: JustWatchTop10Item[];
+  top10Week?: JustWatchTop10Item[];
+  popularPicks?: JustWatchTop10Item[];
+  fanFavorites?: JustWatchTop10Item[];
 }
 
 export type TmdbImportedMovieData = Omit<

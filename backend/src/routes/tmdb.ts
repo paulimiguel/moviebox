@@ -441,6 +441,99 @@ router.get('/platform-suggestions', async (req, res) => {
     }
   }
 
+  if (platform === 'imdb') {
+    try {
+      const q = `
+        query GetPopularPicks {
+          popularTitles(limit: 24) {
+            titles {
+              id
+              titleText { text }
+              originalTitleText { text }
+              titleType { id text }
+              releaseYear { year }
+              primaryImage { url }
+              plot { plotText { plainText } }
+              ratingsSummary { aggregateRating }
+              genres { genres { id text } }
+            }
+          }
+        }
+      `;
+      const imdbRes = await fetch('https://api.graphql.imdb.com/', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-imdb-client-name': 'imdb-web-next-localized',
+          'x-imdb-user-language': 'es-ES',
+          'Accept-Language': 'es-ES,es;q=0.9',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        },
+        body: JSON.stringify({ query: q }),
+        signal: AbortSignal.timeout(10_000),
+      });
+
+      if (imdbRes.ok) {
+        const imdbJson = (await imdbRes.json()) as { data?: any };
+        const titles = imdbJson.data?.popularTitles?.titles || [];
+        const results = await allSettledInBatches(titles, async (item: any, index: number) => {
+          const type = item.titleType?.id?.includes('tv') || item.titleType?.id?.includes('series') ? 'series' : 'movie';
+          let tmdbId: number | null = null;
+          let title = item.titleText?.text || 'Sin título';
+          let originalTitle = item.originalTitleText?.text || title;
+          let overview = item.plot?.plotText?.plainText || '';
+          let posterUrl = item.primaryImage?.url || null;
+          let rating: number | null = item.ratingsSummary?.aggregateRating ? Number(item.ratingsSummary.aggregateRating) : null;
+          let genres: string[] = (item.genres?.genres || []).map((g: any) => g.text).filter(Boolean);
+          const year = item.releaseYear?.year || null;
+
+          if (token && item.id) {
+            try {
+              const findRes = await tmdbRequest<{
+                movie_results?: any[];
+                tv_results?: any[];
+              }>(`/find/${item.id}?external_source=imdb_id&language=es-AR`);
+              const matched = type === 'movie' ? findRes.movie_results?.[0] : findRes.tv_results?.[0];
+              if (matched) {
+                tmdbId = matched.id;
+                title = matched.title || matched.name || title;
+                originalTitle = matched.original_title || matched.original_name || originalTitle;
+                if (matched.overview) overview = matched.overview;
+                if (matched.poster_path) posterUrl = `https://image.tmdb.org/t/p/w500${matched.poster_path}`;
+                if (Number.isFinite(Number(matched.vote_average)) && Number(matched.vote_average) > 0) {
+                  rating = Number(matched.vote_average);
+                }
+              }
+            } catch {
+              // best effort
+            }
+          }
+
+          return {
+            tmdbId: tmdbId || (70000000 + (parseInt(String(item.id).replace(/\D/g, ''), 10) % 9000000)),
+            imdbId: item.id,
+            type,
+            title,
+            originalTitle,
+            year,
+            posterUrl,
+            overview,
+            genres: genres.slice(0, 3),
+            rating,
+            popularity: 80 - index,
+          };
+        }, 8);
+
+        const candidates = results.flatMap((r) => r.status === 'fulfilled' && r.value ? [r.value] : []);
+        if (candidates.length > 0) {
+          return res.json(candidates.slice(0, 24));
+        }
+      }
+    } catch {
+      // Si falla GraphQL de IMDb, continúa hacia TMDB discover sin provider abajo
+    }
+  }
+
   let providerId = 8;
   if (platform === 'prime') providerId = 119;
   else if (platform === 'apple') providerId = 350;
@@ -450,7 +543,7 @@ router.get('/platform-suggestions', async (req, res) => {
   else if (platform === 'claro') providerId = 167;
   else if (platform === 'flow') providerId = 339;
 
-  const providerQuery = platform === 'stremio' ? '' : `&with_watch_providers=${providerId}&watch_region=AR`;
+  const providerQuery = (platform === 'stremio' || platform === 'imdb') ? '' : `&with_watch_providers=${providerId}&watch_region=AR`;
   const basePage = Math.max(1, (Math.abs(seed) % 5) + 1);
 
   const today = new Date().toISOString().slice(0, 10);
@@ -733,6 +826,8 @@ const JW_PLATFORM_PACKAGES: Record<string, string | null> = {
   flow: 'mvp',
   paramount: 'pmp',
   justwatch: null,
+  stremio: null,
+  imdb: null,
 };
 
 const JW_PLATFORM_NAMES: Record<string, string> = {
@@ -745,6 +840,7 @@ const JW_PLATFORM_NAMES: Record<string, string> = {
   paramount: 'Paramount+',
   justwatch: 'JustWatch',
   stremio: 'Stremio',
+  imdb: 'IMDb',
 };
 
 const justwatchPlatformPopularCache = new Map<string, { data: any; cachedAt: number }>();
@@ -883,6 +979,205 @@ router.get('/justwatch-platform-popular', async (req, res) => {
     } catch (error) {
       if (cached) return res.json(cached.data);
       return res.status(502).json({ error: 'No se pudieron cargar los populares de Stremio' });
+    }
+  }
+
+  if (platform === 'imdb') {
+    try {
+      const query = `
+        query GetImdbPlatformData {
+          featuredMovies: advancedTitleSearch(
+            first: 10
+            constraints: { titleTypeConstraint: { anyTitleTypeIds: ["movie"] } }
+            sort: { sortBy: POPULARITY, sortOrder: ASC }
+          ) {
+            edges {
+              node {
+                title {
+                  id
+                  titleText { text }
+                  originalTitleText { text }
+                  releaseYear { year }
+                  primaryImage { url }
+                  plot { plotText { plainText } }
+                  ratingsSummary { aggregateRating }
+                  genres { genres { id text } }
+                }
+              }
+            }
+          }
+          featuredSeries: advancedTitleSearch(
+            first: 10
+            constraints: { titleTypeConstraint: { anyTitleTypeIds: ["tvSeries"] } }
+            sort: { sortBy: POPULARITY, sortOrder: ASC }
+          ) {
+            edges {
+              node {
+                title {
+                  id
+                  titleText { text }
+                  originalTitleText { text }
+                  releaseYear { year }
+                  primaryImage { url }
+                  plot { plotText { plainText } }
+                  ratingsSummary { aggregateRating }
+                  genres { genres { id text } }
+                }
+              }
+            }
+          }
+          top10Week: topMeterTitles(first: 10) {
+            edges {
+              node {
+                id
+                titleText { text }
+                originalTitleText { text }
+                titleType { id text }
+                releaseYear { year }
+                primaryImage { url }
+                plot { plotText { plainText } }
+                ratingsSummary { aggregateRating }
+                genres { genres { id text } }
+              }
+            }
+          }
+          popularPicks: popularTitles(limit: 20) {
+            titles {
+              id
+              titleText { text }
+              originalTitleText { text }
+              titleType { id text }
+              releaseYear { year }
+              primaryImage { url }
+              plot { plotText { plainText } }
+              ratingsSummary { aggregateRating }
+              genres { genres { id text } }
+            }
+          }
+          fanFavorites: advancedTitleSearch(
+            first: 20
+            constraints: { userRatingsConstraint: { aggregateRatingRange: { min: 7.5 } } }
+            sort: { sortBy: POPULARITY, sortOrder: ASC }
+          ) {
+            edges {
+              node {
+                title {
+                  id
+                  titleText { text }
+                  originalTitleText { text }
+                  titleType { id text }
+                  releaseYear { year }
+                  primaryImage { url }
+                  plot { plotText { plainText } }
+                  ratingsSummary { aggregateRating }
+                  genres { genres { id text } }
+                }
+              }
+            }
+          }
+        }
+      `;
+
+      const imdbRes = await fetch('https://api.graphql.imdb.com/', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-imdb-client-name': 'imdb-web-next-localized',
+          'x-imdb-user-language': 'es-ES',
+          'Accept-Language': 'es-ES,es;q=0.9',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        },
+        body: JSON.stringify({ query }),
+        signal: AbortSignal.timeout(15_000),
+      });
+
+      if (!imdbRes.ok) throw new Error(`IMDB_GRAPHQL_FAILED_${imdbRes.status}`);
+      const imdbJson = (await imdbRes.json()) as { data?: any };
+      const data = imdbJson.data;
+      if (!data) throw new Error('IMDB_GRAPHQL_NO_DATA');
+
+      const processImdbItems = async (rawItems: any[], defaultType: 'movie' | 'series') => {
+        const results = await allSettledInBatches(rawItems, async (item: any, index: number) => {
+          const type = item.titleType?.id?.includes('tv') || item.titleType?.id?.includes('series') ? 'series' : defaultType;
+          let tmdbId: number | null = null;
+          let title = item.titleText?.text || 'Sin título';
+          let originalTitle = item.originalTitleText?.text || title;
+          let overview = item.plot?.plotText?.plainText || '';
+          let posterUrl = item.primaryImage?.url || null;
+          let rating: number | null = item.ratingsSummary?.aggregateRating ? Number(item.ratingsSummary.aggregateRating) : null;
+          let genres: string[] = (item.genres?.genres || []).map((g: any) => g.text).filter(Boolean);
+          const year = item.releaseYear?.year || null;
+
+          if (token && item.id) {
+            try {
+              const findRes = await tmdbRequest<{
+                movie_results?: any[];
+                tv_results?: any[];
+              }>(`/find/${item.id}?external_source=imdb_id&language=es-AR`);
+              const matched = type === 'movie' ? findRes.movie_results?.[0] : findRes.tv_results?.[0];
+              if (matched) {
+                tmdbId = matched.id;
+                title = matched.title || matched.name || title;
+                originalTitle = matched.original_title || matched.original_name || originalTitle;
+                if (matched.overview) overview = matched.overview;
+                if (matched.poster_path) posterUrl = `https://image.tmdb.org/t/p/w500${matched.poster_path}`;
+                if (Number.isFinite(Number(matched.vote_average)) && Number(matched.vote_average) > 0) {
+                  rating = Number(matched.vote_average);
+                }
+              }
+            } catch {
+              // best effort TMDB lookup
+            }
+          }
+
+          return {
+            rank: index + 1,
+            jwId: item.id,
+            tmdbId: tmdbId || (70000000 + (parseInt(String(item.id).replace(/\D/g, ''), 10) % 9000000)),
+            imdbId: item.id,
+            type,
+            title,
+            originalTitle,
+            year,
+            overview,
+            genres,
+            posterUrl,
+            rating,
+            popularity: 100 - index,
+            badge: type === 'series' ? 'TV' : 'PELÍCULA',
+            subBadge: null,
+            justwatchUrl: `https://www.imdb.com/title/${item.id}`,
+          };
+        }, 8);
+
+        return results.flatMap((r) => (r.status === 'fulfilled' && r.value ? [r.value] : []));
+      };
+
+      const [featuredMovies, featuredSeries, top10Week, popularPicks, fanFavorites] = await Promise.all([
+        processImdbItems((data.featuredMovies?.edges || []).map((e: any) => e.node.title), 'movie'),
+        processImdbItems((data.featuredSeries?.edges || []).map((e: any) => e.node.title), 'series'),
+        processImdbItems((data.top10Week?.edges || []).map((e: any) => e.node), 'movie'),
+        processImdbItems(data.popularPicks?.titles || [], 'movie'),
+        processImdbItems((data.fanFavorites?.edges || []).map((e: any) => e.node.title), 'movie'),
+      ]);
+
+      const payload = {
+        platform: 'imdb',
+        platformName: 'IMDb',
+        featuredMovies,
+        featuredSeries,
+        top10Week,
+        popularPicks,
+        fanFavorites,
+        popularMovies: [],
+        popularSeries: [],
+      };
+
+      justwatchPlatformPopularCache.set('imdb', { data: payload, cachedAt: Date.now() });
+      return res.json(payload);
+    } catch (error) {
+      if (cached) return res.json(cached.data);
+      return res.status(502).json({ error: 'No se pudieron cargar los populares de IMDb' });
     }
   }
 
