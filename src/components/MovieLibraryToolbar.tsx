@@ -225,6 +225,43 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <input ref={searchInputRef} type="search" value={props.search} onChange={(event) => props.onSearchChange(event.target.value)} className={`control w-full pl-9 ${props.search ? '' : 'pr-16'}`} placeholder="Buscar" />
                 {!props.search && <button type="button" onClick={() => void pasteSearch()} className="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-slate-100 px-2 py-1 text-[10px] font-semibold uppercase text-slate-600 transition-colors hover:bg-slate-200 hover:text-ink">Pegar</button>}
+                <input
+                  ref={searchInputRef}
+                  type="search"
+                  value={props.search}
+                  onChange={(event) => props.onSearchChange(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Escape' && props.search) {
+                      event.preventDefault();
+                      props.onSearchChange('');
+                    }
+                  }}
+                  className={`control w-full pl-9 ${props.search ? 'pr-9' : 'pr-16'} [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-cancel-button]:hidden [&::-webkit-search-decoration]:appearance-none [&::-ms-clear]:hidden`}
+                  placeholder="Buscar"
+                />
+                {props.search ? (
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      props.onSearchChange('');
+                      searchInputRef.current?.focus();
+                    }}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 inline-flex items-center justify-center p-1 text-slate-400 hover:text-ink transition-colors"
+                    title="Borrar búsqueda"
+                    aria-label="Borrar búsqueda"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => void pasteSearch()}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-slate-100 px-2 py-1 text-[10px] font-semibold uppercase text-slate-600 transition-colors hover:bg-slate-200 hover:text-ink"
+                  >
+                    Pegar
+                  </button>
+                )}
               </label>
             </div>
             <div className="order-3 grid grid-cols-3 gap-1.5 w-full md:order-none md:flex md:w-auto md:shrink-0 md:items-center">

@@ -222,7 +222,7 @@ export const AuthPage = () => {
 
       <section
         ref={posterPanelRef}
-        className="relative hidden max-h-screen min-h-screen overflow-y-auto overscroll-contain bg-black lg:block"
+        className="relative hidden max-h-screen min-h-screen overflow-y-auto overscroll-contain bg-black hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden lg:block"
         aria-hidden="true"
       >
         <div className="grid min-h-full grid-cols-5 gap-3 overflow-hidden px-3 py-6">
@@ -235,7 +235,10 @@ export const AuthPage = () => {
                 className={`relative flex min-w-0 self-start flex-col gap-3 ${column % 2 === 0 ? "" : "mt-[75%]"}`}
               >
                 {column % 2 !== 0 && (
-                  <div className="absolute inset-x-0 bottom-[calc(100%+0.75rem)] aspect-[2/3] overflow-hidden bg-white shadow-card">
+                  <div
+                    className="absolute inset-x-0 bottom-[calc(100%+0.75rem)] aspect-[2/3] overflow-hidden rounded-md bg-white shadow-card transition-all duration-300 ease-out hover:scale-105 hover:z-20 hover:shadow-2xl cursor-pointer"
+                    title={edgePoster.title}
+                  >
                     <img
                       src={edgePoster.src}
                       alt={edgePoster.title}
@@ -248,7 +251,8 @@ export const AuthPage = () => {
                 ).map((poster) => (
                   <div
                     key={poster.src}
-                    className="aspect-[2/3] flex-none overflow-hidden bg-white shadow-card"
+                    className="relative aspect-[2/3] flex-none overflow-hidden rounded-md bg-white shadow-card transition-all duration-300 ease-out hover:scale-105 hover:z-20 hover:shadow-2xl cursor-pointer"
+                    title={poster.title}
                   >
                     <img
                       src={poster.src}
@@ -259,7 +263,8 @@ export const AuthPage = () => {
                 ))}
                 {column % 2 === 0 && (
                   <div
-                    className="absolute inset-x-0 top-[calc(100%+0.75rem)] aspect-[2/3] overflow-hidden bg-white shadow-card"
+                    className="absolute inset-x-0 top-[calc(100%+0.75rem)] aspect-[2/3] overflow-hidden rounded-md bg-white shadow-card transition-all duration-300 ease-out hover:scale-105 hover:z-20 hover:shadow-2xl cursor-pointer"
+                    title={edgePoster.title}
                   >
                     <img
                       src={edgePoster.src}
