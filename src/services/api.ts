@@ -118,6 +118,7 @@ export const api = {
       justwatchTop10: () => request<JustWatchTop10Item[]>('/tmdb/justwatch-top10'),
       justwatchPlatformPopular: (platform: string) => request<JustWatchPlatformPopularResponse>(`/tmdb/justwatch-platform-popular?platform=${encodeURIComponent(platform)}`),
       searchPlatforms: (query: string) => request<TitlePlatformResult[]>(`/tmdb/search-platforms?query=${encodeURIComponent(query)}`),
+      justwatchLoginPosters: () => request<{ src: string; title: string }[]>('/tmdb/public/justwatch-posters'),
     },
 };
 

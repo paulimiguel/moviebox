@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -44,10 +44,20 @@ const LOGIN_EDGE_POSTERS = [
   { src: "/login-posters/youve-got-mail.jpg", title: "You've Got Mail" },
 ] as const;
 
+const ALL_LOGIN_POSTERS: { src: string; title: string }[] = [...LOGIN_POSTERS, ...LOGIN_EDGE_POSTERS];
+
+const COLUMN_CONFIGS = [
+  { direction: "up" as const, duration: 105 },
+  { direction: "down" as const, duration: 115 },
+  { direction: "up" as const, duration: 100 },
+  { direction: "down" as const, duration: 120 },
+  { direction: "up" as const, duration: 110 },
+];
+
 export const AuthPage = () => {
   const { login, register } = useAuth();
   const { theme } = useTheme();
-  const posterPanelRef = useRef<HTMLElement>(null);
+  const [posters, setPosters] = useState<{ src: string; title: string }[]>(ALL_LOGIN_POSTERS);
   const [mode, setMode] = useState<"login" | "register">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -66,10 +76,19 @@ export const AuthPage = () => {
   }, []);
 
   useEffect(() => {
-    const panel = posterPanelRef.current;
-    if (!panel) return;
-
-    panel.scrollTop = (panel.scrollHeight - panel.clientHeight) / 2;
+    let cancelled = false;
+    api.tmdb.justwatchLoginPosters()
+      .then((data) => {
+        if (!cancelled && Array.isArray(data) && data.length >= 10) {
+          setPosters(data);
+        }
+      })
+      .catch(() => {
+        // Fallback a los posters locales
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const submit = async (event: FormEvent) => {
@@ -221,58 +240,64 @@ export const AuthPage = () => {
       </section>
 
       <section
-        ref={posterPanelRef}
-        className="relative hidden max-h-screen min-h-screen overflow-y-auto overscroll-contain bg-black hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden lg:block"
+        className="group relative hidden max-h-screen min-h-screen overflow-hidden bg-black lg:block"
         aria-hidden="true"
       >
-        <div className="grid min-h-full grid-cols-5 gap-3 overflow-hidden px-3 py-6">
-          {[0, 1, 2, 3, 4].map((column) => {
-            const edgePoster = LOGIN_EDGE_POSTERS[column];
+        <div className="grid h-full grid-cols-5 gap-3 px-3">
+          {COLUMN_CONFIGS.map((config, colIndex) => {
+            const columnPosters = posters.filter(
+              (_, posterIndex) => posterIndex % 5 === colIndex,
+            );
+            const animationClass =
+              config.direction === "up"
+                ? "auth-marquee-up"
+                : "auth-marquee-down";
 
             return (
               <div
-                key={column}
-                className={`relative flex min-w-0 self-start flex-col gap-3 ${column % 2 === 0 ? "" : "mt-[75%]"}`}
+                key={colIndex}
+                className="relative h-full overflow-hidden"
               >
-                {column % 2 !== 0 && (
-                  <div
-                    className="absolute inset-x-0 bottom-[calc(100%+0.75rem)] aspect-[2/3] overflow-hidden rounded-md bg-white shadow-card transition-all duration-300 ease-out hover:scale-105 hover:z-20 hover:shadow-2xl cursor-pointer"
-                    title={edgePoster.title}
-                  >
-                    <img
-                      src={edgePoster.src}
-                      alt={edgePoster.title}
-                      className="h-full w-full object-cover"
-                    />
+                <div
+                  className={`flex flex-col group-hover:[animation-play-state:paused] ${animationClass}`}
+                  style={{ animationDuration: `${config.duration}s` }}
+                >
+                  {/* First set of posters */}
+                  <div className="flex flex-col gap-3 pb-3">
+                    {columnPosters.map((poster) => (
+                      <div
+                        key={poster.src}
+                        className="relative aspect-[2/3] flex-none overflow-hidden rounded-md bg-white shadow-card transition-all duration-300 ease-out hover:scale-105 hover:z-20 hover:shadow-2xl cursor-pointer"
+                        title={poster.title}
+                      >
+                        <img
+                          src={poster.src}
+                          alt={poster.title}
+                          className="h-full w-full object-cover"
+                          loading="eager"
+                        />
+                      </div>
+                    ))}
                   </div>
-                )}
-                {LOGIN_POSTERS.filter(
-                  (_, posterIndex) => posterIndex % 5 === column,
-                ).map((poster) => (
-                  <div
-                    key={poster.src}
-                    className="relative aspect-[2/3] flex-none overflow-hidden rounded-md bg-white shadow-card transition-all duration-300 ease-out hover:scale-105 hover:z-20 hover:shadow-2xl cursor-pointer"
-                    title={poster.title}
-                  >
-                    <img
-                      src={poster.src}
-                      alt={poster.title}
-                      className="h-full w-full object-cover"
-                    />
+
+                  {/* Duplicate set for seamless infinite loop */}
+                  <div className="flex flex-col gap-3 pb-3" aria-hidden="true">
+                    {columnPosters.map((poster, duplicateIndex) => (
+                      <div
+                        key={`${poster.src}-dup-${duplicateIndex}`}
+                        className="relative aspect-[2/3] flex-none overflow-hidden rounded-md bg-white shadow-card transition-all duration-300 ease-out hover:scale-105 hover:z-20 hover:shadow-2xl cursor-pointer"
+                        title={poster.title}
+                      >
+                        <img
+                          src={poster.src}
+                          alt={poster.title}
+                          className="h-full w-full object-cover"
+                          loading="eager"
+                        />
+                      </div>
+                    ))}
                   </div>
-                ))}
-                {column % 2 === 0 && (
-                  <div
-                    className="absolute inset-x-0 top-[calc(100%+0.75rem)] aspect-[2/3] overflow-hidden rounded-md bg-white shadow-card transition-all duration-300 ease-out hover:scale-105 hover:z-20 hover:shadow-2xl cursor-pointer"
-                    title={edgePoster.title}
-                  >
-                    <img
-                      src={edgePoster.src}
-                      alt={edgePoster.title}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                )}
+                </div>
               </div>
             );
           })}

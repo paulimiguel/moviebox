@@ -80,6 +80,82 @@ const tmdbRequest = async <T>(path: string): Promise<T> => {
   return response.json() as Promise<T>;
 };
 
+let justwatchPostersCache: { data: { src: string; title: string }[]; cachedAt: number } | null = null;
+
+router.get('/public/justwatch-posters', async (_req, res) => {
+  if (justwatchPostersCache && Date.now() - justwatchPostersCache.cachedAt < 1000 * 60 * 60) {
+    return res.json(justwatchPostersCache.data);
+  }
+
+  try {
+    const query = `
+      query GetPopularTitles($country: Country!, $filter: TitleFilter, $first: Int!) {
+        popularTitles(country: $country, filter: $filter, first: $first, sortBy: POPULAR) {
+          edges {
+            node {
+              content(country: $country, language: "es") {
+                title
+                posterUrl
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const jwRes = await fetch('https://apis.justwatch.com/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      },
+      body: JSON.stringify({
+        operationName: 'GetPopularTitles',
+        variables: {
+          country: 'AR',
+          filter: {
+            ageCertifications: [],
+            excludeGenres: [],
+            excludeIrrelevantTitles: false,
+            excludeProductionCountries: [],
+            genres: [],
+            monetizationTypes: [],
+            objectTypes: [],
+            packages: [],
+            presentationTypes: [],
+            productionCountries: [],
+            subgenres: [],
+          },
+          first: 35,
+        },
+        query,
+      }),
+      signal: AbortSignal.timeout(15_000),
+    });
+
+    if (!jwRes.ok) throw new Error(`JUSTWATCH_GQL_${jwRes.status}`);
+    const jwData = (await jwRes.json()) as any;
+    const edges = jwData?.data?.popularTitles?.edges || [];
+
+    const posters = edges
+      .map((edge: any) => edge?.node?.content)
+      .filter((content: any) => content?.title && content?.posterUrl)
+      .map((content: any) => ({
+        title: content.title,
+        src: `https://images.justwatch.com${content.posterUrl.replace('{profile}', 's332').replace('{format}', 'webp')}`,
+      }));
+
+    if (posters.length > 0) {
+      justwatchPostersCache = { data: posters, cachedAt: Date.now() };
+      return res.json(posters);
+    }
+    return res.json([]);
+  } catch {
+    if (justwatchPostersCache) return res.json(justwatchPostersCache.data);
+    return res.json([]);
+  }
+});
+
 router.use(authenticateToken);
 router.get('/status', (_req, res) => res.json({ configured: Boolean(token), protectedFields: ['favorite', 'watched', 'watchlist', 'personalRating', 'collectionIds'] }));
 router.get('/search', async (req, res) => {

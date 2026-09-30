@@ -756,3 +756,38 @@ html.cursor-thinking * {
   animation: popcorn-bucket-bounce 0.7s ease-in-out infinite;
   transform-origin: bottom center;
 }
+
+@keyframes marquee-scroll-up {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
+@keyframes marquee-scroll-down {
+  0% {
+    transform: translateY(-50%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.auth-marquee-up {
+  animation: marquee-scroll-up linear infinite;
+  will-change: transform;
+}
+
+.auth-marquee-down {
+  animation: marquee-scroll-down linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-marquee-up,
+  .auth-marquee-down {
+    animation: none;
+  }
+}
