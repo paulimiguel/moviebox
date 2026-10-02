@@ -28,18 +28,34 @@ interface SearchGroup {
   error?: string;
 }
 
+const normalizeImportedTitle = (value: string) => value
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .toLocaleLowerCase('es')
+  .replace(/[^a-z0-9]+/g, ' ')
+  .trim();
+
+const parseImportedTitle = (value: string) => {
+  const trimmed = value.trim();
+  const match = trimmed.match(/^(.*?)\s*(?:\((\d{4})\)|[-–—,;|]\s*(\d{4})|(\d{4}))\s*$/);
+  const year = Number(match?.[2] || match?.[3] || match?.[4] || 0);
+  const title = match?.[1]?.trim();
+  const validYear = year >= 1888 && year <= new Date().getFullYear() + 2;
+  return validYear && title ? { title, year } : { title: trimmed, year: null };
+};
+
 const PosterThumbnail = ({ candidate }: { candidate: ImdbSearchCandidate }) => {
   const [failed, setFailed] = useState(false);
 
   if (!candidate.posterUrl || failed) {
     return (
-      <div className="grid h-24 w-16 shrink-0 place-items-center rounded-sm bg-slate-100 text-slate-400">
+      <div className="grid aspect-[2/3] w-full place-items-center bg-slate-100 text-slate-400">
         {candidate.type === 'movie' ? <Film className="h-6 w-6" /> : <Tv className="h-6 w-6" />}
       </div>
     );
   }
 
-  return <img src={candidate.posterUrl} alt="" className="h-24 w-16 shrink-0 rounded-sm object-cover" onError={() => setFailed(true)} />;
+  return <img src={candidate.posterUrl} alt="" className="aspect-[2/3] w-full object-cover" onError={() => setFailed(true)} />;
 };
 
 const CoverAddButton = ({
@@ -113,8 +129,12 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
 
   const [addedMovieIds, setAddedMovieIds] = useState<Record<string, string>>({});
 
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const bulkTextareaRef = useRef<HTMLTextAreaElement>(null);
   const txtInputRef = useRef<HTMLInputElement>(null);
   const spreadsheetInputRef = useRef<HTMLInputElement>(null);
+  const autoImportFromFileRef = useRef(false);
+  const autoImportPendingReviewCountRef = useRef(0);
 
   const library = useQuery({ queryKey: ['movies'], queryFn: api.movies.getAll, enabled: isOpen });
   const libraryMovies = useMemo(() => (library.data || []) as MovieItem[], [library.data]);
@@ -331,7 +351,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
         const batch = movieNames.slice(index, index + SEARCH_BATCH_SIZE);
         results.push(...await Promise.all(batch.map(async (name) => {
           try {
-            return { name, candidates: await api.imdb.search(name) };
+            return { name, candidates: await api.imdb.search(parseImportedTitle(name).title) };
           } catch (reason) {
             return {
               name,
@@ -344,6 +364,48 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
       return results;
     },
     onSuccess: (results) => {
+      if (autoImportFromFileRef.current) {
+        autoImportFromFileRef.current = false;
+        const automaticCandidates: ImdbSearchCandidate[] = [];
+        const pendingGroups: SearchGroup[] = [];
+
+        results.forEach((group) => {
+          const parsed = parseImportedTitle(group.name);
+          if (!parsed.year || group.error) {
+            pendingGroups.push(group);
+            return;
+          }
+
+          const candidatesForYear = group.candidates.filter((candidate) => candidate.year === parsed.year);
+          const normalizedExpectedTitle = normalizeImportedTitle(parsed.title);
+          const exactTitleCandidates = candidatesForYear.filter((candidate) =>
+            normalizeImportedTitle(candidate.title) === normalizedExpectedTitle ||
+            normalizeImportedTitle(candidate.originalTitle) === normalizedExpectedTitle
+          );
+          const candidate = exactTitleCandidates.length === 1
+            ? exactTitleCandidates[0]
+            : candidatesForYear.length === 1
+              ? candidatesForYear[0]
+              : null;
+
+          if (candidate) automaticCandidates.push(candidate);
+          else pendingGroups.push(group);
+        });
+
+        setGroups(pendingGroups.length ? pendingGroups : null);
+        setSelectedIds({});
+        autoImportPendingReviewCountRef.current = pendingGroups.length;
+
+        if (automaticCandidates.length) {
+          importBulkMovies.mutate(automaticCandidates);
+        } else {
+          setError(pendingGroups.length
+            ? `${pendingGroups.length} ${pendingGroups.length === 1 ? 'título requiere' : 'títulos requieren'} selección manual.`
+            : 'No se encontraron títulos para importar.');
+        }
+        return;
+      }
+
       setGroups(results);
       setSelectedIds({});
       const failedCount = results.filter((group) => group.error).length;
@@ -397,7 +459,11 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
         `${savedIds.length} ${savedIds.length === 1 ? 'título agregado' : 'títulos agregados'}.`,
         ...duplicates.map((duplicate) => `${duplicate}: Este título ya está en MovieBox.`),
         ...failures,
+        ...(autoImportPendingReviewCountRef.current
+          ? [`${autoImportPendingReviewCountRef.current} ${autoImportPendingReviewCountRef.current === 1 ? 'título requiere' : 'títulos requieren'} selección manual.`]
+          : []),
       ];
+      autoImportPendingReviewCountRef.current = 0;
       setError(summary.join(' '));
     },
     onError: (reason: Error) => setError(reason.message),
@@ -443,6 +509,10 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
     setError(cleaned.length ? '' : 'El archivo no contiene títulos para buscar.');
     setBulkOptionsOpen(false);
     setBulkDialogOpen(true);
+    if (cleaned.length) {
+      autoImportFromFileRef.current = true;
+      bulkSearch.mutate(cleaned);
+    }
   };
 
   const importTextFile = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -462,7 +532,22 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       if (!sheet) return loadImportedTitles([]);
       const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, raw: false });
-      loadImportedTitles(rows.map((row) => String(row.find((cell) => String(cell ?? '').trim()) ?? '')));
+      const headers = (rows[0] || []).map((cell) => normalizeImportedTitle(String(cell ?? '')));
+      const titleColumn = headers.findIndex((header) => ['titulo', 'title', 'pelicula', 'movie'].includes(header));
+      const yearColumn = headers.findIndex((header) => ['ano', 'year'].includes(header));
+      const dataRows = titleColumn >= 0 ? rows.slice(1) : rows;
+      loadImportedTitles(dataRows.map((row) => {
+        const year = yearColumn >= 0
+          ? String(row[yearColumn] ?? '').trim()
+          : String(row.find((cell) => /^\d{4}$/.test(String(cell ?? '').trim())) ?? '').trim();
+        const title = String((titleColumn >= 0
+          ? row[titleColumn]
+          : row.find((cell) => {
+            const value = String(cell ?? '').trim();
+            return value && value !== year;
+          })) ?? '').trim();
+        return title && /^\d{4}$/.test(year) ? `${title} (${year})` : title;
+      }));
     } catch {
       setError('No se pudo leer la planilla. Revisá que sea un archivo XLS o XLSX válido.');
       setBulkOptionsOpen(false);
@@ -478,7 +563,29 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
     setGroups(null);
     setSelectedIds({});
     setError('');
+    autoImportFromFileRef.current = false;
+    autoImportPendingReviewCountRef.current = 0;
     onClose();
+  };
+
+  const handleNewSearch = () => {
+    setBulkOptionsOpen(false);
+    setSelectedCandidate(null);
+    setError('');
+
+    if (bulkDialogOpen) {
+      setBulkQuery('');
+      setGroups(null);
+      setSelectedIds({});
+      autoImportFromFileRef.current = false;
+      autoImportPendingReviewCountRef.current = 0;
+      requestAnimationFrame(() => bulkTextareaRef.current?.focus());
+      return;
+    }
+
+    setSearchQuery('');
+    setAppliedSearch('');
+    requestAnimationFrame(() => searchInputRef.current?.focus());
   };
 
   useEffect(() => {
@@ -568,6 +675,8 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                     return;
                   }
                   setError('');
+                  autoImportFromFileRef.current = false;
+                  autoImportPendingReviewCountRef.current = 0;
                   bulkSearch.mutate(bulkNames);
                 }}
                 className="rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
@@ -575,9 +684,10 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                 <label>
                   <span className="field-label">Títulos a buscar</span>
                   <textarea
+                    ref={bulkTextareaRef}
                     value={bulkQuery}
                     onChange={(e) => setBulkQuery(e.target.value)}
-                    placeholder="Ingresá un título por línea"
+                    placeholder="Ingresá un título por línea (podés escribirlos o pegar texto del portapapeles)"
                     className="control min-h-32 w-full py-2"
                   />
                 </label>
@@ -623,11 +733,11 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                         )}
                       </div>
                       {group.candidates.length ? (
-                        <div className="divide-y divide-slate-100">
+                        <div className="grid grid-cols-2 gap-3 p-3 sm:grid-cols-3 sm:p-4 md:grid-cols-4 lg:grid-cols-5">
                           {group.candidates.slice(0, 5).map((candidate) => {
                             const selected = (selectedIds[groupIndex] || []).includes(candidate.imdbId);
                             return (
-                              <div key={`${candidate.type}-${candidate.imdbId}`} className={`flex items-center gap-4 p-3 sm:px-4 transition-colors ${selected ? 'bg-mist' : 'hover:bg-slate-50'}`}>
+                              <div key={`${candidate.type}-${candidate.imdbId}`} className={`relative min-w-0 overflow-hidden rounded-md border transition-colors ${selected ? 'border-aqua bg-mist' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
                                 <input
                                   type="checkbox"
                                   checked={selected}
@@ -638,20 +748,15 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                                       [groupIndex]: selected ? groupIds.filter((imdbId) => imdbId !== candidate.imdbId) : [...groupIds, candidate.imdbId],
                                     };
                                   })}
-                                  className="h-4 w-4 shrink-0 cursor-pointer rounded accent-aqua"
+                                  className="absolute left-2 top-2 z-10 h-4 w-4 cursor-pointer rounded bg-white accent-aqua shadow"
                                   aria-label={`Seleccionar ${candidate.title}`}
                                 />
-                                <div className="flex min-w-0 flex-1 items-center gap-4">
-                                  <PosterThumbnail candidate={candidate} />
-                                  <div className="min-w-0 flex-1">
-                                    <span className="block font-semibold text-ink">{candidate.title}</span>
-                                    {candidate.originalTitle !== candidate.title && (
-                                      <span className="block truncate text-sm text-slate-500">{candidate.originalTitle}</span>
-                                    )}
-                                    <span className="mt-1 block text-xs font-medium uppercase text-slate-400">
-                                      {candidate.type === 'movie' ? 'Película' : 'Serie'}{candidate.year ? ` · ${candidate.year}` : ''}
-                                    </span>
-                                  </div>
+                                <PosterThumbnail candidate={candidate} />
+                                <div className="min-w-0 p-2.5">
+                                  <span className="block truncate text-sm font-semibold text-ink" title={candidate.title}>{candidate.title}</span>
+                                  <span className="mt-1 block text-xs font-medium uppercase text-slate-400">
+                                    {candidate.type === 'movie' ? 'Película' : 'Serie'}{candidate.year ? ` · ${candidate.year}` : ''}
+                                  </span>
                                 </div>
                               </div>
                             );
@@ -668,8 +773,6 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                 </div>
               )}
 
-              {error && <p className="movie-import-feedback rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
-
               <div className="flex justify-end border-t border-slate-200 pt-4">
                 <button type="button" onClick={() => setBulkDialogOpen(false)} className="secondary-button">
                   Volver al buscador
@@ -685,6 +788,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input
+                      ref={searchInputRef}
                       id="movie-search-modal-input"
                       type="search"
                       name="moviebox_search_query"
@@ -786,12 +890,6 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                           importSuggestion.variables &&
                           suggestionKey(importSuggestion.variables) === suggestionKey(candidate);
 
-                        const typeBadge = (
-                          <span className={`rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase text-white shadow-sm ${candidate.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>
-                            {candidate.type === 'movie' ? 'Película' : 'Serie'}
-                          </span>
-                        );
-
                         return (
                           <article
                             key={suggestionKey(candidate)}
@@ -822,7 +920,6 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                                   {candidate.type === 'movie' ? <Film className="h-10 w-10" /> : <Tv className="h-10 w-10" />}
                                 </div>
                               )}
-                              <div className="absolute left-2 top-2 pointer-events-none">{typeBadge}</div>
                               <div className="absolute bottom-2 right-2 z-10">
                                 <CoverAddButton
                                   isAdded={Boolean(inLibraryId)}
@@ -835,19 +932,16 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                             <div className="flex flex-1 flex-col justify-between p-3">
                               <div>
                                 <h4
-                                  className="font-bebas text-lg uppercase leading-5 text-ink dark:text-white line-clamp-1 cursor-pointer hover:text-coral transition-colors"
+                                  className="line-clamp-1 cursor-pointer text-sm font-semibold leading-5 text-ink transition-colors hover:text-coral dark:text-white"
                                   title={candidate.title}
                                   onClick={() => setSelectedCandidate(candidate)}
                                 >
                                   {candidate.title}
                                 </h4>
-                                {candidate.originalTitle && candidate.originalTitle !== candidate.title && (
-                                  <p className="truncate text-xs text-slate-400" title={candidate.originalTitle}>
-                                    {candidate.originalTitle}
-                                  </p>
-                                )}
                                 <div className="mt-1 flex items-center justify-between text-xs text-slate-500">
-                                  <span>{candidate.year || 'S/D'}</span>
+                                  <span className="font-medium uppercase">
+                                    {candidate.type === 'movie' ? 'Película' : 'Serie'} · {candidate.year || 'S/D'}
+                                  </span>
                                   {candidate.rating ? (
                                     <span className="inline-flex items-center gap-0.5 font-semibold text-amber-500">
                                       <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
@@ -898,6 +992,14 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
           </div>
         )}
 
+        {bulkDialogOpen && error && (
+          <div className="shrink-0 border-t border-slate-200 bg-white px-4 py-3 sm:px-6">
+            <p className="movie-import-feedback max-h-32 overflow-y-auto rounded-md bg-red-50 p-3 text-sm text-red-700">
+              {error}
+            </p>
+          </div>
+        )}
+
         {/* Footer */}
         <footer className="flex h-16 shrink-0 items-center justify-end gap-2 border-t border-slate-200 bg-white px-4 sm:px-6">
           <button
@@ -906,6 +1008,13 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
             className="secondary-button min-w-28"
           >
             Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={handleNewSearch}
+            className="secondary-button min-w-32"
+          >
+            Nueva búsqueda
           </button>
           <button
             type="button"
@@ -956,7 +1065,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
               className="flex w-full items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-4 text-left font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-ink"
             >
               <Plus className="h-5 w-5 shrink-0 text-aqua" />
-              Pegar texto
+              Pegar texto o escribir títulos
             </button>
             <button
               type="button"

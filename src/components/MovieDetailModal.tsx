@@ -1,11 +1,55 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, Bookmark, Check, ChevronDown, ExternalLink, Eye, Film, Heart, Pencil, Star, Trash2, X, Plus } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bookmark, Check, ChevronDown, ExternalLink, Eye, Film, Heart, Pencil, Play, Star, Trash2, X, Plus } from 'lucide-react';
 import { PlatformLogos } from '@/components/PlatformLogos';
 import { StarRating } from '@/components/StarRating';
 import { TrailerModal } from '@/components/TrailerModal';
 import { api, resolveMovieImageUrl } from '@/services/api';
 import type { MovieItem } from '@/types/movie';
+
+const normalizePlatformName = (name: string) => name
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .toLocaleLowerCase('es')
+  .replace(/[^a-z0-9]+/g, ' ')
+  .trim();
+
+const getWatchNowDestination = (movie: MovieItem) => {
+  const searchTitle = [movie.spanishTitle || movie.originalTitle, movie.year].filter(Boolean).join(' ');
+  const query = encodeURIComponent(searchTitle);
+  const platformNames = movie.platforms.map((platform) => normalizePlatformName(platform.name));
+  const hasPlatform = (matcher: (name: string) => boolean) => platformNames.some(matcher);
+
+  if (hasPlatform((name) => name === 'netflix')) {
+    return { label: 'Netflix', url: `https://www.netflix.com/search?q=${query}` };
+  }
+  if (hasPlatform((name) => name.includes('amazon prime') || name.includes('prime video'))) {
+    return { label: 'Amazon Prime', url: `https://www.primevideo.com/search/ref=atv_nb_sr?phrase=${query}` };
+  }
+  if (hasPlatform((name) => name.includes('disney'))) {
+    return { label: 'Disney+', url: `https://www.disneyplus.com/search?q=${query}` };
+  }
+  if (hasPlatform((name) => name.includes('hbo') || name === 'max')) {
+    return { label: 'HBO Max', url: `https://play.hbomax.com/search?q=${query}` };
+  }
+  if (hasPlatform((name) => name.includes('apple tv'))) {
+    return { label: 'Apple TV', url: `https://tv.apple.com/ar/search?term=${query}` };
+  }
+  if (hasPlatform((name) => name === 'flow' || name.includes('flow'))) {
+    return { label: 'Flow', url: `https://web.app.flow.com.ar/search?q=${query}` };
+  }
+  if (hasPlatform((name) => name.includes('paramount'))) {
+    return { label: 'Paramount+', url: `https://www.paramountplus.com/ar/search/?q=${query}` };
+  }
+  if (hasPlatform((name) => name.includes('stremio'))) {
+    return { label: 'Stremio', url: `https://web.stremio.com/#/search?search=${query}` };
+  }
+
+  return {
+    label: 'JustWatch',
+    url: movie.justwatchUrl || `https://www.justwatch.com/ar/buscar?q=${query}`,
+  };
+};
 
 export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal, onRating, onCollections, onPrevious, onNext, onAdd }: {
   movie: MovieItem;
@@ -39,6 +83,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
   const title = movie.originalTitle;
   const spanishTitle = movie.spanishTitle && movie.spanishTitle !== movie.originalTitle ? movie.spanishTitle : null;
   const image = movie.images.find((item) => item.isPrimary) || movie.images[0];
+  const watchNowDestination = getWatchNowDestination(movie);
   const tmdbUrl = movie.tmdbUrl || (movie.tmdbId ? `https://www.themoviedb.org/${movie.type === 'movie' ? 'movie' : 'tv'}/${movie.tmdbId}` : null);
   const justWatchUrl = movie.justwatchUrl || `https://www.justwatch.com/ar/buscar?q=${encodeURIComponent([spanishTitle || title, movie.year].filter(Boolean).join(' '))}`;
   const links = [
@@ -129,10 +174,10 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                 </div>
               ) : (
                 <div className="mt-3 grid grid-cols-2 gap-2">
-                <button type="button" aria-pressed={movie.watched} onClick={() => onPersonal(movie, 'watched')} className={`moviebox-translucent-action secondary-button min-w-0 gap-2 px-2 text-xs uppercase ${movie.watched ? 'border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]' : ''}`}><Eye className="h-[18px] w-[18px]" />Watched</button>
-                <button type="button" aria-pressed={movie.favorite} onClick={() => onPersonal(movie, 'favorite')} className={`moviebox-translucent-action secondary-button min-w-0 gap-2 px-2 text-xs uppercase ${movie.favorite ? 'border-coral bg-red-50 text-coral' : ''}`}><Heart className={`h-4 w-4 ${movie.favorite ? 'fill-current' : ''}`} />Like</button>
-                <button type="button" aria-pressed={movie.watchlist} onClick={() => onPersonal(movie, 'watchlist')} className={`moviebox-translucent-action secondary-button h-12 min-w-0 gap-1.5 px-1.5 py-1 text-[11px] uppercase ${movie.watchlist ? 'border-aqua bg-mist text-aqua' : ''}`}><Bookmark className={`h-3.5 w-3.5 ${movie.watchlist ? 'fill-current' : ''}`} />Watchlist</button>
-                <div className="flex h-12 min-w-0 flex-col justify-center rounded-md border border-slate-200 bg-white px-1.5 py-1 text-left">
+                <button type="button" aria-pressed={movie.watched} onClick={() => onPersonal(movie, 'watched')} className={`moviebox-translucent-action secondary-button h-9 min-w-0 gap-2 px-2 text-xs uppercase ${movie.watched ? 'border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]' : ''}`}><Eye className="h-[18px] w-[18px]" />Watched</button>
+                <button type="button" aria-pressed={movie.favorite} onClick={() => onPersonal(movie, 'favorite')} className={`moviebox-translucent-action secondary-button h-9 min-w-0 gap-2 px-2 text-xs uppercase ${movie.favorite ? 'border-coral bg-red-50 text-coral' : ''}`}><Heart className={`h-4 w-4 ${movie.favorite ? 'fill-current' : ''}`} />Like</button>
+                <button type="button" aria-pressed={movie.watchlist} onClick={() => onPersonal(movie, 'watchlist')} className={`moviebox-translucent-action secondary-button h-10 min-w-0 gap-1.5 px-1.5 py-1 text-[11px] uppercase ${movie.watchlist ? 'border-aqua bg-mist text-aqua' : ''}`}><Bookmark className={`h-3.5 w-3.5 ${movie.watchlist ? 'fill-current' : ''}`} />Watchlist</button>
+                <div className="flex h-10 min-w-0 flex-col justify-center rounded-md border border-slate-200 bg-white px-1.5 py-1 text-left">
                   <span className="field-label mb-0 leading-none">Rate</span>
                   <StarRating compact value={movie.personalRating} onChange={(rating) => onRating(movie, rating)} />
                 </div>
@@ -158,6 +203,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
               <div className="mt-2 flex flex-wrap items-center gap-3">
                 <span className="text-base font-bold text-slate-500">{movie.year || 'Año desconocido'}</span>
                 {movie.imdbRating != null && <span className="inline-flex items-center gap-1 text-sm font-semibold text-slate-500"><Star className="h-4 w-4 fill-amber-400 text-amber-400" />{movie.imdbRating}</span>}
+                {movie.trailerUrl ? <button type="button" onClick={() => setTrailerOpen(true)} className="movie-trailer-link ml-auto mr-4 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-opacity hover:opacity-70"><img src="/youtube-play.png" alt="" className="h-4 w-[23px] object-contain" aria-hidden="true" />Ver trailer</button> : <span className="ml-auto mr-4 text-sm text-slate-400">No disponible</span>}
               </div>
               <p className="mt-1 text-sm text-slate-500">{movie.durationMinutes ? `${movie.durationMinutes} minutos` : 'Duración desconocida'}</p>
               <p className="mt-1 text-sm text-slate-500">{movie.genres.map((item) => item.name).join(', ') || 'Sin género'}</p>
@@ -176,8 +222,8 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                   <dd className="text-sm text-ink">{movie.credits.filter((item) => item.creditType === 'cast').map((item) => item.name).join(', ') || 'Sin datos'}</dd>
                 </div>
                 <div>
-                  <dt className="field-label">Trailer</dt>
-                  <dd>{movie.trailerUrl ? <button type="button" onClick={() => setTrailerOpen(true)} className="movie-trailer-link inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-opacity hover:opacity-70"><img src="/youtube-play.png" alt="" className="h-4 w-[23px] object-contain" aria-hidden="true" />Ver trailer</button> : <span className="text-sm text-slate-400">No disponible</span>}</dd>
+                  <dt className="field-label">Links</dt>
+                  <dd className="mt-1 flex flex-wrap items-center gap-2">{links.filter((item) => item.label !== 'Trailer').map((item) => <a key={item.label} href={item.url!} target="_blank" rel="noreferrer" aria-label={item.label} className="inline-flex items-center transition-opacity hover:opacity-70">{item.label === 'IMDb' ? <img src="/imdb-logo.png" alt="IMDb" className="h-6 w-[50px] object-contain" /> : item.label === 'TMDB' ? <img src="/tmdb.png" alt="TMDB" className="h-5 w-[96px] object-contain" /> : item.label === 'JustWatch' ? <img src="/justwatch.png" alt="JustWatch" className="h-5 w-[85px] object-contain" /> : <>{item.label}<ExternalLink className="h-4 w-4" /></>}</a>)}</dd>
                 </div>
                 {movie.type === 'series' && <>
                   <div>
@@ -193,9 +239,11 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                   <dt className="field-label">Plataformas</dt>
                   <dd className="mt-1"><PlatformLogos platforms={movie.platforms} large /></dd>
                 </div>
-                <div>
-                  <dt className="field-label">Links</dt>
-                  <dd className="mt-1 flex flex-wrap items-center gap-2">{links.filter((item) => item.label !== 'Trailer').map((item) => <a key={item.label} href={item.url!} target="_blank" rel="noreferrer" aria-label={item.label} className="inline-flex items-center transition-opacity hover:opacity-70">{item.label === 'IMDb' ? <img src="/imdb-logo.png" alt="IMDb" className="h-6 w-[50px] object-contain" /> : item.label === 'TMDB' ? <img src="/tmdb.png" alt="TMDB" className="h-5 w-[96px] object-contain" /> : item.label === 'JustWatch' ? <img src="/justwatch.png" alt="JustWatch" className="h-5 w-[85px] object-contain" /> : <>{item.label}<ExternalLink className="h-4 w-4" /></>}</a>)}</dd>
+                <div className="flex items-start">
+                  <a href={watchNowDestination.url} target="_blank" rel="noreferrer" className="secondary-button h-8 gap-1.5 px-3 text-xs" title={`Ver ahora en ${watchNowDestination.label}`}>
+                    <Play className="h-3.5 w-3.5 fill-current" />
+                    VER AHORA
+                  </a>
                 </div>
               </dl>
             </section>

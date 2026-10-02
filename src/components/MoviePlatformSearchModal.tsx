@@ -144,7 +144,7 @@ export const MoviePlatformSearchModal = ({ isOpen, onClose }: MoviePlatformSearc
       }}
     >
       <div
-        className="movie-detail-modal flex max-h-[92vh] sm:min-h-[560px] md:min-h-[600px] w-full max-w-3xl flex-col overflow-hidden rounded-xl bg-canvas shadow-2xl border border-slate-200"
+        className="movie-detail-modal flex max-h-[92vh] sm:min-h-[560px] md:min-h-[600px] w-full max-w-5xl flex-col overflow-hidden rounded-xl bg-canvas shadow-2xl border border-slate-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -247,9 +247,9 @@ export const MoviePlatformSearchModal = ({ isOpen, onClose }: MoviePlatformSearc
                       className="group flex flex-col sm:flex-row gap-3 sm:gap-4 rounded-xl border border-slate-200 bg-white p-3 sm:p-4 shadow-sm transition-all hover:shadow-md hover:border-slate-300"
                     >
                       {/* Poster */}
-                      <div className="relative aspect-[2/3] w-20 sm:w-24 shrink-0 overflow-hidden rounded-lg bg-mist shadow-inner mx-auto sm:mx-0">
+                      <div className="relative aspect-[2/3] w-20 sm:w-28 shrink-0 self-start overflow-hidden rounded-lg bg-mist shadow-inner mx-auto sm:mx-0">
                         {item.posterUrl ? (
-                          <img src={item.posterUrl} alt={item.title} className="h-full w-full object-cover" />
+                          <img src={item.posterUrl} alt={item.title} className="h-full w-full object-contain" />
                         ) : (
                           <div className="grid h-full place-items-center text-slate-300">
                             {item.type === 'movie' ? <Film className="h-8 w-8" /> : <Tv className="h-8 w-8" />}

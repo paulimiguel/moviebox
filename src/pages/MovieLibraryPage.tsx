@@ -6,7 +6,7 @@ import { MovieBulkEditModal } from '@/components/MovieBulkEditModal';
 import { MovieCard, type MovieViewMode } from '@/components/MovieCard';
 import { MovieDetailModal } from '@/components/MovieDetailModal';
 import { MovieEditModal } from '@/components/MovieEditModal';
-import { MovieExportTxtModal } from '@/components/MovieExportTxtModal';
+import { MovieExportOptionsModal } from '@/components/MovieExportOptionsModal';
 import { MoviePlatformSearchModal } from '@/components/MoviePlatformSearchModal';
 import { EmptyFieldsModal, type EmptyMovieField } from '@/components/EmptyFieldsModal';
 import { MovieLibraryToolbar, type MovieBulkMode, type MovieLibrarySort, type MovieSearchScope } from '@/components/MovieLibraryToolbar';
@@ -77,7 +77,7 @@ export const MovieLibraryPage = () => {
   const [editingMovie, setEditingMovie] = useState<MovieItem | null>(null);
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [exportTxtOpen, setExportTxtOpen] = useState(false);
+  const [exportOptionsOpen, setExportOptionsOpen] = useState(false);
   const [platformSearchOpen, setPlatformSearchOpen] = useState(false);
   const [emptyFieldsOpen, setEmptyFieldsOpen] = useState(false);
   const [emptyFields, setEmptyFields] = useState<EmptyMovieField[]>([]);
@@ -385,9 +385,9 @@ export const MovieLibraryPage = () => {
                 {bulkMode === 'print' && <><button type="button" onClick={() => printMovies(selectedMovies, 'cards')} disabled={!selectedMovies.length} className="secondary-button gap-2"><Printer className="h-4 w-4" />Imprimir tarjetas</button><button type="button" onClick={() => printMovies(selectedMovies, 'list')} disabled={!selectedMovies.length} className="secondary-button gap-2"><Printer className="h-4 w-4" />Imprimir lista</button></>}
                 {bulkMode === 'delete' && <button type="button" onClick={() => setDeleteConfirmOpen(true)} disabled={!selectedMovies.length} className="primary-button bg-red-600 hover:bg-red-700"><Trash2 className="h-4 w-4" />Eliminar movies</button>}
                 {bulkMode === 'exportTxt' && (
-                  <button type="button" onClick={() => setExportTxtOpen(true)} disabled={!selectedMovies.length} className="primary-button gap-2">
+                  <button type="button" onClick={() => setExportOptionsOpen(true)} disabled={!selectedMovies.length} className="primary-button gap-2">
                     <FileText className="h-4 w-4" />
-                    Exportar títulos a TXT
+                    Exportar títulos
                   </button>
                 )}
                 <button type="button" onClick={() => handleBulkModeChange(null)} className="icon-button" title="Cerrar" aria-label="Cerrar"><X className="h-4 w-4" /></button>
@@ -409,7 +409,7 @@ export const MovieLibraryPage = () => {
       {editingMovie && <MovieEditModal key={editingMovie.id} movie={editingMovie} onClose={() => setEditingMovie(null)} onSaved={() => { refreshLibrary(); setEditingMovie(null); }} onPrevious={adjacentMovie(editingMovie, -1) ? () => setEditingMovie(adjacentMovie(editingMovie, -1)) : undefined} onNext={adjacentMovie(editingMovie, 1) ? () => setEditingMovie(adjacentMovie(editingMovie, 1)) : undefined} />}
       {emptyFieldsOpen && <EmptyFieldsModal selected={emptyFields} onClose={() => setEmptyFieldsOpen(false)} onApply={(fields) => { setEmptyFields(fields); setEmptyFieldsOpen(false); }} />}
       {bulkEditOpen && <MovieBulkEditModal movies={selectedMovies} genres={metadataQuery.data?.genres || []} platforms={metadataQuery.data?.platforms || []} countries={metadataQuery.data?.countries || []} collections={collectionsQuery.data || []} onClose={() => setBulkEditOpen(false)} onSaved={() => { refreshLibrary(); setBulkEditOpen(false); setSelectedIds(new Set()); }} />}
-      {exportTxtOpen && <MovieExportTxtModal movies={selectedMovies} onClose={() => setExportTxtOpen(false)} />}
+      {exportOptionsOpen && <MovieExportOptionsModal movies={selectedMovies} onClose={() => setExportOptionsOpen(false)} />}
       {platformSearchOpen && <MoviePlatformSearchModal isOpen={platformSearchOpen} onClose={() => setPlatformSearchOpen(false)} />}
       {deleteConfirmOpen && (
         <div className="fixed inset-0 z-[70] grid place-items-center bg-ink/55 p-4" role="dialog" aria-modal="true" aria-labelledby="delete-movies-title">
