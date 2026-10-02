@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft,
   Check,
-  ChevronDown,
   Download,
   FileSpreadsheet,
   FileText,
@@ -20,7 +19,7 @@ import { api } from '@/services/api';
 import { MovieDetailModal } from '@/components/MovieDetailModal';
 import type { ImdbSearchCandidate, MovieItem, TmdbSuggestionCandidate } from '@/types/movie';
 
-const MAX_NAMES = 50;
+const MAX_NAMES = 200;
 const SEARCH_BATCH_SIZE = 4;
 
 interface SearchGroup {
@@ -102,7 +101,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
-  const [bulkMenuOpen, setBulkMenuOpen] = useState(false);
+  const [bulkOptionsOpen, setBulkOptionsOpen] = useState(false);
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<TmdbSuggestionCandidate | null>(null);
 
@@ -116,7 +115,6 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
 
   const txtInputRef = useRef<HTMLInputElement>(null);
   const spreadsheetInputRef = useRef<HTMLInputElement>(null);
-  const bulkMenuRef = useRef<HTMLDivElement>(null);
 
   const library = useQuery({ queryKey: ['movies'], queryFn: api.movies.getAll, enabled: isOpen });
   const libraryMovies = useMemo(() => (library.data || []) as MovieItem[], [library.data]);
@@ -363,35 +361,44 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
     mutationFn: async (candidates: ImdbSearchCandidate[]) => {
       const failures: string[] = [];
       const savedIds: string[] = [];
+      const duplicateIds: string[] = [];
+      const duplicates: string[] = [];
       for (const candidate of candidates) {
         try {
           const data = await api.imdb.import({ imdbId: candidate.imdbId, type: candidate.type });
           await api.movies.create({ ...data, favorite: false, watched: false, watchlist: false, personalRating: null, collectionIds: [] });
           savedIds.push(candidate.imdbId);
         } catch (reason) {
-          failures.push(`${candidate.title}: ${reason instanceof Error ? reason.message : 'No se pudo importar'}`);
+          const message = reason instanceof Error ? reason.message : 'No se pudo importar';
+          const normalizedMessage = message.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es');
+          if (normalizedMessage.includes('ya esta en tu biblioteca')) {
+            duplicateIds.push(candidate.imdbId);
+            duplicates.push(candidate.title);
+          } else {
+            failures.push(`${candidate.title}: ${message}`);
+          }
         }
       }
-      return { savedIds, failures };
+      return { savedIds, duplicateIds, duplicates, failures };
     },
-    onSuccess: ({ savedIds, failures }) => {
+    onSuccess: ({ savedIds, duplicateIds, duplicates, failures }) => {
       if (savedIds.length) {
         queryClient.invalidateQueries({ queryKey: ['movies'] });
         queryClient.invalidateQueries({ queryKey: ['metadata'] });
         queryClient.invalidateQueries({ queryKey: ['collections'] });
       }
-      if (failures.length) {
-        setSelectedIds((current) => Object.fromEntries(Object.entries(current).flatMap(([index, imdbIds]) => {
-          const remaining = imdbIds.filter((imdbId) => !savedIds.includes(imdbId));
-          return remaining.length ? [[index, remaining]] : [];
-        })));
-        setError(`${savedIds.length ? `${savedIds.length} agregadas. ` : ''}${failures.join(' | ')}`);
-        return;
-      }
-      setBulkDialogOpen(false);
-      setBulkQuery('');
-      setGroups(null);
-      setSelectedIds({});
+      const handledIds = new Set([...savedIds, ...duplicateIds]);
+      setSelectedIds((current) => Object.fromEntries(Object.entries(current).flatMap(([index, imdbIds]) => {
+        const remaining = imdbIds.filter((imdbId) => !handledIds.has(imdbId));
+        return remaining.length ? [[index, remaining]] : [];
+      })));
+
+      const summary = [
+        `${savedIds.length} ${savedIds.length === 1 ? 'título agregado' : 'títulos agregados'}.`,
+        ...duplicates.map((duplicate) => `${duplicate}: Este título ya está en MovieBox.`),
+        ...failures,
+      ];
+      setError(summary.join(' '));
     },
     onError: (reason: Error) => setError(reason.message),
   });
@@ -407,17 +414,6 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
     }, 350);
     return () => clearTimeout(timer);
   }, [searchQuery]);
-
-  useEffect(() => {
-    if (!bulkMenuOpen) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (bulkMenuRef.current && !bulkMenuRef.current.contains(e.target as Node)) {
-        setBulkMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [bulkMenuOpen]);
 
   const pasteSearch = async () => {
     try {
@@ -445,7 +441,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
     setGroups(null);
     setSelectedIds({});
     setError(cleaned.length ? '' : 'El archivo no contiene títulos para buscar.');
-    setBulkMenuOpen(false);
+    setBulkOptionsOpen(false);
     setBulkDialogOpen(true);
   };
 
@@ -469,7 +465,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
       loadImportedTitles(rows.map((row) => String(row.find((cell) => String(cell ?? '').trim()) ?? '')));
     } catch {
       setError('No se pudo leer la planilla. Revisá que sea un archivo XLS o XLSX válido.');
-      setBulkMenuOpen(false);
+      setBulkOptionsOpen(false);
       setBulkDialogOpen(true);
     }
   };
@@ -477,7 +473,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
   const handleClose = () => {
     setSearchQuery('');
     setAppliedSearch('');
-    setBulkMenuOpen(false);
+    setBulkOptionsOpen(false);
     setBulkDialogOpen(false);
     setGroups(null);
     setSelectedIds({});
@@ -489,8 +485,8 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (bulkMenuOpen) {
-          setBulkMenuOpen(false);
+        if (bulkOptionsOpen) {
+          setBulkOptionsOpen(false);
         } else {
           handleClose();
         }
@@ -498,7 +494,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, bulkMenuOpen]);
+  }, [isOpen, bulkOptionsOpen]);
 
   if (!isOpen) return null;
 
@@ -539,7 +535,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
               </h2>
               <p className="truncate text-xs text-slate-500">
                 {bulkDialogOpen
-                  ? 'Ingresá títulos o cargalos desde un archivo para buscarlos y agregarlos en lote'
+                  ? 'Ingresá un título por línea o pegalos en el recuadro'
                   : 'Buscá una película o serie por nombre o agregá varias a la vez'}
               </p>
             </div>
@@ -669,22 +665,10 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                     </section>
                   ))}
 
-                  <div className="sticky bottom-0 flex flex-wrap items-center justify-end gap-3 border-t border-slate-200 bg-canvas/95 py-4 backdrop-blur">
-                    <span className="text-sm text-slate-500">{selectedCandidates.length} seleccionadas</span>
-                    <button
-                      type="button"
-                      onClick={() => { setError(''); importBulkMovies.mutate(selectedCandidates); }}
-                      className="primary-button"
-                      disabled={!selectedCandidates.length || importBulkMovies.isPending}
-                    >
-                      {importBulkMovies.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-                      Agregar {selectedCandidates.length}
-                    </button>
-                  </div>
                 </div>
               )}
 
-              {error && <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+              {error && <p className="movie-import-feedback rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
               <div className="flex justify-end border-t border-slate-200 pt-4">
                 <button type="button" onClick={() => setBulkDialogOpen(false)} className="secondary-button">
@@ -695,7 +679,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
           ) : (
             /* Modo Búsqueda de Título */
             <div className="space-y-6">
-              {/* Barra de búsqueda y botón con menú */}
+              {/* Barra de búsqueda y acceso a carga múltiple */}
               <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
                 <form onSubmit={handleSearchSubmit} className="relative flex flex-1 gap-2" autoComplete="off">
                   <div className="relative flex-1">
@@ -746,62 +730,20 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                   </button>
                 </form>
 
-                {/* Botón Buscar varios títulos con dropdown */}
-                <div className="relative shrink-0" ref={bulkMenuRef}>
+                <div className="shrink-0">
                   <button
                     type="button"
-                    onClick={() => setBulkMenuOpen((c) => !c)}
-                    className="secondary-button w-full sm:w-auto justify-between sm:justify-center gap-2 border-slate-200 font-semibold"
-                    aria-expanded={bulkMenuOpen}
+                    onClick={() => setBulkOptionsOpen(true)}
+                    className="secondary-button w-full justify-center gap-2 border-slate-200 font-semibold sm:w-auto"
+                    aria-haspopup="dialog"
                   >
-                    <div className="flex items-center gap-2">
-                      <Plus className="h-4 w-4 text-aqua" />
-                      <span>Buscar varios títulos</span>
-                    </div>
-                    <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${bulkMenuOpen ? 'rotate-180' : ''}`} />
+                    <Plus className="h-4 w-4 text-aqua" />
+                    <span>Agregar varios títulos</span>
                   </button>
-
-                  {bulkMenuOpen && (
-                    <div className="header-dropdown absolute right-0 top-full mt-1.5 z-40 w-full sm:w-72 rounded-lg border border-slate-200 bg-white p-1.5 shadow-xl">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setBulkMenuOpen(false);
-                          setBulkDialogOpen(true);
-                        }}
-                        className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-ink"
-                      >
-                        <Plus className="h-4 w-4 text-aqua shrink-0" />
-                        <span>Pegar texto</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setBulkMenuOpen(false);
-                          txtInputRef.current?.click();
-                        }}
-                        className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-ink"
-                      >
-                        <FileText className="h-4 w-4 text-slate-400 shrink-0" />
-                        <span>Importar archivo de texto</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setBulkMenuOpen(false);
-                          spreadsheetInputRef.current?.click();
-                        }}
-                        className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-ink"
-                      >
-                        <FileSpreadsheet className="h-4 w-4 text-emerald-500 shrink-0" />
-                        <span>Importar archivo de excel</span>
-                      </button>
-                    </div>
-                  )}
                 </div>
               </div>
 
-              {error && <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+              {error && <p className="movie-import-feedback rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
               {/* Títulos encontrados debajo */}
               {appliedSearch ? (
@@ -933,7 +875,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                   <Film className="mx-auto h-12 w-12 text-slate-300" />
                   <p className="mt-3 text-sm font-semibold text-ink">Buscador de películas y series</p>
                   <p className="mt-1 text-xs text-slate-500 max-w-md mx-auto">
-                    Ingresá una palabra clave para buscar títulos y agregarlos a tu biblioteca, o usá <strong>Buscar varios títulos</strong> para importar por lista o archivo.
+                    Ingresá una palabra clave para buscar títulos y agregarlos a tu biblioteca, o usá <strong>Agregar varios títulos</strong> para importar por lista o archivo.
                   </p>
                 </div>
               )}
@@ -941,8 +883,30 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
           )}
         </div>
 
+        {bulkDialogOpen && groups && (
+          <div className="flex min-h-16 shrink-0 flex-wrap items-center justify-end gap-3 border-t border-slate-200 bg-white px-4 py-3 sm:px-6">
+            <span className="text-sm text-slate-500">{selectedCandidates.length} seleccionadas</span>
+            <button
+              type="button"
+              onClick={() => { setError(''); importBulkMovies.mutate(selectedCandidates); }}
+              className="primary-button"
+              disabled={!selectedCandidates.length || importBulkMovies.isPending}
+            >
+              {importBulkMovies.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Agregar {selectedCandidates.length}
+            </button>
+          </div>
+        )}
+
         {/* Footer */}
-        <footer className="flex h-16 shrink-0 items-center justify-end border-t border-slate-200 bg-white px-4 sm:px-6">
+        <footer className="flex h-16 shrink-0 items-center justify-end gap-2 border-t border-slate-200 bg-white px-4 sm:px-6">
+          <button
+            type="button"
+            onClick={handleClose}
+            className="secondary-button min-w-28"
+          >
+            Cancelar
+          </button>
           <button
             type="button"
             onClick={handleClose}
@@ -953,6 +917,82 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
         </footer>
       </div>
     </div>
+    {bulkOptionsOpen && (
+      <div
+        className="fixed inset-0 z-[110] grid place-items-center bg-ink/60 p-4 backdrop-blur-sm"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="bulk-options-title"
+        onClick={(event) => {
+          if (event.target === event.currentTarget) setBulkOptionsOpen(false);
+        }}
+      >
+        <div className="movie-detail-modal w-full max-w-lg overflow-hidden rounded-md border border-slate-200 bg-canvas shadow-2xl">
+          <header className="flex min-h-16 items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 sm:px-5">
+            <div className="min-w-0 flex-1">
+              <h2 id="bulk-options-title" className="font-bebas text-2xl uppercase tracking-wide text-ink">
+                Agregar varios títulos
+              </h2>
+              <p className="text-xs text-slate-500">Elegí cómo querés cargar los títulos.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setBulkOptionsOpen(false)}
+              className="icon-button border-0 shadow-none"
+              title="Cerrar"
+              aria-label="Cerrar"
+              autoFocus
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </header>
+          <div className="grid gap-3 p-4 sm:p-5">
+            <button
+              type="button"
+              onClick={() => {
+                setBulkOptionsOpen(false);
+                setBulkDialogOpen(true);
+              }}
+              className="flex w-full items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-4 text-left font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-ink"
+            >
+              <Plus className="h-5 w-5 shrink-0 text-aqua" />
+              Pegar texto
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setBulkOptionsOpen(false);
+                txtInputRef.current?.click();
+              }}
+              className="flex w-full items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-4 text-left font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-ink"
+            >
+              <FileText className="h-5 w-5 shrink-0 text-slate-400" />
+              Importar archivo de texto
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setBulkOptionsOpen(false);
+                spreadsheetInputRef.current?.click();
+              }}
+              className="flex w-full items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-4 text-left font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-ink"
+            >
+              <FileSpreadsheet className="h-5 w-5 shrink-0 text-emerald-500" />
+              Importar archivo de excel
+            </button>
+          </div>
+          <footer className="flex justify-end border-t border-slate-200 bg-white px-4 py-3 sm:px-5">
+            <button
+              type="button"
+              onClick={() => setBulkOptionsOpen(false)}
+              className="secondary-button min-w-28"
+            >
+              Cancelar
+            </button>
+          </footer>
+        </div>
+      </div>
+    )}
     {activeMovie && (
       <MovieDetailModal
         movie={activeMovie}

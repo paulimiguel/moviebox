@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, ArrowRight, Bookmark, Check, ChevronDown, ExternalLink, Eye, Film, Heart, Pencil, Star, Trash2, X, Plus } from 'lucide-react';
 import { PlatformLogos } from '@/components/PlatformLogos';
 import { StarRating } from '@/components/StarRating';
+import { TrailerModal } from '@/components/TrailerModal';
 import { api, resolveMovieImageUrl } from '@/services/api';
 import type { MovieItem } from '@/types/movie';
 
@@ -20,6 +21,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
 }) => {
   const collections = useQuery({ queryKey: ['collections'], queryFn: api.collections.getAll });
   const [collectionMenuOpen, setCollectionMenuOpen] = useState(false);
+  const [trailerOpen, setTrailerOpen] = useState(false);
   const [selectedCollectionIds, setSelectedCollectionIds] = useState(movie.collections.map((collection) => collection.id));
   const [modalOffset, setModalOffset] = useState({ x: 0, y: 0 });
   const modalRef = useRef<HTMLDivElement>(null);
@@ -80,7 +82,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
 
-  return (
+  return (<>
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/55 sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="movie-detail-title">
       <div ref={modalRef} className="movie-detail-modal flex flex-col max-h-[85vh] sm:max-h-[92vh] sm:min-h-[560px] md:min-h-[600px] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-5xl sm:rounded-md" style={{ transform: `translate3d(${modalOffset.x}px, ${modalOffset.y}px, 0)` }}>
         <header onPointerDown={startDragging} onPointerMove={dragModal} onPointerUp={stopDragging} onPointerCancel={stopDragging} className="flex min-h-16 shrink-0 touch-none select-none items-center gap-4 border-b border-slate-200 bg-white px-4 py-3 sm:cursor-move sm:px-6">
@@ -175,7 +177,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                 </div>
                 <div>
                   <dt className="field-label">Trailer</dt>
-                  <dd>{movie.trailerUrl ? <a href={movie.trailerUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-opacity hover:opacity-70"><img src="/youtube-play.png" alt="" className="h-4 w-[23px] object-contain" aria-hidden="true" />Ver trailer</a> : <span className="text-sm text-slate-400">No disponible</span>}</dd>
+                  <dd>{movie.trailerUrl ? <button type="button" onClick={() => setTrailerOpen(true)} className="movie-trailer-link inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-opacity hover:opacity-70"><img src="/youtube-play.png" alt="" className="h-4 w-[23px] object-contain" aria-hidden="true" />Ver trailer</button> : <span className="text-sm text-slate-400">No disponible</span>}</dd>
                 </div>
                 {movie.type === 'series' && <>
                   <div>
@@ -201,5 +203,6 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
         </div>
       </div>
     </div>
-  );
+    {trailerOpen && movie.trailerUrl && <TrailerModal title={title} trailerUrl={movie.trailerUrl} onClose={() => setTrailerOpen(false)} />}
+  </>);
 };

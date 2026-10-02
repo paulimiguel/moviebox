@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Bookmark, Check, Download, ExternalLink, Eye, Film, Heart, MoreVertical, Pencil, Printer, Share2, Star, Trash2, Tv, Youtube } from 'lucide-react';
 import { PlatformLogos } from '@/components/PlatformLogos';
 import { StarRating } from '@/components/StarRating';
+import { TrailerModal } from '@/components/TrailerModal';
 import { resolveMovieImageUrl } from '@/services/api';
 import { printMovies } from '@/utils/printMovies';
 import type { MovieItem } from '@/types/movie';
@@ -23,6 +24,7 @@ interface MovieCardProps {
 
 export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, onDelete, selectionMode = false, selected = false, onSelectionChange }: MovieCardProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [trailerOpen, setTrailerOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const title = movie.originalTitle;
   const spanishTitle = movie.spanishTitle && movie.spanishTitle !== movie.originalTitle
@@ -68,7 +70,10 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
     </span>
   );
   const trailerLink = movie.trailerUrl ? (
-    <a href={movie.trailerUrl} target="_blank" rel="noreferrer" onClick={interactive} className="inline-flex items-center gap-1.5 font-semibold text-slate-500 hover:text-ink hover:underline"><img src="/youtube-play.png" alt="" className="h-4 w-[23px] object-contain" aria-hidden="true" />Ver trailer</a>
+    <button type="button" onClick={(event) => { event.stopPropagation(); setTrailerOpen(true); }} className="movie-trailer-link inline-flex items-center gap-1.5 font-semibold text-slate-500 hover:text-ink hover:underline"><img src="/youtube-play.png" alt="" className="h-4 w-[23px] object-contain" aria-hidden="true" />Ver trailer</button>
+  ) : null;
+  const trailerModal = trailerOpen && movie.trailerUrl ? (
+    <TrailerModal title={title} trailerUrl={movie.trailerUrl} onClose={() => setTrailerOpen(false)} />
   ) : null;
   const closeMenu = () => setMenuOpen(false);
   const downloadMovie = () => {
@@ -94,7 +99,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
         <button type="button" onClick={() => setMenuOpen((current) => !current)} className={`moviebox-translucent-action grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : largeOnMobile ? 'h-9 w-9 lg:h-8 lg:w-8' : 'h-8 w-8'} ${overlay ? 'border border-white/30 bg-white/70 text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white/90' : 'border border-slate-200 bg-white text-slate-500 hover:bg-slate-50'}`} title="Más acciones" aria-label="Más acciones" aria-expanded={menuOpen}><MoreVertical className={compact ? 'h-3 w-3' : largeOnMobile ? 'h-[18px] w-[18px] lg:h-4 lg:w-4' : 'h-4 w-4'} /></button>
       </div>
       {menuOpen && <div className={`movie-card-dropdown absolute bottom-full ${fullWidthMobile ? 'left-0 lg:left-auto lg:right-0' : 'right-0'} z-[70] mb-1 w-52 rounded-md border border-slate-200 bg-white p-1.5 text-xs shadow-card`}>
-        {movie.trailerUrl ? <a href={movie.trailerUrl} target="_blank" rel="noreferrer" onClick={closeMenu} className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-slate-600 hover:bg-slate-50"><Youtube className="h-4 w-4" />Ver trailer</a> : <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-3 py-1.5 text-slate-300"><Youtube className="h-4 w-4" />Ver trailer</span>}
+        {movie.trailerUrl ? <button type="button" onClick={() => { closeMenu(); setTrailerOpen(true); }} className="movie-trailer-link flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-slate-600 hover:bg-slate-50"><Youtube className="h-4 w-4" />Ver trailer</button> : <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-3 py-1.5 text-slate-300"><Youtube className="h-4 w-4" />Ver trailer</span>}
         {movie.imdbUrl ? <a href={movie.imdbUrl} target="_blank" rel="noreferrer" onClick={closeMenu} className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-slate-600 hover:bg-slate-50"><ExternalLink className="h-4 w-4" />Ver en IMDb</a> : <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-3 py-1.5 text-slate-300"><ExternalLink className="h-4 w-4" />Ver en IMDb</span>}
         {tmdbUrl ? <a href={tmdbUrl} target="_blank" rel="noreferrer" onClick={closeMenu} className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-slate-600 hover:bg-slate-50"><ExternalLink className="h-4 w-4" />Ver en TMDB</a> : <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-3 py-1.5 text-slate-300"><ExternalLink className="h-4 w-4" />Ver en TMDB</span>}
         <a href={`/titulo/${movie.id}`} target="_blank" rel="noreferrer" onClick={closeMenu} className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-slate-600 hover:bg-slate-50"><ExternalLink className="h-4 w-4" />Abrir en nueva pestaña</a>
@@ -110,7 +115,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
   );
 
   if (mode === 'list') {
-    return (
+    return (<>
       <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card relative grid min-h-[140px] cursor-pointer grid-cols-[132px_minmax(0,1fr)] items-stretch gap-x-3 sm:gap-x-4 gap-y-3 border-b border-slate-200 bg-white p-3 transition-colors hover:bg-slate-50 lg:grid-cols-[100px_minmax(240px,1fr)_minmax(230px,auto)] lg:items-center ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40' : ''} ${selected ? 'movie-card-selected' : ''}`}>
         <div className="row-span-2 flex flex-col w-[132px] shrink-0 self-start lg:row-span-1 lg:w-auto lg:h-full lg:self-center">
           <div className="group/poster relative w-[132px] aspect-[2/3] shrink-0 overflow-hidden rounded bg-slate-100 lg:w-auto lg:h-full">
@@ -148,11 +153,12 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
           {trailerLink && <div className="shrink-0 text-xs [&_img]:h-3 [&_img]:w-[18px]">{trailerLink}</div>}
         </div>
       </article>
-    );
+      {trailerModal}
+    </>);
   }
 
   if (mode === 'details') {
-    return (
+    return (<>
       <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card relative grid cursor-pointer gap-5 border-b border-slate-200 bg-white p-4 transition-colors hover:bg-slate-50 sm:grid-cols-[200px_minmax(0,1fr)] lg:grid-cols-[220px_minmax(190px,0.65fr)_minmax(300px,1.35fr)] ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40' : ''} ${selected ? 'movie-card-selected' : ''}`}>
         <div className="group/poster relative mx-auto aspect-[2/3] w-full max-w-[220px] overflow-hidden bg-slate-100">{selectionMark()}{poster('h-full w-full object-cover transition-transform duration-300 ease-out group-hover/poster:scale-105')}</div>
 
@@ -202,12 +208,13 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
           )}
         </div>
       </article>
-    );
+      {trailerModal}
+    </>);
   }
 
   if (mode === 'medium' || mode === 'mediumIcons') {
     const mediumIcons = mode === 'mediumIcons';
-    return (
+    return (<>
       <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card group relative flex h-full min-w-0 cursor-pointer flex-col overflow-hidden rounded-md bg-white shadow-card transition-transform hover:-translate-y-0.5 ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40 overflow-visible' : ''} ${selected ? 'movie-card-selected' : ''}`}>
         <div className="relative aspect-[2/3]">
           {selectionMark()}
@@ -240,10 +247,11 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
           {trailerLink && <div className="mt-auto pt-2 text-xs [&_img]:h-3 [&_img]:w-[18px]">{trailerLink}</div>}
         </div>
       </article>
-    );
+      {trailerModal}
+    </>);
   }
 
-  return (
+  return (<>
     <article role="button" tabIndex={0} onClick={(event) => { if (selectionMode && event.shiftKey) event.preventDefault(); activate(event.shiftKey); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') activate(event.shiftKey); }} className={`movie-card group relative min-w-0 cursor-pointer overflow-hidden rounded-md border bg-white shadow-card transition-transform hover:-translate-y-0.5 ${selectionMode ? 'select-none' : ''} ${menuOpen ? 'z-40' : ''} ${selected ? 'movie-card-selected' : 'border-slate-200'}`}>
       {selectionMark()}
       <div className="relative aspect-[2/3]">
@@ -254,5 +262,6 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
         <div className="mt-1 flex justify-end">{actionControls(false, true, true)}</div>
       </div>
     </article>
-  );
+    {trailerModal}
+  </>);
 };

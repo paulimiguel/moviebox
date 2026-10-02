@@ -4,7 +4,7 @@ import { Download, Film, Loader2, Search, Tv, X } from 'lucide-react';
 import { api } from '@/services/api';
 import type { ImdbSearchCandidate, MovieItem } from '@/types/movie';
 
-const MAX_NAMES = 50;
+const MAX_NAMES = 200;
 const SEARCH_BATCH_SIZE = 4;
 
 interface SearchGroup {

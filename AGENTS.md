@@ -61,7 +61,7 @@ Los puntos de entrada más usados son:
 
 ## Importación y proveedores externos
 
-- `/agregar` usa `src/pages/AddMoviesPage.tsx` y admite hasta 50 títulos.
+- `/agregar` usa `src/pages/AddMoviesPage.tsx` y admite hasta 200 títulos.
 - El backend de IMDb/Cinemeta está en `backend/src/routes/imdb.ts`.
 - Las consultas Cinemeta deben usar reintentos y `Promise.allSettled` para conservar resultados parciales si falla películas o series.
 - En importaciones múltiples, reportá errores por título y no descartes los resultados válidos.

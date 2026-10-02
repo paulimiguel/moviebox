@@ -17,6 +17,7 @@ import {
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { MovieEditModal } from "@/components/MovieEditModal";
+import { TrailerModal } from "@/components/TrailerModal";
 import { StarRating } from "@/components/StarRating";
 import { PlatformLogos } from "@/components/PlatformLogos";
 import { api, resolveMovieImageUrl } from "@/services/api";
@@ -26,6 +27,7 @@ export const MovieDetailPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
+  const [trailerOpen, setTrailerOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const movieQuery = useQuery({
     queryKey: ["movie", id],
@@ -273,7 +275,7 @@ export const MovieDetailPage = () => {
                     Plataformas
                   </dt>
                   <dd className="mt-2"><PlatformLogos platforms={movie.platforms} large /></dd>
-                  {movie.trailerUrl && <a href={movie.trailerUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-opacity hover:opacity-70"><img src="/youtube-play.png" alt="" className="h-4 w-[23px] object-contain" aria-hidden="true" />Ver trailer</a>}
+                  {movie.trailerUrl && <button type="button" onClick={() => setTrailerOpen(true)} className="movie-trailer-link mt-3 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-opacity hover:opacity-70"><img src="/youtube-play.png" alt="" className="h-4 w-[23px] object-contain" aria-hidden="true" />Ver trailer</button>}
               </div>
               {movie.type === "series" && (
                 <div>
@@ -346,6 +348,9 @@ export const MovieDetailPage = () => {
           onPrevious={previousMovie ? () => navigate(`/titulo/${previousMovie.id}`) : undefined}
           onNext={nextMovie ? () => navigate(`/titulo/${nextMovie.id}`) : undefined}
         />
+      )}
+      {trailerOpen && movie.trailerUrl && (
+        <TrailerModal title={title} trailerUrl={movie.trailerUrl} onClose={() => setTrailerOpen(false)} />
       )}
     </main>
   );

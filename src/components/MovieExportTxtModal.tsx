@@ -17,7 +17,7 @@ const WhatsAppIcon = () => (
 
 export const MovieExportTxtModal = ({ movies, onClose }: MovieExportTxtModalProps) => {
   const [titleFormat, setTitleFormat] = useState<TitleFormat>('spanish');
-  const [includeYear, setIncludeYear] = useState(false);
+  const [includeYear, setIncludeYear] = useState(true);
   const [copied, setCopied] = useState(false);
 
   const generateLines = (format: TitleFormat, withYear: boolean) => {
@@ -37,7 +37,7 @@ export const MovieExportTxtModal = ({ movies, onClose }: MovieExportTxtModalProp
     });
   };
 
-  const [text, setText] = useState<string>(() => generateLines('spanish', false).join('\n'));
+  const [text, setText] = useState<string>(() => generateLines('spanish', true).join('\n'));
 
   const handleFormatChange = (format: TitleFormat) => {
     setTitleFormat(format);

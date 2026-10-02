@@ -459,6 +459,10 @@ body {
   color: #fff;
 }
 
+:root[data-theme="dark"] .movie-trailer-link {
+  color: #fff;
+}
+
 :root[data-theme="dark"] .movie-card[class~="min-h-[140px]"],
 :root[data-theme="dark"] .movie-card[class~="gap-5"] {
   border-color: rgb(55 59 65);
@@ -522,6 +526,12 @@ body {
 }
 
 :root[data-theme="dark"] .movie-detail-modal button {
+  color: #fff;
+}
+
+:root[data-theme="dark"] .movie-detail-modal .movie-import-feedback {
+  border: 1px solid rgb(71 76 83);
+  background-color: rgb(52 56 62);
   color: #fff;
 }
 
