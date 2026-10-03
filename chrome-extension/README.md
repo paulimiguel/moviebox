@@ -1,6 +1,6 @@
 # Extensión de Chrome de MovieBox
 
-La extensión detecta el título de la película o serie visible en la pestaña actual. Permite corregirlo antes de abrir MovieBox con el cuadro **Agregar títulos** y la búsqueda ya iniciada.
+La extensión detecta el título de la película o serie visible en la pestaña actual. Permite corregirlo o escribir varios títulos, uno por línea, antes de abrir MovieBox con el cuadro **Agregar títulos** y la búsqueda ya iniciada.
 
 ## Instalarla en Chrome
 
@@ -14,7 +14,7 @@ La extensión detecta el título de la película o serie visible en la pestaña 
 
 1. Abrí una página de una película o serie.
 2. Pulsá el icono de la extensión.
-3. Revisá o corregí el título detectado.
+3. Revisá o corregí el título detectado. También podés escribir varios títulos, uno debajo del otro.
 4. Pulsá **Abrir en MovieBox**.
 
 MovieBox se abre en una pestaña nueva. Si la sesión no está iniciada, primero muestra el acceso y conserva los parámetros para abrir el buscador después de autenticarte.

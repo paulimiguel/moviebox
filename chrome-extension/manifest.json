@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "MovieBox - Agregar título",
   "description": "Detecta la película o serie de la página actual y abre el buscador de MovieBox.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "permissions": [
     "activeTab",
     "scripting"

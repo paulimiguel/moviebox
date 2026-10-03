@@ -122,9 +122,10 @@ interface AddMovieModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialQuery?: string;
+  initialBulkQuery?: string;
 }
 
-export const AddMovieModal = ({ isOpen, onClose, initialQuery = '' }: AddMovieModalProps) => {
+export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQuery = '' }: AddMovieModalProps) => {
   const queryClient = useQueryClient();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -700,8 +701,18 @@ export const AddMovieModal = ({ isOpen, onClose, initialQuery = '' }: AddMovieMo
   };
 
   useEffect(() => {
+    const titles = initialBulkQuery.split(/\r?\n/).map((title) => title.trim()).filter(Boolean);
+    if (!isOpen || !titles.length) return;
+
+    setSearchQuery('');
+    setAppliedSearch('');
+    setSelectedCandidate(null);
+    startBulkBatches(titles, false);
+  }, [initialBulkQuery, isOpen]);
+
+  useEffect(() => {
     const query = initialQuery.trim();
-    if (!isOpen || !query) return;
+    if (!isOpen || initialBulkQuery.trim() || !query) return;
 
     setBulkOptionsOpen(false);
     setBulkDialogOpen(false);
@@ -712,7 +723,7 @@ export const AddMovieModal = ({ isOpen, onClose, initialQuery = '' }: AddMovieMo
     setSearchQuery(query);
     setAppliedSearch(query);
     requestAnimationFrame(() => searchInputRef.current?.focus());
-  }, [initialQuery, isOpen]);
+  }, [initialBulkQuery, initialQuery, isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;

@@ -9,14 +9,18 @@
   <body>
     <main>
       <header>
-        <div class="brand">MOVIE<span>BOX</span></div>
-        <p>Agregar película o serie</p>
+        <img class="logo" src="moviebox-logo-white.png" alt="MovieBox" />
+        <p>Agregar películas o series</p>
       </header>
 
       <section>
         <p id="page-host" class="page-host"></p>
-        <label for="title">Título detectado</label>
-        <input id="title" type="text" autocomplete="off" placeholder="Escribí el título" />
+        <label for="title">Títulos a agregar</label>
+        <textarea id="title" autocomplete="off" placeholder="Ingresá un título por línea"></textarea>
+        <div class="field-meta">
+          <span>Podés escribir uno o varios, uno debajo del otro.</span>
+          <span id="title-count">0 títulos</span>
+        </div>
         <p id="status" class="status" aria-live="polite">Buscando el título de esta página…</p>
         <button id="open-moviebox" type="button" disabled>Abrir en MovieBox</button>
       </section>

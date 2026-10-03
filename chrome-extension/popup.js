@@ -3,6 +3,7 @@ const MOVIEBOX_URL = 'https://moviebox.beweb.com.ar/';
 const titleInput = document.querySelector('#title');
 const statusText = document.querySelector('#status');
 const hostText = document.querySelector('#page-host');
+const titleCount = document.querySelector('#title-count');
 const openButton = document.querySelector('#open-moviebox');
 
 const setStatus = (message, isError = false) => {
@@ -10,8 +11,20 @@ const setStatus = (message, isError = false) => {
   statusText.classList.toggle('error', isError);
 };
 
+const getTitles = () => {
+  const seen = new Set();
+  return titleInput.value.split(/\r?\n/).map((title) => title.trim()).filter((title) => {
+    const normalized = title.toLocaleLowerCase('es');
+    if (!title || seen.has(normalized)) return false;
+    seen.add(normalized);
+    return true;
+  });
+};
+
 const updateButton = () => {
-  openButton.disabled = !titleInput.value.trim();
+  const titles = getTitles();
+  openButton.disabled = titles.length === 0;
+  titleCount.textContent = `${titles.length} ${titles.length === 1 ? 'título' : 'títulos'}`;
 };
 
 const detectTitleInPage = () => {
@@ -116,15 +129,21 @@ const initialize = async () => {
 
 titleInput.addEventListener('input', updateButton);
 titleInput.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter' && !openButton.disabled) openButton.click();
+  if (event.key === 'Enter' && (event.ctrlKey || event.metaKey) && !openButton.disabled) {
+    openButton.click();
+  }
 });
 
 openButton.addEventListener('click', async () => {
-  const title = titleInput.value.trim();
-  if (!title) return;
+  const titles = getTitles();
+  if (!titles.length) return;
   const url = new URL(MOVIEBOX_URL);
   url.searchParams.set('agregar', '1');
-  url.searchParams.set('titulo', title);
+  if (titles.length === 1) {
+    url.searchParams.set('titulo', titles[0]);
+  } else {
+    url.searchParams.set('titulos', titles.join('\n'));
+  }
   url.searchParams.set('origen', 'extension');
   await chrome.tabs.create({ url: url.toString() });
   window.close();
