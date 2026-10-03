@@ -130,7 +130,6 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
   const [addedMovieIds, setAddedMovieIds] = useState<Record<string, string>>({});
 
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const bulkTextareaRef = useRef<HTMLTextAreaElement>(null);
   const txtInputRef = useRef<HTMLInputElement>(null);
   const spreadsheetInputRef = useRef<HTMLInputElement>(null);
   const autoImportFromFileRef = useRef(false);
@@ -570,21 +569,16 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
 
   const handleNewSearch = () => {
     setBulkOptionsOpen(false);
+    setBulkDialogOpen(false);
+    setBulkQuery('');
+    setGroups(null);
+    setSelectedIds({});
     setSelectedCandidate(null);
     setError('');
-
-    if (bulkDialogOpen) {
-      setBulkQuery('');
-      setGroups(null);
-      setSelectedIds({});
-      autoImportFromFileRef.current = false;
-      autoImportPendingReviewCountRef.current = 0;
-      requestAnimationFrame(() => bulkTextareaRef.current?.focus());
-      return;
-    }
-
     setSearchQuery('');
     setAppliedSearch('');
+    autoImportFromFileRef.current = false;
+    autoImportPendingReviewCountRef.current = 0;
     requestAnimationFrame(() => searchInputRef.current?.focus());
   };
 
@@ -684,7 +678,6 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                 <label>
                   <span className="field-label">Títulos a buscar</span>
                   <textarea
-                    ref={bulkTextareaRef}
                     value={bulkQuery}
                     onChange={(e) => setBulkQuery(e.target.value)}
                     placeholder="Ingresá un título por línea (podés escribirlos o pegar texto del portapapeles)"
@@ -773,11 +766,6 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                 </div>
               )}
 
-              <div className="flex justify-end border-t border-slate-200 pt-4">
-                <button type="button" onClick={() => setBulkDialogOpen(false)} className="secondary-button">
-                  Volver al buscador
-                </button>
-              </div>
             </div>
           ) : (
             /* Modo Búsqueda de Título */
