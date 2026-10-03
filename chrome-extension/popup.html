@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agregar a MovieBox</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="brand">MOVIE<span>BOX</span></div>
+        <p>Agregar película o serie</p>
+      </header>
+
+      <section>
+        <p id="page-host" class="page-host"></p>
+        <label for="title">Título detectado</label>
+        <input id="title" type="text" autocomplete="off" placeholder="Escribí el título" />
+        <p id="status" class="status" aria-live="polite">Buscando el título de esta página…</p>
+        <button id="open-moviebox" type="button" disabled>Abrir en MovieBox</button>
+      </section>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

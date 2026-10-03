@@ -121,9 +121,10 @@ const CoverAddButton = ({
 interface AddMovieModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialQuery?: string;
 }
 
-export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
+export const AddMovieModal = ({ isOpen, onClose, initialQuery = '' }: AddMovieModalProps) => {
   const queryClient = useQueryClient();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -697,6 +698,21 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
     setBulkOptionsOpen(false);
     setBulkDialogOpen(true);
   };
+
+  useEffect(() => {
+    const query = initialQuery.trim();
+    if (!isOpen || !query) return;
+
+    setBulkOptionsOpen(false);
+    setBulkDialogOpen(false);
+    setGroups(null);
+    setSelectedIds({});
+    setSelectedCandidate(null);
+    setError('');
+    setSearchQuery(query);
+    setAppliedSearch(query);
+    requestAnimationFrame(() => searchInputRef.current?.focus());
+  }, [initialQuery, isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;

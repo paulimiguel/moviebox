@@ -27,6 +27,7 @@ export const Header = () => {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [addModalOpen, setAddModalOpen] = useState(searchParams.get('agregar') === '1');
+  const extensionTitle = searchParams.get('titulo') || '';
   const [libraryMenuOpen, setLibraryMenuOpen] = useState(false);
   const [collectionMenuOpen, setCollectionMenuOpen] = useState(false);
   const [platformMenuOpen, setPlatformMenuOpen] = useState(false);
@@ -52,9 +53,11 @@ export const Header = () => {
 
   const handleCloseAddModal = () => {
     setAddModalOpen(false);
-    if (searchParams.get('agregar') === '1') {
+    if (searchParams.get('agregar') === '1' || searchParams.has('titulo') || searchParams.has('origen')) {
       const nextParams = new URLSearchParams(searchParams);
       nextParams.delete('agregar');
+      nextParams.delete('titulo');
+      nextParams.delete('origen');
       setSearchParams(nextParams, { replace: true });
     }
   };
@@ -644,7 +647,7 @@ export const Header = () => {
         </div>
       </div>
     </header>
-    <AddMovieModal isOpen={addModalOpen} onClose={handleCloseAddModal} />
+    <AddMovieModal isOpen={addModalOpen} onClose={handleCloseAddModal} initialQuery={extensionTitle} />
     <MoviePlatformSearchModal isOpen={platformSearchOpen} onClose={() => setPlatformSearchOpen(false)} />
   </>
 );
