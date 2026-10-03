@@ -535,6 +535,10 @@ body {
   color: #fff;
 }
 
+:root[data-theme="dark"] .movie-detail-modal .bulk-import-result-summary {
+  color: #fff;
+}
+
 :root[data-theme="dark"] .movie-detail-modal [class~="bg-mist"] {
   background-color: rgb(65 70 77);
 }

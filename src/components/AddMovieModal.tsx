@@ -681,6 +681,23 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
     requestAnimationFrame(() => searchInputRef.current?.focus());
   };
 
+  const openEmptyBulkDialog = () => {
+    setBulkQuery('');
+    setGroups(null);
+    setSelectedIds({});
+    setError('');
+    setBulkContinuationPrompt(null);
+    setBulkImportResult(null);
+    autoImportFromFileRef.current = false;
+    autoImportPendingReviewCountRef.current = 0;
+    automaticImportInFlightRef.current = false;
+    remainingBulkTitlesRef.current = [];
+    totalBulkImportedRef.current = 0;
+    bulkImportTotalsRef.current = { added: [], rejectedCount: 0, rejectedReasons: [] };
+    setBulkOptionsOpen(false);
+    setBulkDialogOpen(true);
+  };
+
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1147,10 +1164,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
           <div className="grid gap-3 p-4 sm:p-5">
             <button
               type="button"
-              onClick={() => {
-                setBulkOptionsOpen(false);
-                setBulkDialogOpen(true);
-              }}
+              onClick={openEmptyBulkDialog}
               className="flex w-full items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-4 text-left font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-ink"
             >
               <Plus className="h-5 w-5 shrink-0 text-aqua" />
@@ -1225,7 +1239,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
             <h2 id="bulk-import-result-title" className="font-bebas text-2xl uppercase tracking-wide text-ink">
               Resultado de la importación
             </h2>
-            <div className="mt-1 flex flex-wrap gap-x-5 gap-y-1 text-sm text-slate-600">
+            <div className="bulk-import-result-summary mt-1 flex flex-wrap gap-x-5 gap-y-1 text-sm text-slate-600">
               <span>Número de títulos aceptados: <strong className="text-ink">{bulkImportResult.added.length}</strong></span>
               <span>Número de títulos rechazados: <strong className="text-ink">{bulkImportResult.rejectedCount}</strong></span>
             </div>
