@@ -169,6 +169,11 @@ export const MovieLibraryPage = () => {
     const handleActionEmptyFields = () => {
       setEmptyFieldsOpen(true);
     };
+    const handleActionCloseBulk = () => {
+      setBulkMode(null);
+      setSelectedIds(new Set());
+      selectionAnchorId.current = null;
+    };
     window.addEventListener('moviebox:filter-library', handleLibraryFilter);
     window.addEventListener('moviebox:filter-genre', handleGenreFilter);
     window.addEventListener('moviebox:filter-platform', handlePlatformFilter);
@@ -176,6 +181,7 @@ export const MovieLibraryPage = () => {
     window.addEventListener('moviebox:action-bulk-edit', handleActionBulkEdit);
     window.addEventListener('moviebox:action-export-txt', handleActionExportTxt);
     window.addEventListener('moviebox:action-empty-fields', handleActionEmptyFields);
+    window.addEventListener('moviebox:action-close-bulk', handleActionCloseBulk);
     try {
       const storedLibraryFilter = window.sessionStorage.getItem('moviebox:library-filter') as LibraryFilterPreset | null;
       if (storedLibraryFilter && LIBRARY_FILTER_PRESETS.includes(storedLibraryFilter)) applyLibraryFilter(storedLibraryFilter);
@@ -196,6 +202,7 @@ export const MovieLibraryPage = () => {
       window.removeEventListener('moviebox:action-bulk-edit', handleActionBulkEdit);
       window.removeEventListener('moviebox:action-export-txt', handleActionExportTxt);
       window.removeEventListener('moviebox:action-empty-fields', handleActionEmptyFields);
+      window.removeEventListener('moviebox:action-close-bulk', handleActionCloseBulk);
     };
   }, []);
 

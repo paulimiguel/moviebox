@@ -19,13 +19,24 @@ import { api } from '@/services/api';
 import { MovieDetailModal } from '@/components/MovieDetailModal';
 import type { ImdbSearchCandidate, MovieItem, TmdbSuggestionCandidate } from '@/types/movie';
 
-const MAX_NAMES = 200;
+const MAX_NAMES = 100;
 const SEARCH_BATCH_SIZE = 4;
 
 interface SearchGroup {
   name: string;
   candidates: ImdbSearchCandidate[];
   error?: string;
+}
+
+interface BulkContinuationPrompt {
+  imported: number;
+  remaining: number;
+}
+
+interface BulkImportResult {
+  added: ImdbSearchCandidate[];
+  rejectedCount: number;
+  rejectedReasons: string[];
 }
 
 const normalizeImportedTitle = (value: string) => value
@@ -126,6 +137,8 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
   const [groups, setGroups] = useState<SearchGroup[] | null>(null);
   const [selectedIds, setSelectedIds] = useState<Record<number, string[]>>({});
   const [error, setError] = useState('');
+  const [bulkContinuationPrompt, setBulkContinuationPrompt] = useState<BulkContinuationPrompt | null>(null);
+  const [bulkImportResult, setBulkImportResult] = useState<BulkImportResult | null>(null);
 
   const [addedMovieIds, setAddedMovieIds] = useState<Record<string, string>>({});
 
@@ -134,6 +147,11 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
   const spreadsheetInputRef = useRef<HTMLInputElement>(null);
   const autoImportFromFileRef = useRef(false);
   const autoImportPendingReviewCountRef = useRef(0);
+  const automaticImportInFlightRef = useRef(false);
+  const remainingBulkTitlesRef = useRef<string[]>([]);
+  const bulkBatchAutoImportRef = useRef(false);
+  const totalBulkImportedRef = useRef(0);
+  const bulkImportTotalsRef = useRef<BulkImportResult>({ added: [], rejectedCount: 0, rejectedReasons: [] });
 
   const library = useQuery({ queryKey: ['movies'], queryFn: api.movies.getAll, enabled: isOpen });
   const libraryMovies = useMemo(() => (library.data || []) as MovieItem[], [library.data]);
@@ -396,6 +414,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
         autoImportPendingReviewCountRef.current = pendingGroups.length;
 
         if (automaticCandidates.length) {
+          automaticImportInFlightRef.current = true;
           importBulkMovies.mutate(automaticCandidates);
         } else {
           setError(pendingGroups.length
@@ -442,7 +461,22 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
       }
       return { savedIds, duplicateIds, duplicates, failures };
     },
-    onSuccess: ({ savedIds, duplicateIds, duplicates, failures }) => {
+    onSuccess: ({ savedIds, duplicateIds, duplicates, failures }, candidates) => {
+      const wasAutomaticImport = automaticImportInFlightRef.current;
+      const pendingReviewCount = autoImportPendingReviewCountRef.current;
+      automaticImportInFlightRef.current = false;
+      totalBulkImportedRef.current += savedIds.length;
+      const savedIdSet = new Set(savedIds);
+      const totals = bulkImportTotalsRef.current;
+      bulkImportTotalsRef.current = {
+        added: [...totals.added, ...candidates.filter((candidate) => savedIdSet.has(candidate.imdbId))],
+        rejectedCount: totals.rejectedCount + duplicates.length + failures.length,
+        rejectedReasons: [
+          ...totals.rejectedReasons,
+          ...duplicates.map((title) => `${title}: ya está en la biblioteca de MovieBox.`),
+          ...failures,
+        ],
+      };
       if (savedIds.length) {
         queryClient.invalidateQueries({ queryKey: ['movies'] });
         queryClient.invalidateQueries({ queryKey: ['metadata'] });
@@ -454,19 +488,70 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
         return remaining.length ? [[index, remaining]] : [];
       })));
 
+      const rejectedCount = duplicates.length + failures.length;
       const summary = [
-        `${savedIds.length} ${savedIds.length === 1 ? 'título agregado' : 'títulos agregados'}.`,
-        ...duplicates.map((duplicate) => `${duplicate}: Este título ya está en MovieBox.`),
-        ...failures,
+        `${savedIds.length} ${savedIds.length === 1 ? 'título aceptado' : 'títulos aceptados'}. ${rejectedCount} ${rejectedCount === 1 ? 'título rechazado' : 'títulos rechazados'}.`,
+        ...(duplicates.length
+          ? [`Rechazados porque ya están en la biblioteca de MovieBox: ${duplicates.join(', ')}.`]
+          : []),
+        ...(failures.length ? [`No se pudieron agregar: ${failures.join(' | ')}`] : []),
         ...(autoImportPendingReviewCountRef.current
           ? [`${autoImportPendingReviewCountRef.current} ${autoImportPendingReviewCountRef.current === 1 ? 'título requiere' : 'títulos requieren'} selección manual.`]
           : []),
       ];
       autoImportPendingReviewCountRef.current = 0;
-      setError(summary.join(' '));
+      setError(summary.join('\n'));
+      if (remainingBulkTitlesRef.current.length && (!wasAutomaticImport || pendingReviewCount === 0)) {
+        setBulkContinuationPrompt({
+          imported: totalBulkImportedRef.current,
+          remaining: remainingBulkTitlesRef.current.length,
+        });
+      } else if (!remainingBulkTitlesRef.current.length && (!wasAutomaticImport || pendingReviewCount === 0)) {
+        setBulkImportResult(bulkImportTotalsRef.current);
+      }
     },
     onError: (reason: Error) => setError(reason.message),
   });
+
+  const startBulkBatches = (titles: string[], autoImport: boolean) => {
+    const firstBatch = titles.slice(0, MAX_NAMES);
+    remainingBulkTitlesRef.current = titles.slice(MAX_NAMES);
+    bulkBatchAutoImportRef.current = autoImport;
+    totalBulkImportedRef.current = 0;
+    bulkImportTotalsRef.current = { added: [], rejectedCount: 0, rejectedReasons: [] };
+    setBulkContinuationPrompt(null);
+    setBulkImportResult(null);
+    setBulkQuery(firstBatch.join('\n'));
+    setGroups(null);
+    setSelectedIds({});
+    setError('');
+    setBulkOptionsOpen(false);
+    setBulkDialogOpen(true);
+    autoImportPendingReviewCountRef.current = 0;
+    automaticImportInFlightRef.current = false;
+    autoImportFromFileRef.current = autoImport;
+    if (firstBatch.length) bulkSearch.mutate(firstBatch);
+  };
+
+  const continueBulkImport = () => {
+    const nextBatch = remainingBulkTitlesRef.current.slice(0, MAX_NAMES);
+    remainingBulkTitlesRef.current = remainingBulkTitlesRef.current.slice(MAX_NAMES);
+    setBulkContinuationPrompt(null);
+    setBulkQuery(nextBatch.join('\n'));
+    setGroups(null);
+    setSelectedIds({});
+    setError('');
+    autoImportPendingReviewCountRef.current = 0;
+    automaticImportInFlightRef.current = false;
+    autoImportFromFileRef.current = bulkBatchAutoImportRef.current;
+    if (nextBatch.length) bulkSearch.mutate(nextBatch);
+  };
+
+  const stopBulkImport = () => {
+    remainingBulkTitlesRef.current = [];
+    setBulkContinuationPrompt(null);
+    setBulkImportResult(bulkImportTotalsRef.current);
+  };
 
   useEffect(() => {
     const trimmed = searchQuery.trim();
@@ -502,15 +587,17 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
   const loadImportedTitles = (titles: string[]) => {
     const headerNames = new Set(['titulo', 'title', 'pelicula', 'movie']);
     const cleaned = titles.map((title) => title.trim()).filter((title, index) => title && !(index === 0 && headerNames.has(title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es'))));
-    setBulkQuery(cleaned.join('\n'));
-    setGroups(null);
-    setSelectedIds({});
-    setError(cleaned.length ? '' : 'El archivo no contiene títulos para buscar.');
-    setBulkOptionsOpen(false);
-    setBulkDialogOpen(true);
     if (cleaned.length) {
-      autoImportFromFileRef.current = true;
-      bulkSearch.mutate(cleaned);
+      startBulkBatches(cleaned, true);
+    } else {
+      remainingBulkTitlesRef.current = [];
+      setBulkContinuationPrompt(null);
+      setBulkQuery('');
+      setGroups(null);
+      setSelectedIds({});
+      setError('El archivo no contiene títulos para buscar.');
+      setBulkOptionsOpen(false);
+      setBulkDialogOpen(true);
     }
   };
 
@@ -562,8 +649,14 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
     setGroups(null);
     setSelectedIds({});
     setError('');
+    setBulkContinuationPrompt(null);
+    setBulkImportResult(null);
     autoImportFromFileRef.current = false;
     autoImportPendingReviewCountRef.current = 0;
+    automaticImportInFlightRef.current = false;
+    remainingBulkTitlesRef.current = [];
+    totalBulkImportedRef.current = 0;
+    bulkImportTotalsRef.current = { added: [], rejectedCount: 0, rejectedReasons: [] };
     onClose();
   };
 
@@ -575,10 +668,16 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
     setSelectedIds({});
     setSelectedCandidate(null);
     setError('');
+    setBulkContinuationPrompt(null);
+    setBulkImportResult(null);
     setSearchQuery('');
     setAppliedSearch('');
     autoImportFromFileRef.current = false;
     autoImportPendingReviewCountRef.current = 0;
+    automaticImportInFlightRef.current = false;
+    remainingBulkTitlesRef.current = [];
+    totalBulkImportedRef.current = 0;
+    bulkImportTotalsRef.current = { added: [], rejectedCount: 0, rejectedReasons: [] };
     requestAnimationFrame(() => searchInputRef.current?.focus());
   };
 
@@ -622,7 +721,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
             {bulkDialogOpen && (
               <button
                 type="button"
-                onClick={() => setBulkDialogOpen(false)}
+                onClick={handleNewSearch}
                 className="icon-button -ml-1 border-0 shadow-none text-slate-500 hover:text-ink"
                 title="Volver a búsqueda por título"
                 aria-label="Volver a búsqueda por título"
@@ -636,7 +735,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
               </h2>
               <p className="truncate text-xs text-slate-500">
                 {bulkDialogOpen
-                  ? 'Ingresá un título por línea o pegalos en el recuadro'
+                  ? `Ingresá un título por línea o pegalos en el recuadro (Máximo ${MAX_NAMES} títulos por lote)`
                   : 'Buscá una película o serie por nombre o agregá varias a la vez'}
               </p>
             </div>
@@ -664,14 +763,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                 onSubmit={(e) => {
                   e.preventDefault();
                   if (!bulkNames.length) return;
-                  if (bulkNames.length > MAX_NAMES) {
-                    setError(`Podés buscar hasta ${MAX_NAMES} películas o series por vez.`);
-                    return;
-                  }
-                  setError('');
-                  autoImportFromFileRef.current = false;
-                  autoImportPendingReviewCountRef.current = 0;
-                  bulkSearch.mutate(bulkNames);
+                  startBulkBatches(bulkNames, false);
                 }}
                 className="rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
               >
@@ -685,13 +777,22 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                   />
                 </label>
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                  <span className={`text-xs ${bulkNames.length > MAX_NAMES ? 'font-semibold text-red-600' : 'text-slate-500'}`}>
-                    {bulkNames.length} de {MAX_NAMES} títulos
+                  <span className="text-xs text-slate-500">
+                    {bulkNames.length > MAX_NAMES
+                      ? `${MAX_NAMES} títulos en el primer lote · ${bulkNames.length - MAX_NAMES} pendientes`
+                      : `${bulkNames.length} de ${MAX_NAMES} títulos`}
                   </span>
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      onClick={() => { setBulkQuery(''); setGroups(null); setSelectedIds({}); setError(''); }}
+                      onClick={() => {
+                        setBulkQuery('');
+                        setGroups(null);
+                        setSelectedIds({});
+                        setError('');
+                        setBulkContinuationPrompt(null);
+                        remainingBulkTitlesRef.current = [];
+                      }}
                       className="secondary-button"
                       disabled={!bulkQuery && !groups}
                     >
@@ -700,7 +801,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
                     <button
                       type="submit"
                       className="primary-button"
-                      disabled={!bulkNames.length || bulkNames.length > MAX_NAMES || bulkSearch.isPending || importBulkMovies.isPending}
+                      disabled={!bulkNames.length || bulkSearch.isPending || importBulkMovies.isPending}
                     >
                       {bulkSearch.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                       Buscar
@@ -982,7 +1083,7 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
 
         {bulkDialogOpen && error && (
           <div className="shrink-0 border-t border-slate-200 bg-white px-4 py-3 sm:px-6">
-            <p className="movie-import-feedback max-h-32 overflow-y-auto rounded-md bg-red-50 p-3 text-sm text-red-700">
+            <p className="movie-import-feedback max-h-32 whitespace-pre-line overflow-y-auto rounded-md bg-red-50 p-3 text-sm text-red-700">
               {error}
             </p>
           </div>
@@ -1085,6 +1186,89 @@ export const AddMovieModal = ({ isOpen, onClose }: AddMovieModalProps) => {
               className="secondary-button min-w-28"
             >
               Cancelar
+            </button>
+          </footer>
+        </div>
+      </div>
+    )}
+    {bulkContinuationPrompt && (
+      <div className="fixed inset-0 z-[120] grid place-items-center bg-ink/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="continue-bulk-import-title">
+        <div className="movie-detail-modal w-full max-w-md overflow-hidden rounded-md border border-slate-200 bg-canvas shadow-2xl">
+          <header className="flex min-h-16 items-center justify-between border-b border-slate-200 bg-white px-5">
+            <h2 id="continue-bulk-import-title" className="font-bebas text-2xl uppercase tracking-wide text-ink">
+              Continuar importación
+            </h2>
+          </header>
+          <div className="space-y-3 p-5">
+            <p className="text-sm leading-6 text-slate-600">
+              Hasta ahora se importaron <strong className="text-ink">{bulkContinuationPrompt.imported}</strong> títulos.
+            </p>
+            <p className="text-sm leading-6 text-slate-600">
+              Quedan <strong className="text-ink">{bulkContinuationPrompt.remaining}</strong> títulos por procesar. ¿Deseás seguir importando el resto?
+            </p>
+          </div>
+          <footer className="flex justify-end gap-2 border-t border-slate-200 bg-white px-5 py-4">
+            <button type="button" onClick={stopBulkImport} className="secondary-button">
+              No continuar
+            </button>
+            <button type="button" onClick={continueBulkImport} className="primary-button">
+              Sí, continuar
+            </button>
+          </footer>
+        </div>
+      </div>
+    )}
+    {bulkImportResult && (
+      <div className="fixed inset-0 z-[130] grid place-items-center bg-ink/60 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="bulk-import-result-title">
+        <div className="movie-detail-modal flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-md border border-slate-200 bg-canvas shadow-2xl">
+          <header className="shrink-0 border-b border-slate-200 bg-white px-5 py-4">
+            <h2 id="bulk-import-result-title" className="font-bebas text-2xl uppercase tracking-wide text-ink">
+              Resultado de la importación
+            </h2>
+            <div className="mt-1 flex flex-wrap gap-x-5 gap-y-1 text-sm text-slate-600">
+              <span>Número de títulos aceptados: <strong className="text-ink">{bulkImportResult.added.length}</strong></span>
+              <span>Número de títulos rechazados: <strong className="text-ink">{bulkImportResult.rejectedCount}</strong></span>
+            </div>
+          </header>
+
+          <div className="min-h-0 flex-1 overflow-y-auto p-5">
+            {bulkImportResult.added.length ? (
+              <div className="grid grid-cols-4 gap-3 sm:grid-cols-6 md:grid-cols-8">
+                {bulkImportResult.added.map((candidate, index) => (
+                  <div key={`${candidate.imdbId}-${index}`} className="min-w-0">
+                    <div className="aspect-[2/3] overflow-hidden rounded-sm bg-slate-100">
+                      {candidate.posterUrl ? (
+                        <img src={candidate.posterUrl} alt={candidate.title} className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="grid h-full place-items-center text-slate-300">
+                          {candidate.type === 'movie' ? <Film className="h-6 w-6" /> : <Tv className="h-6 w-6" />}
+                        </div>
+                      )}
+                    </div>
+                    <p className="mt-1 truncate text-[11px] font-medium text-ink" title={candidate.title}>{candidate.title}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="rounded-md border border-slate-200 bg-white p-4 text-sm text-slate-500">No se aceptaron títulos nuevos.</p>
+            )}
+
+            {bulkImportResult.rejectedReasons.length > 0 && (
+              <div className="movie-import-feedback mt-4 rounded-md border border-slate-200 bg-white p-3 text-sm text-slate-600">
+                <strong className="text-ink">Motivos de rechazo:</strong>
+                <ul className="mt-2 space-y-1">
+                  {bulkImportResult.rejectedReasons.map((reason, index) => <li key={`${reason}-${index}`}>• {reason}</li>)}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          <footer className="flex shrink-0 justify-end gap-2 border-t border-slate-200 bg-white px-5 py-4">
+            <button type="button" onClick={handleNewSearch} className="secondary-button min-w-32">
+              Nueva búsqueda
+            </button>
+            <button type="button" onClick={handleClose} className="primary-button min-w-28">
+              Finalizar
             </button>
           </footer>
         </div>

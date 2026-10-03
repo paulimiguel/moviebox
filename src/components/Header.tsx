@@ -147,6 +147,7 @@ export const Header = () => {
   const handleTriggerAction = (action: 'add' | 'search-platform' | 'bulk-edit' | 'empty-fields' | 'export-txt') => {
     setActionsMenuOpen(false);
     setMenuOpen(false);
+    window.dispatchEvent(new CustomEvent('moviebox:action-close-bulk'));
     if (action === 'add') {
       setAddModalOpen(true);
       return;
