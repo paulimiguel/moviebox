@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "MovieBox - Agregar título",
   "description": "Detecta la película o serie de la página actual y abre el buscador de MovieBox.",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "permissions": [
     "activeTab",
     "scripting"
@@ -17,5 +17,13 @@
     "default_title": "Agregar título a MovieBox",
     "default_popup": "popup.html",
     "default_icon": "moviebox-icon.png"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+M"
+      },
+      "description": "Abrir MovieBox para agregar títulos"
+    }
   }
 }

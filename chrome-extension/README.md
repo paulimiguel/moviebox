@@ -13,10 +13,12 @@ La extensión detecta el título de la película o serie visible en la pestaña 
 ## Usarla
 
 1. Abrí una página de una película o serie.
-2. Pulsá el icono de la extensión.
+2. Pulsá el icono de la extensión o usá `Ctrl + M`.
 3. Revisá o corregí el título detectado. También podés escribir varios títulos, uno debajo del otro.
 4. Pulsá **Abrir en MovieBox**.
 
 MovieBox se abre en una pestaña nueva. Si la sesión no está iniciada, primero muestra el acceso y conserva los parámetros para abrir el buscador después de autenticarte.
 
 La extensión solicita acceso únicamente a la pestaña activa cuando se pulsa su icono. No lee ni guarda el token de MovieBox.
+
+El atajo se puede consultar o reasignar desde `chrome://extensions/shortcuts`.
