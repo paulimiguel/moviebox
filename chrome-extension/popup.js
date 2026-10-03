@@ -119,7 +119,6 @@ const initialize = async () => {
     setStatus(detectedTitle
       ? 'Revisá el título y abrilo en MovieBox.'
       : 'No se detectó un título. Podés escribirlo manualmente.');
-    titleInput.select();
   } catch {
     titleInput.value = cleanDetectedTitle(tab.title);
     updateButton();

@@ -1,3 +1,11 @@
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url("inter-800-latin.woff2") format("woff2");
+}
+
 :root {
   color-scheme: dark;
   font-family: Arial, Helvetica, sans-serif;
@@ -112,8 +120,10 @@ button {
   background: #ef5544;
   color: #fff;
   cursor: pointer;
+  font-family: "Inter", Arial, Helvetica, sans-serif;
   font-size: 14px;
   font-weight: 800;
+  text-transform: uppercase;
 }
 
 button:hover:not(:disabled) {
