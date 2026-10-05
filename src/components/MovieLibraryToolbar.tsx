@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ArrowDown, ArrowUp, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronsUpDown, Edit3, Eye, EyeOff, FileText, Film, Filter, Grid2X2, Heart, LayoutGrid, List, ListChecks, Plus, Search, Tv, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronsUpDown, Edit3, Eye, EyeOff, FileText, Film, Filter, Grid3x3, Heart, LayoutGrid, List, ListChecks, Plus, Search, Square, Tv, X } from 'lucide-react';
 import type { MovieViewMode } from '@/components/MovieCard';
 import type { FavoriteFilter, MovieTypeFilter, SortDirection, WatchedFilter, WatchlistFilter } from '@/types/movie';
 
@@ -102,18 +102,18 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
   }, []);
 
   const viewOptions: { value: MovieViewMode; label: string; icon: React.ReactNode }[] = [
-    { value: 'medium', label: 'Iconos grandes', icon: <LayoutGrid className="h-4 w-4" /> },
+    { value: 'medium', label: 'Iconos grandes', icon: <Square className="h-4 w-4" /> },
     { value: 'mediumIcons', label: 'Iconos medianos', icon: <LayoutGrid className="h-3.5 w-3.5" /> },
-    { value: 'small', label: 'Iconos pequeños', icon: <Grid2X2 className="h-4 w-4" /> },
+    { value: 'small', label: 'Iconos pequeños', icon: <Grid3x3 className="h-4 w-4" /> },
     { value: 'list', label: 'Lista', icon: <List className="h-4 w-4" /> },
     { value: 'details', label: 'Detalles', icon: <ListChecks className="h-4 w-4" /> },
   ];
   const activeViewIcon = props.viewMode === 'medium'
-    ? <LayoutGrid className="h-3.5 w-3.5 shrink-0" />
+    ? <Square className="h-3.5 w-3.5 shrink-0" />
     : props.viewMode === 'mediumIcons'
       ? <LayoutGrid className="h-3.5 w-3.5 shrink-0" />
     : props.viewMode === 'small'
-      ? <Grid2X2 className="h-3.5 w-3.5 shrink-0" />
+      ? <Grid3x3 className="h-3.5 w-3.5 shrink-0" />
       : props.viewMode === 'list'
         ? <List className="h-3.5 w-3.5 shrink-0" />
         : <ListChecks className="h-3.5 w-3.5 shrink-0" />;
@@ -297,7 +297,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
               })}
             </div>
 
-            <div className="order-4 grid grid-cols-3 gap-2 w-full md:order-none md:w-[380px] lg:w-[400px] shrink-0 md:ml-auto">
+            <div className="order-4 grid grid-cols-3 gap-2 w-full md:order-none md:grid-cols-4 md:w-[500px] lg:w-[540px] shrink-0 md:ml-auto">
               <div className="relative w-full">
                 <button type="button" onClick={() => setOpenMenu(openMenu === 'view' ? null : 'view')} className={menuButton} aria-expanded={openMenu === 'view'}>{activeViewIcon}<span className="whitespace-nowrap">Ver</span><ChevronDown className="h-3.5 w-3.5 shrink-0" /></button>
                 {openMenu === 'view' && <div className="library-toolbar-dropdown absolute left-0 top-full z-40 mt-1.5 w-52 rounded-md border border-slate-200 bg-white p-1.5 shadow-card">{viewOptions.map((option) => <button key={option.value} type="button" onClick={() => { props.onViewModeChange(option.value); setOpenMenu(null); }} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${props.viewMode === option.value ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`}>{option.icon}<span className="flex-1">{option.label}</span>{props.viewMode === option.value && <Check className="h-4 w-4 text-coral" />}</button>)}</div>}
@@ -309,8 +309,25 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
               <div className="relative w-full">
                 <button type="button" onClick={() => { setOpenMenu(null); props.onFiltersToggle(); }} className={`${menuButton} ${props.filtersOpen ? 'border-coral bg-red-50 text-coral' : ''}`}><Filter className="h-3.5 w-3.5 shrink-0" /><span className="whitespace-nowrap">Filtrar</span><ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${props.filtersOpen ? 'rotate-180' : ''}`} /></button>
               </div>
-
-
+              <button
+                type="button"
+                onClick={() => {
+                  setOpenMenu(null);
+                  if (props.onAddClick) {
+                    props.onAddClick();
+                    return;
+                  }
+                  setSearchParams((current) => {
+                    const nextParams = new URLSearchParams(current);
+                    nextParams.set('agregar', '1');
+                    return nextParams;
+                  });
+                }}
+                className="primary-button hidden h-10 w-full justify-center px-2.5 text-xs uppercase md:inline-flex"
+              >
+                <Plus className="h-3.5 w-3.5 shrink-0" />
+                <span className="whitespace-nowrap">Nuevo título</span>
+              </button>
             </div>
           </div>
         </div>

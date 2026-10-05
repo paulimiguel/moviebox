@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, ArrowUpDown, Check, ChevronDown, Grid2X2, LayoutGrid, Search } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Check, ChevronDown, Grid3x3, LayoutGrid, Search, Square } from 'lucide-react';
 import type { SortDirection } from '@/types/movie';
 
 export type CatalogViewMode = 'large' | 'medium' | 'small';
@@ -21,9 +21,9 @@ interface CatalogToolbarProps {
 const menuButton = 'library-toolbar-menu-button inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold uppercase text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50 xl:w-[150px]';
 
 const viewOptions: Array<{ value: CatalogViewMode; label: string; icon: React.ReactNode }> = [
-  { value: 'large', label: 'Iconos grandes', icon: <LayoutGrid className="h-5 w-5" /> },
+  { value: 'large', label: 'Iconos grandes', icon: <Square className="h-5 w-5" /> },
   { value: 'medium', label: 'Iconos medianos', icon: <LayoutGrid className="h-4 w-4" /> },
-  { value: 'small', label: 'Iconos pequeños', icon: <Grid2X2 className="h-4 w-4" /> },
+  { value: 'small', label: 'Iconos pequeños', icon: <Grid3x3 className="h-4 w-4" /> },
 ];
 
 export const catalogGridClass: Record<CatalogViewMode, string> = {
@@ -45,10 +45,10 @@ export const CatalogToolbar = (props: CatalogToolbarProps) => {
   }, []);
 
   const activeViewIcon = props.viewMode === 'large'
-    ? <LayoutGrid className="h-5 w-5 shrink-0" />
+    ? <Square className="h-5 w-5 shrink-0" />
     : props.viewMode === 'medium'
       ? <LayoutGrid className="h-4 w-4 shrink-0" />
-      : <Grid2X2 className="h-4 w-4 shrink-0" />;
+      : <Grid3x3 className="h-4 w-4 shrink-0" />;
 
   return (
     <section ref={toolbarRef} className="library-toolbar sticky top-[72px] z-30 border-b border-slate-200 bg-white shadow-sm">
