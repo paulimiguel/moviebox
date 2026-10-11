@@ -6,34 +6,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { resolvePlatformLogoUrl } from '@/components/PlatformLogos';
 import { MovieDetailModal } from '@/components/MovieDetailModal';
 import { TinderSuggestions } from '@/components/TinderSuggestions';
-import { Loader2, Film, Tv, ChevronLeft, ChevronRight, Plus, Check } from 'lucide-react';
+import { Loader2, Film, Tv, ChevronLeft, ChevronRight, Plus, Check, Search, X } from 'lucide-react';
 import type { JustWatchTop10Item, MovieItem, TmdbSuggestionCandidate } from '@/types/movie';
-
-const SUGGESTION_PLATFORMS = [
-  { id: 'netflix', name: 'Netflix' },
-  { id: 'prime', name: 'Prime Video' },
-  { id: 'apple', name: 'Apple TV' },
-  { id: 'disney', name: 'Disney+' },
-  { id: 'max', name: 'HBO Max' },
-  { id: 'flow', name: 'Flow' },
-  { id: 'paramount', name: 'Paramount+' },
-  { id: 'justwatch', name: 'JustWatch' },
-  { id: 'stremio', name: 'Stremio' },
-  { id: 'imdb', name: 'IMDb' },
-];
-
-const PLATFORMS = [
-  { id: 'netflix', name: 'Netflix' },
-  { id: 'prime', name: 'Prime Video' },
-  { id: 'apple', name: 'Apple TV' },
-  { id: 'disney', name: 'Disney+' },
-  { id: 'justwatch', name: 'JustWatch' },
-  { id: 'max', name: 'HBO Max' },
-  { id: 'flow', name: 'Flow' },
-  { id: 'paramount', name: 'Paramount+' },
-  { id: 'stremio', name: 'Stremio' },
-  { id: 'claro', name: 'Claro Video' },
-];
+import { PLATFORM_PREFERENCES } from '@/constants/platformPreferences';
+import { useAuth } from '@/contexts/AuthContext';
 
 const getTop10 = (data: any): TmdbSuggestionCandidate[] => {
   if (!data) return [];
@@ -425,9 +401,14 @@ const HorizontalScrollSection = ({
 };
 
 export const NewsPage = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
+  const visiblePlatforms = useMemo(
+    () => PLATFORM_PREFERENCES.filter((platform) => user?.preferredPlatforms.includes(platform.id)),
+    [user?.preferredPlatforms],
+  );
 
   useEffect(() => {
     if (location.hash) {
@@ -443,11 +424,20 @@ export const NewsPage = () => {
       return () => clearTimeout(timer);
     }
   }, [location.hash]);
-  const headerScrollRef = useRef<HTMLDivElement>(null);
-  const contentScrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
+  const newsSearchInputRef = useRef<HTMLInputElement>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<TmdbSuggestionCandidate | null>(null);
+  const [newsSearch, setNewsSearch] = useState('');
+
+  const pasteNewsSearch = async () => {
+    try {
+      const text = (await navigator.clipboard.readText()).trim().replace(/\s+/g, ' ');
+      if (text) setNewsSearch(text);
+    } catch {
+      // El navegador puede bloquear el portapapeles; mantenemos el campo disponible.
+    } finally {
+      newsSearchInputRef.current?.focus();
+    }
+  };
 
   const library = useQuery({ queryKey: ['movies'], queryFn: api.movies.getAll });
   const justwatchTop10Query = useQuery({
@@ -455,34 +445,36 @@ export const NewsPage = () => {
     queryFn: api.tmdb.justwatchTop10,
     staleTime: 0,
     refetchOnMount: 'always',
+    enabled: user?.preferredPlatforms.includes('justwatch') ?? false,
   });
 
-  const [activePopularPlatform, setActivePopularPlatform] = useState('netflix');
+  const [activePopularPlatform, setActivePopularPlatform] = useState(visiblePlatforms[0]?.id || '');
+
+  useEffect(() => {
+    if (!visiblePlatforms.some((platform) => platform.id === activePopularPlatform)) {
+      setActivePopularPlatform(visiblePlatforms[0]?.id || '');
+    }
+  }, [activePopularPlatform, visiblePlatforms]);
 
   const platformPopularQuery = useQuery({
     queryKey: ['justwatch-platform-popular', activePopularPlatform],
     queryFn: () => api.tmdb.justwatchPlatformPopular(activePopularPlatform),
     staleTime: 1000 * 60 * 30,
+    enabled: Boolean(activePopularPlatform),
   });
 
   const currentPopularPlatformName = useMemo(() => {
-    return SUGGESTION_PLATFORMS.find((p) => p.id === activePopularPlatform)?.name || 'la plataforma';
-  }, [activePopularPlatform]);
+    return visiblePlatforms.find((p) => p.id === activePopularPlatform)?.name || 'la plataforma';
+  }, [activePopularPlatform, visiblePlatforms]);
 
   const platformNewReleasesQuery = useQuery({
     queryKey: ['newReleases', activePopularPlatform],
     queryFn: () => api.tmdb.newReleases(activePopularPlatform),
     staleTime: 1000 * 60 * 5,
-    enabled: activePopularPlatform !== 'imdb',
+    enabled: Boolean(activePopularPlatform),
   });
 
   const currentPlatformNewReleases = useMemo(() => {
-    if (activePopularPlatform === 'imdb') {
-      return (platformPopularQuery.data?.popularPicks || []).map((p) => ({
-        ...p,
-        subBadge: 'Selección',
-      }));
-    }
     if (!platformNewReleasesQuery.data) return [];
     const movies = platformNewReleasesQuery.data.movies || [];
     const series = platformNewReleasesQuery.data.series || [];
@@ -493,16 +485,24 @@ export const NewsPage = () => {
       if (i < series.length) combined.push({ ...series[i], subBadge: 'Novedad' });
     }
     return combined;
-  }, [activePopularPlatform, platformPopularQuery.data?.popularPicks, platformNewReleasesQuery.data]);
+  }, [platformNewReleasesQuery.data]);
 
-  const [activeSuggestionPlatform, setActiveSuggestionPlatform] = useState('netflix');
+  const [activeSuggestionPlatform, setActiveSuggestionPlatform] = useState(visiblePlatforms[0]?.id || '');
   const [suggestionSeed, setSuggestionSeed] = useState(0);
   const [addedSuggestionMovieIds, setAddedSuggestionMovieIds] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!visiblePlatforms.some((platform) => platform.id === activeSuggestionPlatform)) {
+      setActiveSuggestionPlatform(visiblePlatforms[0]?.id || '');
+      setSuggestionSeed(0);
+    }
+  }, [activeSuggestionPlatform, visiblePlatforms]);
 
   const suggestionsQuery = useQuery({
     queryKey: ['tmdb-platform-suggestions', activeSuggestionPlatform, suggestionSeed],
     queryFn: () => api.tmdb.platformSuggestions(activeSuggestionPlatform, suggestionSeed),
     staleTime: 1000 * 60 * 5,
+    enabled: Boolean(activeSuggestionPlatform),
   });
 
   const libraryMovies = useMemo(() => (library.data || []) as MovieItem[], [library.data]);
@@ -551,12 +551,27 @@ export const NewsPage = () => {
   });
 
   const queries = useQueries({
-    queries: PLATFORMS.map((platform) => ({
+    queries: visiblePlatforms.map((platform) => ({
       queryKey: ['newReleases', platform.id],
       queryFn: () => api.tmdb.newReleases(platform.id),
       staleTime: 1000 * 60 * 5,
     })),
   });
+
+  const newsSearchResults = useMemo(() => {
+    const normalizeSearch = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es');
+    const search = normalizeSearch(newsSearch.trim());
+    if (!search) return [];
+    const unique = new Map<string, TmdbSuggestionCandidate>();
+    queries.forEach((query) => {
+      const data = query.data as { movies?: TmdbSuggestionCandidate[]; series?: TmdbSuggestionCandidate[] } | undefined;
+      [...(data?.movies || []), ...(data?.series || [])].forEach((candidate) => {
+        const haystack = normalizeSearch(`${candidate.title} ${candidate.originalTitle || ''}`);
+        if (haystack.includes(search)) unique.set(`${candidate.type}-${candidate.tmdbId}`, candidate);
+      });
+    });
+    return [...unique.values()].slice(0, 50);
+  }, [newsSearch, queries]);
 
   const existingMovie = useMemo(() => {
     if (!selectedCandidate || !library.data) return null;
@@ -572,6 +587,54 @@ export const NewsPage = () => {
     enabled: Boolean(selectedCandidate?.imdbId && !existingMovie),
     staleTime: 1000 * 60 * 30,
   });
+
+  const selectedCandidateSourcePlatforms = useMemo(() => {
+    if (!selectedCandidate) return [];
+
+    const matchesSelected = (candidate: TmdbSuggestionCandidate) =>
+      candidate.type === selectedCandidate.type && (
+        (candidate.tmdbId && candidate.tmdbId === selectedCandidate.tmdbId) ||
+        (candidate.imdbId && candidate.imdbId === selectedCandidate.imdbId)
+      );
+    const platformIds = new Set<string>();
+    const containsSelected = (items: TmdbSuggestionCandidate[] | undefined) =>
+      Boolean(items?.some(matchesSelected));
+
+    queries.forEach((query, index) => {
+      const data = query.data as { movies?: TmdbSuggestionCandidate[]; series?: TmdbSuggestionCandidate[] } | undefined;
+      const platformId = visiblePlatforms[index].id;
+      const queryIsProviderFiltered = platformId !== 'justwatch' && platformId !== 'stremio';
+      if (queryIsProviderFiltered && containsSelected([...(data?.movies || []), ...(data?.series || [])])) {
+        platformIds.add(visiblePlatforms[index].id);
+      }
+    });
+
+    const popularData = platformPopularQuery.data;
+    const activePopularItems = popularData ? [
+      ...(popularData.featuredMovies || []),
+      ...(popularData.featuredSeries || []),
+      ...(popularData.top10Week || []),
+      ...(popularData.popularPicks || []),
+      ...(popularData.fanFavorites || []),
+      ...(popularData.popularMovies || []),
+      ...(popularData.popularSeries || []),
+    ] : [];
+    if (containsSelected(activePopularItems)) platformIds.add(activePopularPlatform);
+    if (containsSelected(suggestionsQuery.data)) platformIds.add(activeSuggestionPlatform);
+    if (containsSelected(justwatchTop10Query.data)) platformIds.add('justwatch');
+
+    return [...platformIds].map((id, order) => {
+      const platform = PLATFORM_PREFERENCES.find((item) => item.id === id);
+      return {
+        id: `preview-platform-${id}`,
+        name: platform?.name || id,
+        tmdbProviderId: null,
+        logoPath: null,
+        isPrimary: order === 0,
+        order,
+      };
+    });
+  }, [selectedCandidate, queries, visiblePlatforms, platformPopularQuery.data, activePopularPlatform, suggestionsQuery.data, activeSuggestionPlatform, justwatchTop10Query.data]);
 
   const activeMovie: MovieItem | null = useMemo(() => {
     if (!selectedCandidate) return null;
@@ -599,7 +662,7 @@ export const NewsPage = () => {
       imdbId: selectedCandidate.imdbId || null,
       imdbUrl: selectedCandidate.imdbId ? `https://www.imdb.com/title/${selectedCandidate.imdbId}` : null,
       tmdbUrl: selectedCandidate.tmdbId ? `https://www.themoviedb.org/${selectedCandidate.type === 'movie' ? 'movie' : 'tv'}/${selectedCandidate.tmdbId}` : null,
-      justwatchUrl: null,
+      justwatchUrl: details?.justwatchUrl || null,
       trailerUrl: details?.trailerUrl || null,
       tmdbCollectionId: details?.tmdbCollectionId ?? null,
       tmdbCollectionName: details?.tmdbCollectionName ?? null,
@@ -621,7 +684,35 @@ export const NewsPage = () => {
         imagePath: null,
         order: i,
       })),
-      platforms: [],
+      platforms: (() => {
+        const platformKey = (name: string) => {
+          const normalized = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es').replace(/[^a-z0-9]+/g, ' ').trim();
+          if (normalized.includes('amazon prime') || normalized.includes('prime video')) return 'prime';
+          if (normalized.includes('disney')) return 'disney';
+          if (normalized.includes('hbo') || normalized === 'max') return 'max';
+          if (normalized.includes('apple tv')) return 'apple';
+          if (normalized.includes('paramount')) return 'paramount';
+          return normalized;
+        };
+        const detailPlatforms = (details?.platforms || []).map((platform, index) => ({
+          id: `preview-platform-${platform.tmdbProviderId || index}`,
+          name: platform.name,
+          tmdbProviderId: platform.tmdbProviderId ?? null,
+          logoPath: platform.logoPath ?? null,
+          isPrimary: platform.isPrimary ?? index === 0,
+          order: platform.order ?? index,
+        }));
+        const merged = [...detailPlatforms];
+        const normalizedNames = new Set(detailPlatforms.map((platform) => platformKey(platform.name)));
+        selectedCandidateSourcePlatforms.forEach((platform) => {
+          const normalizedName = platformKey(platform.name);
+          if (!normalizedNames.has(normalizedName)) {
+            normalizedNames.add(normalizedName);
+            merged.push({ ...platform, isPrimary: merged.length === 0, order: merged.length });
+          }
+        });
+        return merged;
+      })(),
       keywords: [],
       credits: (details?.credits || []).map((cr, i) => ({
         id: String(i),
@@ -642,7 +733,7 @@ export const NewsPage = () => {
       })),
       collections: [],
     };
-  }, [selectedCandidate, existingMovie, candidateDetails.data]);
+  }, [selectedCandidate, existingMovie, candidateDetails.data, selectedCandidateSourcePlatforms]);
 
   const allCandidatesInActivePlatform = useMemo(() => {
     if (!selectedCandidate) return [];
@@ -779,52 +870,68 @@ export const NewsPage = () => {
     },
   });
 
-  const updateScrollState = () => {
-    const el = contentScrollRef.current;
-    if (!el) return;
-    if (headerScrollRef.current) {
-      headerScrollRef.current.scrollLeft = el.scrollLeft;
-    }
-    setCanScrollLeft(el.scrollLeft > 5);
-    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 5);
-  };
-
-  useEffect(() => {
-    const el = contentScrollRef.current;
-    if (!el) return;
-    updateScrollState();
-    el.addEventListener('scroll', updateScrollState, { passive: true });
-    window.addEventListener('resize', updateScrollState);
-    return () => {
-      el.removeEventListener('scroll', updateScrollState);
-      window.removeEventListener('resize', updateScrollState);
-    };
-  }, []);
-
-  useEffect(() => {
-    updateScrollState();
-  }, [queries]);
-
-  const scrollLeft = () => {
-    const el = contentScrollRef.current;
-    if (!el) return;
-    const amount = el.clientWidth;
-    el.scrollBy({ left: -amount, behavior: 'smooth' });
-    setTimeout(updateScrollState, 400);
-  };
-
-  const scrollRight = () => {
-    const el = contentScrollRef.current;
-    if (!el) return;
-    const amount = el.clientWidth;
-    el.scrollBy({ left: amount, behavior: 'smooth' });
-    setCanScrollLeft(true);
-    setTimeout(updateScrollState, 400);
-  };
+  if (!visiblePlatforms.length) {
+    return (
+      <main className="news-page min-h-screen bg-canvas pb-20">
+        <Header />
+        <section className="grid min-h-[65vh] place-items-center px-4 py-12 text-center">
+          <div className="max-w-lg">
+            <Tv className="mx-auto h-14 w-14 text-aqua" />
+            <h1 className="mt-4 font-bebas text-3xl uppercase text-ink sm:text-4xl">Elegí tus plataformas</h1>
+            <p className="mt-2 text-sm leading-relaxed text-slate-500">Seleccioná las plataformas que utilizás para ver solamente sus contenidos en Novedades.</p>
+            <button type="button" onClick={() => window.dispatchEvent(new Event('moviebox:open-platform-preferences'))} className="primary-button mt-6">Seleccionar plataformas</button>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="news-page min-h-screen bg-canvas pb-20 relative">
       <Header />
+      <section className="border-b border-slate-200/70 bg-canvas px-4 py-5 sm:px-6">
+        <div className="mx-auto max-w-[1500px]">
+          <h1 className="mb-3 font-bebas text-2xl uppercase text-ink sm:text-3xl">Buscar en novedades</h1>
+          <div className="relative w-full max-w-4xl">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+            <input
+              ref={newsSearchInputRef}
+              type="text"
+              value={newsSearch}
+              onChange={(event) => setNewsSearch(event.target.value)}
+              placeholder="Buscar películas o series en novedades..."
+              className="news-search-input control h-12 w-full pl-12 pr-16 text-sm"
+              aria-label="Buscar en novedades"
+            />
+            {newsSearch ? (
+              <button type="button" onClick={() => { setNewsSearch(''); newsSearchInputRef.current?.focus(); }} className="absolute right-3 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-md text-slate-400 hover:bg-mist hover:text-ink" aria-label="Borrar búsqueda"><X className="h-4 w-4" /></button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void pasteNewsSearch()}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-slate-100 px-2 py-1 text-[10px] font-semibold uppercase text-slate-600 transition-colors hover:bg-slate-200 hover:text-ink"
+              >
+                Pegar
+              </button>
+            )}
+          </div>
+          {newsSearch.trim() && (
+            <div className="mt-5 border-t border-slate-200/70 pt-5">
+              <div className="mb-3 flex items-baseline justify-between gap-4">
+                <h2 className="font-bebas text-2xl uppercase text-ink">Resultados para “{newsSearch.trim()}”</h2>
+                <span className="text-xs text-slate-500">{newsSearchResults.length} {newsSearchResults.length === 1 ? 'título' : 'títulos'}</span>
+              </div>
+              {queries.some((query) => query.isLoading) && !newsSearchResults.length ? (
+                <div className="grid h-36 place-items-center"><Loader2 className="h-7 w-7 animate-spin text-aqua" /></div>
+              ) : newsSearchResults.length ? (
+                <HorizontalScrollSection items={newsSearchResults} onSelect={setSelectedCandidate} isMovieInLibrary={isMovieInLibrary} isItemAdding={isItemAdding} onAdd={(item) => importMutation.mutate(item)} />
+              ) : (
+                <p className="rounded-lg border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500">No se encontraron novedades con ese título.</p>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
       {/* Sección principal superior: Populares por plataforma (JustWatch) */}
       <section id="populares-plataforma" className="scroll-mt-20 w-full px-4 pt-6 pb-12 sm:px-6 sm:pt-8 sm:pb-14 border-b border-slate-200/50">
         <h1 className="font-bebas text-3xl sm:text-4xl font-normal text-ink uppercase text-center mb-4">
@@ -833,7 +940,7 @@ export const NewsPage = () => {
 
         {/* Iconos de plataformas */}
         <div className="w-fit mx-auto grid grid-cols-5 gap-2.5 sm:gap-3 sm:w-auto sm:flex sm:flex-wrap sm:items-center sm:justify-center mb-8">
-          {SUGGESTION_PLATFORMS.map((p) => {
+          {visiblePlatforms.map((p) => {
             const active = activePopularPlatform === p.id;
             const logoUrl = resolvePlatformLogoUrl({ name: p.name, logoPath: null });
             return (
@@ -904,24 +1011,6 @@ export const NewsPage = () => {
               />
             </div>
 
-            {/* Top 10 en IMDb esta semana (exclusivo IMDb) */}
-            {activePopularPlatform === 'imdb' && (
-              <div>
-                <div className="relative flex items-center justify-between mb-3">
-                  <h2 className="font-bebas text-2xl sm:text-3xl text-ink uppercase tracking-wide">
-                    Top 10 en IMDb esta semana
-                  </h2>
-                </div>
-                <Top10FeaturedSection
-                  items={platformPopularQuery.data.top10Week || []}
-                  onSelect={setSelectedCandidate}
-                  isMovieInLibrary={isMovieInLibrary}
-                  isItemAdding={isItemAdding}
-                  onAdd={(cand) => importMutation.mutate(cand)}
-                />
-              </div>
-            )}
-
             {/* 3. Novedades en la plataforma seleccionada */}
             <div>
               <div className="relative flex items-center justify-between mb-3">
@@ -929,12 +1018,10 @@ export const NewsPage = () => {
                   <h2 className="font-bebas text-2xl sm:text-3xl text-ink uppercase tracking-wide">
                     Novedades en {currentPopularPlatformName}
                   </h2>
-                  <p className="text-xs text-slate-500">
-                    {activePopularPlatform === 'imdb' ? 'Selecciones populares' : 'Últimas incorporaciones'}
-                  </p>
+                  <p className="text-xs text-slate-500">Últimas incorporaciones</p>
                 </div>
               </div>
-              {activePopularPlatform !== 'imdb' && platformNewReleasesQuery.isLoading ? (
+              {platformNewReleasesQuery.isLoading ? (
                 <div className="grid h-40 place-items-center">
                   <Loader2 className="h-6 w-6 animate-spin text-aqua" />
                 </div>
@@ -951,30 +1038,7 @@ export const NewsPage = () => {
               )}
             </div>
 
-            {/* Favoritos de los seguidores (exclusivo IMDb) */}
-            {activePopularPlatform === 'imdb' && (
-              <div>
-                <div className="relative flex items-center justify-between mb-3">
-                  <div>
-                    <h2 className="font-bebas text-2xl sm:text-3xl text-ink uppercase tracking-wide">
-                      Favoritos de los seguidores
-                    </h2>
-                    <p className="text-xs text-slate-500">Los títulos más aclamados por la audiencia</p>
-                  </div>
-                </div>
-                <HorizontalScrollSection
-                  items={platformPopularQuery.data.fanFavorites || []}
-                  onSelect={setSelectedCandidate}
-                  isMovieInLibrary={isMovieInLibrary}
-                  isItemAdding={isItemAdding}
-                  onAdd={(cand) => importMutation.mutate(cand)}
-                />
-              </div>
-            )}
-
-            {/* 4 y 5. Todas las películas y todas las series (ocultas para IMDb) */}
-            {activePopularPlatform !== 'imdb' && (
-              <>
+            {/* 4 y 5. Todas las películas y todas las series */}
                 {/* 4. Todas las películas de la plataforma (las 50 más populares) */}
                 <div>
                   <div className="relative flex items-center justify-between mb-3">
@@ -1012,8 +1076,6 @@ export const NewsPage = () => {
                     onAdd={(cand) => importMutation.mutate(cand)}
                   />
                 </div>
-              </>
-            )}
           </div>
         ) : (
           <p className="text-center text-sm text-slate-400 py-8">
@@ -1027,94 +1089,47 @@ export const NewsPage = () => {
           Top 10 por plataforma
         </h1>
 
-        {/* Barra superior con logos y títulos centrados (no fija) */}
-        <div className="news-sticky-header bg-canvas pt-3 pb-3 border-b border-slate-200/50 -mx-4 px-4 sm:-mx-6 sm:px-6">
-          <div
-            ref={headerScrollRef}
-            className="flex gap-6 overflow-x-hidden hide-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-          >
-            {PLATFORMS.map((platform) => {
-              const logoUrl = resolvePlatformLogoUrl({ name: platform.name, logoPath: null });
-              return (
-                <div
-                  key={`header-${platform.id}`}
-                  className="w-[calc(100%-32px)] sm:w-[calc((100%-24px)/2)] lg:w-[calc((100%-72px)/4)] min-w-[260px] shrink-0 flex items-center justify-center px-2"
+        <div className="grid grid-cols-1 gap-6 pt-6 pb-8 sm:grid-cols-2 xl:grid-cols-4">
+          {visiblePlatforms.map((platform, index) => {
+            const query = queries[index];
+            const top10 = getTop10(query.data);
+            const logoUrl = resolvePlatformLogoUrl({ name: platform.name, logoPath: null });
+            return (
+              <section key={`content-${platform.id}`} className="min-w-0">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/novedades/${platform.id}`)}
+                  className="mb-4 flex w-full items-center justify-center gap-3 py-1 text-center transition-opacity hover:opacity-80 group/btn"
                 >
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/novedades/${platform.id}`)}
-                    className="flex items-center justify-center gap-3 hover:opacity-80 transition-opacity text-center w-full py-1 group/btn"
-                  >
-                    {logoUrl && <img src={logoUrl} alt={platform.name} className="h-10 w-auto rounded object-contain shrink-0 transition-transform group-hover/btn:scale-105" />}
-                    <h3 className="font-bebas text-2xl sm:text-[28px] leading-none text-ink tracking-wide truncate">{platform.name}</h3>
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Carrusel de contenido: 4 columnas por página en desktop */}
-        <div className="relative group/carousel -mx-4 sm:-mx-6">
-          {canScrollLeft && (
-            <button
-              type="button"
-              onClick={scrollLeft}
-              className="absolute left-2 top-1/2 -translate-y-1/2 z-30 grid h-8 w-8 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
-              aria-label="Anterior"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </button>
-          )}
-          {canScrollRight && (
-            <button
-              type="button"
-              onClick={scrollRight}
-              className="absolute right-2 top-1/2 -translate-y-1/2 z-30 grid h-8 w-8 place-items-center rounded-full bg-black/70 text-white shadow-lg backdrop-blur hover:bg-coral hover:scale-110 transition-all opacity-0 group-hover/carousel:opacity-100"
-              aria-label="Siguiente"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          )}
-          <div
-            ref={contentScrollRef}
-            className="flex gap-6 overflow-x-auto pt-6 pb-8 px-4 sm:px-6 snap-x snap-mandatory hide-scrollbar relative [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-          >
-            {PLATFORMS.map((platform, index) => {
-              const query = queries[index];
-              const top10 = getTop10(query.data);
-              return (
-                <div
-                  key={`content-${platform.id}`}
-                  className="w-[calc(100%-32px)] sm:w-[calc((100%-24px)/2)] lg:w-[calc((100%-72px)/4)] min-w-[260px] shrink-0 snap-start flex flex-col"
-                >
-                  {query.isLoading ? (
-                    <div className="grid h-64 place-items-center">
-                      <Loader2 className="h-8 w-8 animate-spin text-aqua" />
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-3">
-                      {top10.map((item, itemIndex) => (
-                        <Top10Item
-                          key={`${item.type}-${item.tmdbId}`}
-                          item={item}
-                          rank={itemIndex + 1}
-                          onSelect={setSelectedCandidate}
-                          isAdded={isMovieInLibrary(item)}
-                          isAdding={isItemAdding(item)}
-                          onAdd={(cand) => importMutation.mutate(cand)}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                  {logoUrl && <img src={logoUrl} alt={platform.name} className="h-10 w-auto shrink-0 rounded object-contain transition-transform group-hover/btn:scale-105" />}
+                  <h3 className="truncate font-bebas text-2xl leading-none tracking-wide text-ink sm:text-[28px]">{platform.name}</h3>
+                </button>
+                {query.isLoading ? (
+                  <div className="grid h-64 place-items-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-aqua" />
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {top10.map((item, itemIndex) => (
+                      <Top10Item
+                        key={`${item.type}-${item.tmdbId}`}
+                        item={item}
+                        rank={itemIndex + 1}
+                        onSelect={setSelectedCandidate}
+                        isAdded={isMovieInLibrary(item)}
+                        isAdding={isItemAdding(item)}
+                        onAdd={(cand) => importMutation.mutate(cand)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            );
+          })}
         </div>
 
         {/* Sección: Top 10 en AR */}
-        <div id="top-10-ar" className="scroll-mt-20 mt-14 border-t border-slate-200/40 pt-8">
+        {user?.preferredPlatforms.includes('justwatch') && <div id="top-10-ar" className="scroll-mt-20 mt-14 border-t border-slate-200/40 pt-8">
           <div className="relative flex items-center justify-center mb-4">
             <h2 className="font-bebas text-2xl sm:text-3xl font-normal text-ink uppercase tracking-wide text-center">
               Top 10 en AR
@@ -1136,7 +1151,7 @@ export const NewsPage = () => {
           ) : (
             <p className="text-sm text-slate-400 py-6">No se pudieron cargar los títulos destacados.</p>
           )}
-        </div>
+        </div>}
 
         {/* Sección: Sugerencias debajo del todo */}
         <div id="sugerencias-plataforma" className="scroll-mt-20 mt-14 border-t border-slate-200/40 pt-8 pb-10 space-y-3">
@@ -1145,7 +1160,7 @@ export const NewsPage = () => {
               <h2 className="font-bebas text-2xl uppercase text-ink sm:text-3xl">Sugerencias por plataforma</h2>
             </div>
             <div className="w-fit mx-auto grid grid-cols-5 gap-2.5 sm:gap-3 sm:w-auto sm:flex sm:flex-wrap sm:items-center sm:justify-center">
-              {SUGGESTION_PLATFORMS.map((p) => {
+              {visiblePlatforms.map((p) => {
                 const active = activeSuggestionPlatform === p.id;
                 const logoUrl = resolvePlatformLogoUrl({ name: p.name, logoPath: null });
                 return (
@@ -1190,7 +1205,7 @@ export const NewsPage = () => {
           ) : suggestionsQuery.isError ? (
             <div className="mt-4 rounded-md border border-red-100 bg-red-50 p-5 text-center">
               <p className="text-sm text-red-700">
-                No se pudieron cargar las sugerencias de {SUGGESTION_PLATFORMS.find((p) => p.id === activeSuggestionPlatform)?.name || 'la plataforma'}.
+                No se pudieron cargar las sugerencias de {visiblePlatforms.find((p) => p.id === activeSuggestionPlatform)?.name || 'la plataforma'}.
               </p>
               <button type="button" onClick={() => suggestionsQuery.refetch()} className="secondary-button mt-3">
                 Reintentar

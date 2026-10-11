@@ -56,7 +56,7 @@ export const GenresPage = () => {
     } catch {
       // The library remains accessible even if session storage is unavailable.
     }
-    navigate('/');
+    navigate('/biblioteca');
   };
 
   const beginEdit = (genre: GenreCatalogItem) => {

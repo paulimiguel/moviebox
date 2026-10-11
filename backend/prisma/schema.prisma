@@ -14,6 +14,7 @@ model User {
   alias        String?
   password     String
   profilePhoto String?
+  preferredPlatforms String @default("[]")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

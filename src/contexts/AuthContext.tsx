@@ -6,6 +6,7 @@ interface AuthContextValue {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
+  updatePreferredPlatforms: (preferredPlatforms: string[]) => Promise<void>;
   logout: () => void;
 }
 
@@ -53,6 +54,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(await api.auth.login(email, password)),
       register: async (name, email, password) =>
         setUser(await api.auth.register(name, email, password)),
+      updatePreferredPlatforms: async (preferredPlatforms) =>
+        setUser(await api.auth.updatePreferredPlatforms(preferredPlatforms)),
       logout: () => {
         authToken.clear();
         setUser(null);

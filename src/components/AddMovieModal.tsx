@@ -123,9 +123,10 @@ interface AddMovieModalProps {
   onClose: () => void;
   initialQuery?: string;
   initialBulkQuery?: string;
+  displayMode?: 'modal' | 'page';
 }
 
-export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQuery = '' }: AddMovieModalProps) => {
+export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQuery = '', displayMode = 'modal' }: AddMovieModalProps) => {
   const queryClient = useQueryClient();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -742,21 +743,21 @@ export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQ
 
   if (!isOpen) return null;
 
-  return createPortal(
+  const content = (
     <>
       <div
-        className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-ink/60 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
+        className={displayMode === 'page' ? 'w-full' : 'fixed inset-0 z-[100] flex items-center justify-center bg-ink/60 p-3 backdrop-blur-sm sm:p-6'}
+      role={displayMode === 'modal' ? 'dialog' : undefined}
+      aria-modal={displayMode === 'modal' ? true : undefined}
       aria-labelledby="add-movie-modal-title"
       onClick={(e) => {
-        if (e.target === e.currentTarget) {
+        if (displayMode === 'modal' && e.target === e.currentTarget) {
           handleClose();
         }
       }}
     >
       <div
-        className="movie-detail-modal flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-xl bg-canvas shadow-2xl border border-slate-200"
+        className={`movie-detail-modal flex w-full flex-col overflow-hidden border border-slate-200 bg-canvas ${displayMode === 'page' ? 'min-h-[calc(100vh-104px)] rounded-xl shadow-card' : 'max-h-[90vh] max-w-4xl rounded-xl shadow-2xl'}`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -775,16 +776,16 @@ export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQ
             )}
             <div className="min-w-0">
               <h2 id="add-movie-modal-title" className="font-bebas text-2xl sm:text-3xl uppercase tracking-wide text-ink dark:text-white truncate">
-                {bulkDialogOpen ? 'Buscar varios títulos' : 'Agregar títulos'}
+                {bulkDialogOpen ? 'Buscar varios títulos' : displayMode === 'page' ? 'Agregar un título' : 'Agregar títulos'}
               </h2>
               <p className="truncate text-xs text-slate-500">
                 {bulkDialogOpen
                   ? `Ingresá un título por línea o pegalos en el recuadro (Máximo ${MAX_NAMES} títulos por lote)`
-                  : 'Buscá una película o serie por nombre o agregá varias a la vez'}
+                  : displayMode === 'page' ? 'Buscá una película o serie por nombre' : 'Buscá una película o serie por nombre o agregá varias a la vez'}
               </p>
             </div>
           </div>
-          <button
+          {displayMode === 'modal' && <button
             type="button"
             onClick={handleClose}
             className="icon-button border-0 shadow-none text-slate-400 hover:text-ink shrink-0 ml-2"
@@ -792,7 +793,7 @@ export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQ
             aria-label="Cerrar"
           >
             <X className="h-5 w-5" />
-          </button>
+          </button>}
         </header>
 
         {/* Modal Body */}
@@ -871,7 +872,7 @@ export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQ
                         )}
                       </div>
                       {group.candidates.length ? (
-                        <div className="grid grid-cols-2 gap-3 p-3 sm:grid-cols-3 sm:p-4 md:grid-cols-4 lg:grid-cols-5">
+                        <div className={`grid gap-3 p-3 sm:p-4 ${displayMode === 'page' ? 'grid-cols-3 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-9 xl:grid-cols-10' : 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5'}`}>
                           {group.candidates.slice(0, 5).map((candidate) => {
                             const selected = (selectedIds[groupIndex] || []).includes(candidate.imdbId);
                             return (
@@ -967,7 +968,7 @@ export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQ
                   </button>
                 </form>
 
-                <div className="shrink-0">
+                {displayMode === 'modal' && <div className="shrink-0">
                   <button
                     type="button"
                     onClick={() => setBulkOptionsOpen(true)}
@@ -977,8 +978,28 @@ export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQ
                     <Plus className="h-4 w-4 text-aqua" />
                     <span>Agregar varios títulos</span>
                   </button>
-                </div>
+                </div>}
               </div>
+
+              {displayMode === 'page' && !appliedSearch && (
+                <section className="rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+                  <h3 className="font-bebas text-2xl uppercase tracking-wide text-ink">Agregar varios títulos</h3>
+                  <div className="mt-3 grid gap-3 md:grid-cols-3">
+                    <button type="button" onClick={openEmptyBulkDialog} className="flex min-h-14 items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-3 text-left font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-ink">
+                      <Plus className="h-5 w-5 shrink-0 text-aqua" />
+                      Pegar texto o escribir títulos
+                    </button>
+                    <button type="button" onClick={() => txtInputRef.current?.click()} className="flex min-h-14 items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-3 text-left font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-ink">
+                      <FileText className="h-5 w-5 shrink-0 text-slate-400" />
+                      Importar archivo de texto
+                    </button>
+                    <button type="button" onClick={() => spreadsheetInputRef.current?.click()} className="flex min-h-14 items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-3 text-left font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-ink">
+                      <FileSpreadsheet className="h-5 w-5 shrink-0 text-emerald-500" />
+                      Importar archivo de excel
+                    </button>
+                  </div>
+                </section>
+              )}
 
               {error && <p className="movie-import-feedback rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
@@ -1015,7 +1036,7 @@ export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQ
                       </button>
                     </div>
                   ) : searchResultsQuery.data?.length ? (
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 sm:gap-4">
+                    <div className={`grid gap-3 ${displayMode === 'page' ? 'grid-cols-3 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-9 xl:grid-cols-10' : 'grid-cols-2 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5'}`}>
                       {searchResultsQuery.data.map((candidate) => {
                         const inLibraryId = addedMovieIdFor(candidate);
                         const isAddingThis =
@@ -1325,7 +1346,8 @@ export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQ
         onCollections={() => {}}
       />
     )}
-  </>,
-  document.body
-);
+  </>
+  );
+
+  return displayMode === 'page' ? content : createPortal(content, document.body);
 };

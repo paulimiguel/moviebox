@@ -7,6 +7,7 @@ import { api } from '@/services/api';
 import { useTheme } from '@/contexts/ThemeContext';
 import { AddMovieModal } from '@/components/AddMovieModal';
 import { MoviePlatformSearchModal } from '@/components/MoviePlatformSearchModal';
+import { PlatformPreferencesModal } from '@/components/PlatformPreferencesModal';
 
 type LibraryFilterPreset = 'all' | 'movie' | 'series' | 'watchlist' | 'favorite' | 'watched' | 'unwatched';
 
@@ -36,6 +37,7 @@ export const Header = () => {
   const [newsMenuOpen, setNewsMenuOpen] = useState(false);
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
   const [platformSearchOpen, setPlatformSearchOpen] = useState(false);
+  const [platformPreferencesOpen, setPlatformPreferencesOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileSubmenu, setMobileSubmenu] = useState<'library' | 'news' | 'platforms' | 'genres' | 'collections' | 'actions' | null>(null);
   const [profilePhotoFailed, setProfilePhotoFailed] = useState(false);
@@ -45,6 +47,15 @@ export const Header = () => {
       setMobileSubmenu(null);
     }
   }, [menuOpen]);
+
+  useEffect(() => {
+    const openPlatformPreferences = () => {
+      setMenuOpen(false);
+      setPlatformPreferencesOpen(true);
+    };
+    window.addEventListener('moviebox:open-platform-preferences', openPlatformPreferences);
+    return () => window.removeEventListener('moviebox:open-platform-preferences', openPlatformPreferences);
+  }, []);
 
   useEffect(() => {
     if (searchParams.get('agregar') === '1') {
@@ -107,7 +118,8 @@ export const Header = () => {
     }
     setLibraryMenuOpen(false);
     setMenuOpen(false);
-    navigate('/');
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    navigate('/biblioteca');
     window.setTimeout(() => window.dispatchEvent(new CustomEvent('moviebox:filter-library', { detail: preset })), 0);
   };
   const filterLibraryByGenre = (genreId: string) => {
@@ -119,7 +131,8 @@ export const Header = () => {
     }
     setGenreMenuOpen(false);
     setMenuOpen(false);
-    navigate('/');
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    navigate('/biblioteca');
     window.setTimeout(() => window.dispatchEvent(new CustomEvent('moviebox:filter-genre', { detail: genreId })), 0);
   };
   const filterLibraryByPlatform = (platformId: string) => {
@@ -131,7 +144,8 @@ export const Header = () => {
     }
     setPlatformMenuOpen(false);
     setMenuOpen(false);
-    navigate('/');
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    navigate('/biblioteca');
     window.setTimeout(() => window.dispatchEvent(new CustomEvent('moviebox:filter-platform', { detail: platformId })), 0);
   };
 
@@ -161,8 +175,8 @@ export const Header = () => {
       setPlatformSearchOpen(true);
       return;
     }
-    if (location.pathname !== '/') {
-      navigate('/');
+    if (location.pathname !== '/biblioteca') {
+      navigate('/biblioteca');
     }
     window.setTimeout(() => {
       if (action === 'bulk-edit') {
@@ -182,8 +196,9 @@ export const Header = () => {
         <Link to="/" className="shrink-0"><img src={theme === 'dark' ? '/moviebox-logo-white.png' : '/moviebox-logo-red.png'} alt="MovieBox" className="h-10 w-auto max-w-[190px] object-contain sm:h-11" /></Link>
         <div className="ml-auto flex h-full min-w-0 items-center gap-1 sm:gap-2 lg:gap-4">
           <nav className="main-navigation hidden h-full items-end md:flex">
+            <Link to="/" className={`flex h-full items-center border-b-2 px-2 text-xs font-semibold whitespace-nowrap xl:px-3 xl:text-sm ${location.pathname === '/' ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`}>INICIO</Link>
             <div ref={libraryMenuRef} className="relative h-full" onMouseEnter={() => setLibraryMenuOpen(true)} onMouseLeave={() => setLibraryMenuOpen(false)}>
-              <button type="button" onClick={() => { filterLibrary('all'); setPlatformMenuOpen(false); setGenreMenuOpen(false); setCollectionMenuOpen(false); setNewsMenuOpen(false); setActionsMenuOpen(false); }} className={`flex h-full items-center gap-1 xl:gap-1.5 border-b-2 px-2 xl:px-3 text-xs xl:text-sm font-semibold whitespace-nowrap ${libraryMenuOpen || location.pathname === '/' ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={libraryMenuOpen}>BIBLIOTECA<ChevronDown className="h-3.5 w-3.5 xl:h-4 xl:w-4" /></button>
+              <button type="button" onClick={() => { filterLibrary('all'); setPlatformMenuOpen(false); setGenreMenuOpen(false); setCollectionMenuOpen(false); setNewsMenuOpen(false); setActionsMenuOpen(false); }} className={`flex h-full items-center gap-1 xl:gap-1.5 border-b-2 px-2 xl:px-3 text-xs xl:text-sm font-semibold whitespace-nowrap ${libraryMenuOpen || location.pathname === '/biblioteca' ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={libraryMenuOpen}>MI BIBLIOTECA<ChevronDown className="h-3.5 w-3.5 xl:h-4 xl:w-4" /></button>
               {libraryMenuOpen && <div className="header-dropdown absolute left-0 top-full w-52 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
                 {libraryOptions.map((option) => <button key={option.preset} type="button" onClick={() => filterLibrary(option.preset)} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink">{option.icon}<span>{option.label}</span></button>)}
               </div>}
@@ -223,13 +238,13 @@ export const Header = () => {
                   >
                     Top 10 por plataforma
                   </button>
-                  <button
+                  {user?.preferredPlatforms.includes('justwatch') && <button
                     type="button"
                     onClick={() => navigateToNewsSection('top-10-ar')}
                     className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
                   >
                     Top 10 en AR
-                  </button>
+                  </button>}
                   <button
                     type="button"
                     onClick={() => navigateToNewsSection('sugerencias-plataforma')}
@@ -335,12 +350,12 @@ export const Header = () => {
             <div className="flex h-full items-center pl-1 xl:pl-1.5">
               <button
                 type="button"
-                onClick={() => setAddModalOpen(true)}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-coral text-white shadow-sm hover:bg-red-600 transition-colors"
+                onClick={() => navigate('/nuevo')}
+                className="inline-flex h-8 items-center justify-center rounded-md bg-coral px-3 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#dc493a]"
                 title="Agregar títulos"
                 aria-label="Agregar títulos"
               >
-                <Plus className="h-4 w-4" strokeWidth={2.5} />
+                NUEVO
               </button>
             </div>
           </nav>
@@ -363,15 +378,27 @@ export const Header = () => {
                 <p className="truncate text-xs text-slate-500">{user?.email}</p>
               </div>
 
+              <button
+                type="button"
+                onClick={() => { setMenuOpen(false); setPlatformPreferencesOpen(true); }}
+                className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink"
+              >
+                <Tv className="h-4 w-4 text-aqua" />
+                <span>Plataformas que utilizo</span>
+              </button>
+
               {/* Biblioteca (colapsable) */}
               <div className="mt-1 border-b border-slate-100 py-1 md:hidden">
+                <Link to="/" onClick={() => setMenuOpen(false)} className="flex w-full items-center rounded-md px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500 hover:bg-slate-50 hover:text-ink">
+                  Inicio
+                </Link>
                 <button
                   type="button"
                   onClick={() => setMobileSubmenu((c) => c === 'library' ? null : 'library')}
                   className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500 hover:bg-slate-50 hover:text-ink transition-colors"
                   aria-expanded={mobileSubmenu === 'library'}
                 >
-                  <span>Biblioteca</span>
+                  <span>Mi biblioteca</span>
                   <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${mobileSubmenu === 'library' ? 'rotate-180' : ''}`} />
                 </button>
                 {mobileSubmenu === 'library' && (
@@ -418,13 +445,13 @@ export const Header = () => {
                     >
                       Top 10 por plataforma
                     </button>
-                    <button
+                    {user?.preferredPlatforms.includes('justwatch') && <button
                       type="button"
                       onClick={() => navigateToNewsSection('top-10-ar')}
                       className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
                     >
                       Top 10 en AR
-                    </button>
+                    </button>}
                     <button
                       type="button"
                       onClick={() => navigateToNewsSection('sugerencias-plataforma')}
@@ -630,12 +657,12 @@ export const Header = () => {
                 type="button"
                 onClick={() => {
                   setMenuOpen(false);
-                  setAddModalOpen(true);
+                  navigate('/nuevo');
                 }}
                 className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink md:hidden"
               >
                 <Plus className="h-4 w-4 text-aqua" />
-                <span>Agregar títulos</span>
+                <span>Nuevo</span>
               </button>
 
               {/* Cerrar sesión */}
@@ -656,6 +683,7 @@ export const Header = () => {
       initialBulkQuery={extensionTitles}
     />
     <MoviePlatformSearchModal isOpen={platformSearchOpen} onClose={() => setPlatformSearchOpen(false)} />
+    <PlatformPreferencesModal isOpen={platformPreferencesOpen} onClose={() => setPlatformPreferencesOpen(false)} />
   </>
 );
 };

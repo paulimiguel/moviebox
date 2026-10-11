@@ -18,6 +18,8 @@ const localLogoFor = (name: string) => {
   if (normalizedName === 'max' || normalizedName.includes('hbo max')) return '/platforms/hbo-max.png';
   if (normalizedName.includes('hulu')) return '/platforms/hulu.png';
   if (normalizedName.includes('mubi')) return '/platforms/mubi.png';
+  if (normalizedName.includes('claro')) return '/platforms/claro-tv.png';
+  if (normalizedName.includes('universal')) return '/platforms/universal-plus.jpg';
   if (normalizedName.includes('netflix')) return '/platforms/netflix-n-v2.png';
   if (normalizedName.includes('paramount')) return '/platforms/paramount-plus.png';
   if (normalizedName.includes('prime video')) return '/platforms/prime-video.png';

@@ -1,7 +1,8 @@
 import { AuthPage } from '@/components/auth/AuthPage';
+import { useEffect } from 'react';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { MovieLibraryPage } from '@/pages/MovieLibraryPage';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { MovieDetailPage } from '@/pages/MovieDetailPage';
 import { CollectionsPage } from '@/pages/CollectionsPage';
 import { CollectionDetailPage } from '@/pages/CollectionDetailPage';
@@ -12,6 +13,17 @@ import { NewsPage } from '@/pages/NewsPage';
 import { PlatformNewsPage } from '@/pages/PlatformNewsPage';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { PopcornCursor } from '@/components/PopcornCursor';
+import { HomePage } from '@/pages/HomePage';
+
+const ScrollToTop = () => {
+  const { pathname, hash } = useLocation();
+
+  useEffect(() => {
+    if (!hash) window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [hash, pathname]);
+
+  return null;
+};
 
 const AppContent = () => {
   const { user, isLoading } = useAuth();
@@ -26,11 +38,13 @@ const AppContent = () => {
 
   return user ? (
     <Routes>
-      <Route path="/" element={<MovieLibraryPage />} />
+      <Route path="/" element={<HomePage />} />
+      <Route path="/biblioteca" element={<MovieLibraryPage />} />
       <Route path="/titulo/:id" element={<MovieDetailPage />} />
       <Route path="/colecciones" element={<CollectionsPage />} />
       <Route path="/colecciones/:id" element={<CollectionDetailPage />} />
       <Route path="/agregar" element={<AddMoviesPage />} />
+      <Route path="/nuevo" element={<AddMoviesPage />} />
       <Route path="/plataformas" element={<PlatformsPage />} />
       <Route path="/generos" element={<GenresPage />} />
       <Route path="/novedades" element={<NewsPage />} />
@@ -44,6 +58,7 @@ const App = () => (
   <ThemeProvider>
     <AuthProvider>
       <BrowserRouter>
+        <ScrollToTop />
         <AppContent />
         <PopcornCursor />
       </BrowserRouter>

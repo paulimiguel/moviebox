@@ -36,18 +36,49 @@ const registerSchema = credentialsSchema.extend({
   alias: z.string().trim().max(60).optional(),
 });
 
+const platformPreferenceIds = [
+  "netflix",
+  "prime",
+  "apple",
+  "disney",
+  "max",
+  "flow",
+  "paramount",
+  "mubi",
+  "stremio",
+  "claro",
+  "universal",
+  "justwatch",
+] as const;
+
+const platformPreferencesSchema = z.object({
+  preferredPlatforms: z.array(z.enum(platformPreferenceIds)).max(platformPreferenceIds.length),
+});
+
+const parsePreferredPlatforms = (value: string) => {
+  try {
+    const parsed = JSON.parse(value);
+    const result = z.array(z.enum(platformPreferenceIds)).safeParse(parsed);
+    return result.success ? [...new Set(result.data)] : [];
+  } catch {
+    return [];
+  }
+};
+
 const publicUser = (user: {
   id: string;
   email: string;
   name: string;
   alias: string | null;
   profilePhoto: string | null;
+  preferredPlatforms: string;
 }) => ({
   id: user.id,
   email: user.email,
   name: user.name,
   alias: user.alias,
   profilePhoto: user.profilePhoto,
+  preferredPlatforms: parsePreferredPlatforms(user.preferredPlatforms),
 });
 
 const createToken = (userId: string) =>
@@ -271,6 +302,23 @@ router.get("/me", authenticateToken, async (req: AuthRequest, res) => {
   if (!user) {
     return res.status(404).json({ error: "Usuario no encontrado" });
   }
+
+  return res.json({ user: publicUser(user) });
+});
+
+router.patch("/me/platforms", authenticateToken, async (req: AuthRequest, res) => {
+  const parsed = platformPreferencesSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: "Seleccioná únicamente plataformas válidas" });
+  }
+
+  const preferredPlatforms = platformPreferenceIds.filter((platformId) =>
+    parsed.data.preferredPlatforms.includes(platformId),
+  );
+  const user = await prisma.user.update({
+    where: { id: req.user!.userId },
+    data: { preferredPlatforms: JSON.stringify(preferredPlatforms) },
+  });
 
   return res.json({ user: publicUser(user) });
 });

@@ -9,6 +9,7 @@ export interface MovieBoxUser {
   name: string;
   alias: string | null;
   profilePhoto: string | null;
+  preferredPlatforms: string[];
 }
 
 interface AuthResponse {
@@ -77,6 +78,11 @@ export const api = {
         body: JSON.stringify({ name, email, password }),
       })),
     me: async () => (await request<{ user: MovieBoxUser }>('/auth/me')).user,
+    updatePreferredPlatforms: async (preferredPlatforms: string[]) =>
+      (await request<{ user: MovieBoxUser }>('/auth/me/platforms', {
+        method: 'PATCH',
+        body: JSON.stringify({ preferredPlatforms }),
+      })).user,
   },
   movies: {
     getAll: () => request<MovieItem[]>('/movies'),

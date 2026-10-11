@@ -335,7 +335,9 @@ router.get('/new-releases', async (req, res) => {
     else if (platform === 'disney') providerId = 337;
     else if (platform === 'max') providerId = 1899;
     else if (platform === 'paramount') providerId = 531;
+    else if (platform === 'mubi') providerId = 11;
     else if (platform === 'claro') providerId = 167;
+    else if (platform === 'universal') providerId = 1889;
     else if (platform === 'flow') providerId = 339; // Movistar fallback
     
     const providerQuery = (platform === 'justwatch' || platform === 'stremio') ? '' : `&with_watch_providers=${providerId}&watch_region=AR`;
@@ -616,7 +618,9 @@ router.get('/platform-suggestions', async (req, res) => {
   else if (platform === 'disney') providerId = 337;
   else if (platform === 'max') providerId = 1899;
   else if (platform === 'paramount') providerId = 531;
+  else if (platform === 'mubi') providerId = 11;
   else if (platform === 'claro') providerId = 167;
+  else if (platform === 'universal') providerId = 1889;
   else if (platform === 'flow') providerId = 339;
 
   const providerQuery = (platform === 'stremio' || platform === 'imdb') ? '' : `&with_watch_providers=${providerId}&watch_region=AR`;
@@ -901,6 +905,9 @@ const JW_PLATFORM_PACKAGES: Record<string, string | null> = {
   max: 'mxx',
   flow: 'mvp',
   paramount: 'pmp',
+  mubi: 'mub',
+  claro: 'clv',
+  universal: 'uap',
   justwatch: null,
   stremio: null,
   imdb: null,
@@ -914,6 +921,9 @@ const JW_PLATFORM_NAMES: Record<string, string> = {
   max: 'HBO Max',
   flow: 'Flow',
   paramount: 'Paramount+',
+  mubi: 'MUBI',
+  claro: 'Claro Video',
+  universal: 'Universal+',
   justwatch: 'JustWatch',
   stremio: 'Stremio',
   imdb: 'IMDb',

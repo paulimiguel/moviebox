@@ -1,0 +1,129 @@
+.home-hero {
+  --hero-backdrop-opacity: 0.22;
+  background: #f4f5f6;
+}
+
+.home-hero-side-overlay {
+  background: linear-gradient(90deg, rgb(255 255 255 / 35%), rgb(247 248 248 / 78%), rgb(247 248 248 / 96%));
+}
+
+.home-hero-bottom-overlay {
+  background: linear-gradient(0deg, rgb(247 248 248 / 85%), transparent 55%, rgb(255 255 255 / 10%));
+}
+
+.home-hero-poster {
+  border-color: rgb(15 23 42 / 14%);
+  background: rgb(255 255 255 / 55%);
+}
+
+.home-hero-copy {
+  color: #20252b;
+}
+
+.home-hero-muted {
+  color: rgb(71 85 105 / 88%);
+}
+
+.home-hero-arrow {
+  color: #374151;
+}
+
+:root[data-theme='dark'] .home-hero {
+  --hero-backdrop-opacity: 0.45;
+  background: linear-gradient(135deg, #050608 0%, #252a30 48%, #0d1014 100%);
+}
+
+:root[data-theme='dark'] .home-hero-side-overlay {
+  background: linear-gradient(90deg, rgb(6 8 10 / 48%), rgb(24 28 33 / 72%), rgb(8 10 13 / 94%));
+}
+
+:root[data-theme='dark'] .home-hero-bottom-overlay {
+  background: linear-gradient(0deg, rgb(10 12 15 / 96%), transparent 55%, rgb(42 47 54 / 14%));
+}
+
+:root[data-theme='dark'] .home-hero-poster {
+  border-color: rgb(255 255 255 / 20%);
+  background: rgb(0 0 0 / 35%);
+}
+
+:root[data-theme='dark'] .home-hero-copy {
+  color: white;
+}
+
+:root[data-theme='dark'] .home-hero-muted {
+  color: rgb(255 255 255 / 80%);
+}
+
+:root[data-theme='dark'] .home-hero-arrow {
+  color: white;
+}
+
+.home-hero-backdrop {
+  animation: home-hero-backdrop-in 7s ease-out both;
+}
+
+.home-hero-outgoing-backdrop {
+  opacity: var(--hero-backdrop-opacity);
+}
+
+.home-hero-poster {
+  animation: home-hero-poster-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.home-hero-copy > * {
+  opacity: 0;
+  animation: home-hero-copy-in 600ms ease-out forwards;
+}
+
+.home-hero-copy > :nth-child(1) { animation-delay: 120ms; }
+.home-hero-copy > :nth-child(2) { animation-delay: 200ms; }
+.home-hero-copy > :nth-child(3) { animation-delay: 280ms; }
+.home-hero-copy > :nth-child(4) { animation-delay: 360ms; }
+.home-hero-copy > :nth-child(5) { animation-delay: 440ms; }
+
+.home-hero-primary-button {
+  position: relative;
+}
+
+.home-hero-primary-button::after {
+  position: absolute;
+  inset: -40% auto -40% -45%;
+  width: 28%;
+  content: '';
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 45%), transparent);
+  transform: skewX(-18deg);
+  animation: home-hero-button-glint 4.5s ease-in-out 1.2s infinite;
+}
+
+@keyframes home-hero-backdrop-in {
+  0% { opacity: 0; transform: scale(1.08); }
+  14% { opacity: var(--hero-backdrop-opacity); }
+  100% { opacity: var(--hero-backdrop-opacity); transform: scale(1.18); }
+}
+
+@keyframes home-hero-poster-in {
+  from { opacity: 0; transform: translateX(-28px) scale(0.98); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes home-hero-copy-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes home-hero-button-glint {
+  0%, 55% { left: -45%; }
+  78%, 100% { left: 125%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero-backdrop,
+  .home-hero-poster,
+  .home-hero-copy > *,
+  .home-hero-primary-button::after {
+    animation: none;
+  }
+
+  .home-hero-backdrop { opacity: var(--hero-backdrop-opacity); }
+  .home-hero-copy > * { opacity: 1; }
+}

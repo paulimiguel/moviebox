@@ -61,7 +61,7 @@ export const PlatformsPage = () => {
     } catch {
       // The library remains accessible even if session storage is unavailable.
     }
-    navigate('/');
+    navigate('/biblioteca');
   };
 
   const updatePlatform = useMutation({

@@ -336,6 +336,21 @@ body {
   border-color: rgb(71 76 83 / 0.5);
 }
 
+:root[data-theme="dark"] .news-search-input {
+  border-color: rgb(71 76 83);
+  background-color: rgb(42 45 49);
+  color: #fff;
+}
+
+:root[data-theme="dark"] .news-search-input:hover {
+  border-color: rgb(100 116 139);
+  background-color: rgb(52 56 62);
+}
+
+:root[data-theme="dark"] .news-search-input::placeholder {
+  color: rgb(148 163 184);
+}
+
 :root[data-theme="dark"] .news-page h1,
 :root[data-theme="dark"] .news-page h3,
 :root[data-theme="dark"] .news-page h4 {
