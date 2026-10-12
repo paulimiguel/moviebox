@@ -43,17 +43,29 @@ const HorizontalRow = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-const SectionTitle = ({ title, subtitle, to, linkLabel, color }: { title: string; subtitle: string; to: string; linkLabel: string; color: 'coral' | 'aqua' }) => (
+const HomeSectionButton = ({ to, color }: { to: string; color: 'coral' | 'aqua' }) => color === 'coral' ? (
+  <Link to={to} className="home-hero-primary-button inline-flex h-9 items-center gap-2 overflow-hidden rounded-md bg-coral px-3 text-xs font-semibold uppercase text-white transition hover:brightness-110 sm:h-11 sm:px-5 sm:text-sm">
+    <Star className="relative z-10 h-4 w-4 fill-current" />
+    <span className="relative z-10">Ver novedades</span>
+  </Link>
+) : (
+  <Link to={to} className="inline-flex h-9 items-center gap-2 rounded-md border border-aqua bg-aqua px-3 text-xs font-semibold uppercase text-white transition hover:brightness-110 sm:h-11 sm:px-5 sm:text-sm">
+    <Library className="h-4 w-4" />
+    Mi biblioteca
+  </Link>
+);
+
+const SectionTitle = ({ title, subtitle, to, color }: { title: string; subtitle: string; to: string; color: 'coral' | 'aqua' }) => (
   <div className="mb-3 flex items-end justify-between gap-4">
     <div className={`border-l-4 pl-3 ${color === 'coral' ? 'border-coral' : 'border-aqua'}`}>
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <h2 className="font-bebas text-3xl uppercase leading-none text-ink sm:text-4xl">{title}</h2>
+        <Link to={to} className="transition-opacity hover:opacity-75">
+          <h2 className="font-bebas text-3xl uppercase leading-none text-ink sm:text-4xl">{title}</h2>
+        </Link>
         <p className="hidden text-sm text-slate-500 sm:block">{subtitle}</p>
       </div>
     </div>
-    <Link to={to} className={`shrink-0 text-xs font-semibold sm:text-sm ${color === 'coral' ? 'text-coral' : 'text-aqua'} hover:underline`}>
-      {linkLabel} →
-    </Link>
+    <div className="shrink-0"><HomeSectionButton to={to} color={color} /></div>
   </div>
 );
 
@@ -63,10 +75,9 @@ const NewsCard = ({ item }: { item: HomeNewsItem }) => (
   <Link to="/novedades" className="group/card w-[132px] shrink-0 snap-start sm:w-[156px]" title={`Ver novedades: ${item.title}`}>
     <div className="relative aspect-[2/3] overflow-hidden rounded-lg border border-slate-200 bg-mist shadow-card transition group-hover/card:-translate-y-1 group-hover/card:border-coral">
       {item.posterUrl ? <img src={item.posterUrl} alt={item.title} className="h-full w-full object-cover" loading="lazy" /> : <div className="grid h-full place-items-center text-slate-400"><Film className="h-8 w-8" /></div>}
-      <span className="absolute left-2 top-2 rounded bg-black/75 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-white backdrop-blur-sm">{item.type === 'series' ? 'Serie' : 'Película'}</span>
     </div>
     <h3 className="mt-2 line-clamp-1 font-bebas text-lg uppercase leading-tight text-ink transition-colors group-hover/card:text-coral">{item.title}</h3>
-    <p className="mt-0.5 truncate text-xs text-slate-500">{item.year || 'Próximamente'}</p>
+    <p className="mt-0.5 truncate text-xs text-slate-500">{item.type === 'series' ? 'Serie' : 'Película'}{item.year ? ` · ${item.year}` : ''}</p>
     <p className="mt-0.5 truncate text-[11px] font-medium text-aqua">{item.platformNames.join(' · ')}</p>
   </Link>
 );
@@ -197,8 +208,8 @@ export const HomePage = () => {
             </div>}
             <p className="home-hero-muted mt-3 line-clamp-2 max-w-xl text-xs leading-relaxed sm:line-clamp-3 sm:text-base">{banner?.overview || 'Descubrí los últimos estrenos disponibles en tus plataformas.'}</p>
             <div className="mt-4 flex w-full flex-wrap justify-start gap-2 sm:mt-6 sm:gap-3">
-              <Link to="/novedades" className="home-hero-primary-button inline-flex h-9 items-center gap-2 overflow-hidden rounded-md bg-coral px-3 text-xs font-semibold uppercase text-white transition hover:brightness-110 sm:h-11 sm:px-5 sm:text-sm"><Star className="relative z-10 h-4 w-4 fill-current" /> <span className="relative z-10">Ver novedades</span></Link>
-              <Link to="/biblioteca" className="inline-flex h-9 items-center gap-2 rounded-md border border-aqua bg-aqua px-3 text-xs font-semibold uppercase text-white transition hover:brightness-110 sm:h-11 sm:px-5 sm:text-sm"><Library className="h-4 w-4" /> Mi biblioteca</Link>
+              <HomeSectionButton to="/novedades" color="coral" />
+              <HomeSectionButton to="/biblioteca" color="aqua" />
             </div>
           </div>
         </div>
@@ -213,11 +224,11 @@ export const HomePage = () => {
 
       <div className="mx-auto max-w-[1500px] space-y-9 px-4 pt-7 sm:px-6 sm:pt-9">
         <section>
-          <SectionTitle title="Novedades" subtitle="Los últimos estrenos, series y películas que no te podés perder." to="/novedades" linkLabel="Ver todas las novedades" color="coral" />
+          <SectionTitle title="Novedades" subtitle="Los últimos estrenos, series y películas que no te podés perder." to="/novedades" color="coral" />
           {platformQueries.some((query) => query.isLoading) && !news.length ? <div className="h-56 animate-pulse rounded-lg bg-mist" /> : news.length ? <HorizontalRow>{news.map((item) => <NewsCard key={`${item.type}-${item.tmdbId}`} item={item} />)}</HorizontalRow> : <Link to="/novedades" className="grid h-36 place-items-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500">Explorar novedades</Link>}
         </section>
         <section>
-          <SectionTitle title="Mi biblioteca" subtitle="Tus películas y series, en un solo lugar." to="/biblioteca" linkLabel="Ver toda mi biblioteca" color="aqua" />
+          <SectionTitle title="Mi biblioteca" subtitle="Tus películas y series, en un solo lugar." to="/biblioteca" color="aqua" />
           {libraryQuery.isLoading ? <div className="h-56 animate-pulse rounded-lg bg-mist" /> : library.length ? <HorizontalRow>{library.slice(0, 14).map((movie) => <LibraryCard key={movie.id} movie={movie} />)}</HorizontalRow> : <Link to="/biblioteca" className="grid h-36 place-items-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500">Tu biblioteca todavía está vacía</Link>}
         </section>
       </div>

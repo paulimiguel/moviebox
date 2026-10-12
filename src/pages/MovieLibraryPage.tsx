@@ -162,6 +162,10 @@ export const MovieLibraryPage = () => {
       setBulkMode('edit');
       setSelectedIds(new Set());
     };
+    const handleActionBulkDelete = () => {
+      setBulkMode('delete');
+      setSelectedIds(new Set());
+    };
     const handleActionExportTxt = () => {
       setBulkMode('exportTxt');
       setSelectedIds(new Set());
@@ -179,6 +183,7 @@ export const MovieLibraryPage = () => {
     window.addEventListener('moviebox:filter-platform', handlePlatformFilter);
     window.addEventListener('moviebox:filter-collection', handleCollectionFilter);
     window.addEventListener('moviebox:action-bulk-edit', handleActionBulkEdit);
+    window.addEventListener('moviebox:action-bulk-delete', handleActionBulkDelete);
     window.addEventListener('moviebox:action-export-txt', handleActionExportTxt);
     window.addEventListener('moviebox:action-empty-fields', handleActionEmptyFields);
     window.addEventListener('moviebox:action-close-bulk', handleActionCloseBulk);
@@ -200,6 +205,7 @@ export const MovieLibraryPage = () => {
       window.removeEventListener('moviebox:filter-platform', handlePlatformFilter);
       window.removeEventListener('moviebox:filter-collection', handleCollectionFilter);
       window.removeEventListener('moviebox:action-bulk-edit', handleActionBulkEdit);
+      window.removeEventListener('moviebox:action-bulk-delete', handleActionBulkDelete);
       window.removeEventListener('moviebox:action-export-txt', handleActionExportTxt);
       window.removeEventListener('moviebox:action-empty-fields', handleActionEmptyFields);
       window.removeEventListener('moviebox:action-close-bulk', handleActionCloseBulk);
@@ -390,7 +396,7 @@ export const MovieLibraryPage = () => {
               <div className="ml-auto flex items-center gap-2 shrink-0">
                 {bulkMode === 'edit' && <button type="button" onClick={() => setBulkEditOpen(true)} disabled={!selectedMovies.length} className="primary-button"><Edit3 className="h-4 w-4" />Editar campos comunes</button>}
                 {bulkMode === 'print' && <><button type="button" onClick={() => printMovies(selectedMovies, 'cards')} disabled={!selectedMovies.length} className="secondary-button gap-2"><Printer className="h-4 w-4" />Imprimir tarjetas</button><button type="button" onClick={() => printMovies(selectedMovies, 'list')} disabled={!selectedMovies.length} className="secondary-button gap-2"><Printer className="h-4 w-4" />Imprimir lista</button></>}
-                {bulkMode === 'delete' && <button type="button" onClick={() => setDeleteConfirmOpen(true)} disabled={!selectedMovies.length} className="primary-button bg-red-600 hover:bg-red-700"><Trash2 className="h-4 w-4" />Eliminar movies</button>}
+                {bulkMode === 'delete' && <button type="button" onClick={() => setDeleteConfirmOpen(true)} disabled={!selectedMovies.length} className="primary-button bg-red-600 hover:bg-red-700"><Trash2 className="h-4 w-4" />Eliminar títulos</button>}
                 {bulkMode === 'exportTxt' && (
                   <button type="button" onClick={() => setExportOptionsOpen(true)} disabled={!selectedMovies.length} className="primary-button gap-2">
                     <FileText className="h-4 w-4" />
@@ -421,9 +427,9 @@ export const MovieLibraryPage = () => {
       {deleteConfirmOpen && (
         <div className="fixed inset-0 z-[70] grid place-items-center bg-ink/55 p-4" role="dialog" aria-modal="true" aria-labelledby="delete-movies-title">
           <div className="movie-detail-modal w-full max-w-md overflow-hidden rounded-md bg-canvas shadow-xl">
-            <header className="flex min-h-16 items-center border-b border-slate-200 bg-white px-5"><h2 id="delete-movies-title" className="text-lg font-semibold text-ink">Eliminar movies</h2></header>
+            <header className="flex min-h-16 items-center border-b border-slate-200 bg-white px-5"><h2 id="delete-movies-title" className="text-lg font-semibold text-ink">Eliminar títulos</h2></header>
             <div className="p-5">
-              <p className="text-sm leading-6 text-slate-600">Se eliminaran {selectedIds.size} {selectedIds.size === 1 ? 'movie seleccionada' : 'movies seleccionadas'} y todos sus datos asociados. Esta accion no se puede deshacer.</p>
+              <p className="text-sm leading-6 text-slate-600">Se eliminarán {selectedIds.size} {selectedIds.size === 1 ? 'título seleccionado' : 'títulos seleccionados'} y todos sus datos asociados. Esta acción no se puede deshacer.</p>
             </div>
             <footer className="flex justify-end gap-2 border-t border-slate-200 bg-white px-5 py-4">
               <button type="button" onClick={() => { setDeleteConfirmOpen(false); if (!bulkMode) setSelectedIds(new Set()); }} className="secondary-button">Cancelar</button>

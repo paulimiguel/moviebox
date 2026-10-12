@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ImagePlus, Loader2, MoreVertical, Pencil, Tags, Trash2, X } from 'lucide-react';
+import { Clapperboard, Compass, Drama, Eye, Ghost, Heart, ImagePlus, Landmark, Laugh, Loader2, MoreVertical, Mountain, Music2, Pencil, Rocket, Search, ShieldAlert, Sparkles, Swords, Tags, Trash2, Tv, UsersRound, WandSparkles, X, type LucideIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { CatalogToolbar, catalogGridClass, type CatalogViewMode } from '@/components/CatalogToolbar';
@@ -14,6 +14,42 @@ const resolveGenreImageUrl = (genre: Pick<GenreCatalogItem, 'imagePath'>) => {
   if (/^(https?:|data:|blob:)/i.test(genre.imagePath)) return genre.imagePath;
   return genre.imagePath.startsWith('/') ? genre.imagePath : `/${genre.imagePath}`;
 };
+
+const genreIconMatchers: Array<{ terms: string[]; icon: LucideIcon }> = [
+  { terms: ['ciencia ficcion', 'science fiction', 'sci-fi'], icon: Rocket },
+  { terms: ['pelicula de tv', 'tv movie'], icon: Tv },
+  { terms: ['aventura', 'adventure'], icon: Compass },
+  { terms: ['animacion', 'animation'], icon: Sparkles },
+  { terms: ['comedia', 'comedy'], icon: Laugh },
+  { terms: ['crimen', 'crime'], icon: ShieldAlert },
+  { terms: ['documental', 'documentary'], icon: Clapperboard },
+  { terms: ['drama'], icon: Drama },
+  { terms: ['familia', 'family'], icon: UsersRound },
+  { terms: ['fantasia', 'fantasy'], icon: WandSparkles },
+  { terms: ['historia', 'history'], icon: Landmark },
+  { terms: ['terror', 'horror'], icon: Ghost },
+  { terms: ['musica', 'music'], icon: Music2 },
+  { terms: ['misterio', 'mystery'], icon: Search },
+  { terms: ['romance'], icon: Heart },
+  { terms: ['suspense', 'thriller'], icon: Eye },
+  { terms: ['belica', 'guerra', 'war'], icon: Swords },
+  { terms: ['western', 'oeste'], icon: Mountain },
+];
+
+const normalizeGenreName = (name: string) => name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase();
+
+const getGenreIcon = (name: string) => {
+  const normalizedName = normalizeGenreName(name);
+  return genreIconMatchers.find(({ terms }) => terms.some((term) => normalizedName.includes(term)))?.icon || Tags;
+};
+
+const genreIconImages: Record<string, string> = {
+  accion: '/genre-icons/accion.png',
+  action: '/genre-icons/accion.png',
+  drama: '/genre-icons/drama.png',
+};
+
+const getGenreIconImage = (name: string) => genreIconImages[normalizeGenreName(name)] || null;
 
 export const GenresPage = () => {
   const queryClient = useQueryClient();
@@ -142,9 +178,15 @@ export const GenresPage = () => {
             : genres.data?.length ? visibleGenres.length ? <section className={catalogGridClass[viewMode]}>
               {visibleGenres.map((genre) => {
                 const imageUrl = resolveGenreImageUrl(genre);
+                const iconImage = getGenreIconImage(genre.name);
+                const GenreIcon = getGenreIcon(genre.name);
                 return <article key={genre.id} role="button" tabIndex={0} onClick={() => showGenreMovies(genre.id)} onKeyDown={(event) => { if ((event.key === 'Enter' || event.key === ' ') && event.target === event.currentTarget) { event.preventDefault(); showGenreMovies(genre.id); } }} className={`movie-card relative flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-md bg-white shadow-card transition-transform hover:-translate-y-0.5 ${openMenuId === genre.id ? 'z-20 overflow-visible' : ''}`}>
                   <div className="relative aspect-square overflow-hidden rounded-t-md bg-slate-100">
-                    {imageUrl ? <img src={imageUrl} alt={genre.name} className="h-full w-full object-cover" loading="lazy" /> : <div className="grid h-full place-items-center"><Tags className="h-16 w-16 text-aqua" /></div>}
+                    {iconImage
+                      ? <div className="grid h-full place-items-center" title={`Icono de ${genre.name}`}><img src={iconImage} alt={`Icono de ${genre.name}`} className="h-[72%] w-[72%] object-contain" /></div>
+                      : imageUrl
+                      ? <><img src={imageUrl} alt={genre.name} className="h-full w-full object-cover" loading="lazy" /><div className="absolute bottom-2 left-2 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-aqua shadow-sm backdrop-blur-sm" title={`Icono de ${genre.name}`}><GenreIcon className="h-5 w-5" /></div></>
+                      : <div className="grid h-full place-items-center" title={`Icono de ${genre.name}`}><GenreIcon className="h-16 w-16 text-aqua" /></div>}
                     <div className="absolute right-2 top-2" onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpenMenuId(null); }}>
                       <button type="button" onClick={() => setOpenMenuId((current) => current === genre.id ? null : genre.id)} className="moviebox-translucent-action grid h-8 w-8 place-items-center rounded-md border border-white/60 bg-white/80 text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white" title="Más acciones" aria-label={`Acciones de ${genre.name}`} aria-expanded={openMenuId === genre.id}><MoreVertical className="h-4 w-4" /></button>
                       {openMenuId === genre.id && <div className="movie-card-dropdown absolute right-0 top-9 z-30 w-40 rounded-md border border-slate-200 bg-white p-1.5 text-sm shadow-card">
@@ -153,7 +195,10 @@ export const GenresPage = () => {
                       </div>}
                     </div>
                   </div>
-                  <div className="p-3"><h2 className="font-bebas line-clamp-2 text-[24px] font-normal uppercase leading-7 text-ink">{genre.name}</h2></div>
+                  <div className="p-3">
+                    <h2 className="font-bebas line-clamp-2 text-[24px] font-normal uppercase leading-7 text-ink">{genre.name}</h2>
+                    <p className="mt-1 text-xs text-slate-500">{genre.movieCount} {genre.movieCount === 1 ? 'título' : 'títulos'}</p>
+                  </div>
                 </article>;
               })}
             </section> : <div className="grid min-h-[45vh] place-items-center text-center"><div><Tags className="mx-auto h-14 w-14 text-aqua" /><h2 className="mt-4 text-lg font-semibold text-ink">No hay coincidencias</h2></div></div> : <div className="grid min-h-[45vh] place-items-center text-center"><div><Tags className="mx-auto h-14 w-14 text-aqua" /><h2 className="mt-4 text-lg font-semibold text-ink">No hay géneros</h2></div></div>}

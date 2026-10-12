@@ -150,7 +150,10 @@ export const PlatformsPage = () => {
                       </div>}
                     </div>
                   </div>
-                  <div className="p-2.5"><h2 className="font-bebas line-clamp-2 text-xl font-normal uppercase leading-6 text-ink">{platform.name}</h2></div>
+                  <div className="p-2.5">
+                    <h2 className="font-bebas line-clamp-2 text-xl font-normal uppercase leading-6 text-ink">{platform.name}</h2>
+                    <p className="mt-1 text-xs text-slate-500">{platform.movieCount} {platform.movieCount === 1 ? 'título' : 'títulos'}</p>
+                  </div>
                 </article>
               );
             })}

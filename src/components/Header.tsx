@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Bookmark, ChevronDown, Edit3, Eye, EyeOff, FileText, Film, Heart, LayoutGrid, LogOut, Moon, Plus, Search, Sun, Tv } from 'lucide-react';
+import { Bookmark, ChevronDown, Edit3, Eye, EyeOff, FileText, Film, Heart, LayoutGrid, LogOut, Moon, Plus, Search, Sun, Trash2, Tv } from 'lucide-react';
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/services/api';
@@ -163,7 +163,7 @@ export const Header = () => {
     }
   };
 
-  const handleTriggerAction = (action: 'add' | 'search-platform' | 'bulk-edit' | 'empty-fields' | 'export-txt') => {
+  const handleTriggerAction = (action: 'add' | 'search-platform' | 'bulk-edit' | 'bulk-delete' | 'empty-fields' | 'export-txt') => {
     setActionsMenuOpen(false);
     setMenuOpen(false);
     window.dispatchEvent(new CustomEvent('moviebox:action-close-bulk'));
@@ -181,6 +181,8 @@ export const Header = () => {
     window.setTimeout(() => {
       if (action === 'bulk-edit') {
         window.dispatchEvent(new CustomEvent('moviebox:action-bulk-edit'));
+      } else if (action === 'bulk-delete') {
+        window.dispatchEvent(new CustomEvent('moviebox:action-bulk-delete'));
       } else if (action === 'empty-fields') {
         window.dispatchEvent(new CustomEvent('moviebox:action-empty-fields'));
       } else if (action === 'export-txt') {
@@ -325,6 +327,14 @@ export const Header = () => {
                   >
                     <Edit3 className="h-4 w-4" />
                     <span>Editar campos comunes</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTriggerAction('bulk-delete')}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span>Eliminar títulos</span>
                   </button>
                   <button
                     type="button"
@@ -622,6 +632,14 @@ export const Header = () => {
                     >
                       <Edit3 className="h-4 w-4" />
                       <span>Editar campos comunes</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleTriggerAction('bulk-delete')}
+                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span>Eliminar títulos</span>
                     </button>
                     <button
                       type="button"

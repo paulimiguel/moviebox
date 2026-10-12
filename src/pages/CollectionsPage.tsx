@@ -173,7 +173,10 @@ export const CollectionsPage = () => {
                       ? <img src={resolveMovieImageUrl(collection.coverImage)} alt={collection.name} className="h-full w-full object-cover" loading="lazy" />
                       : <div className="grid h-full place-items-center"><FolderOpen className="h-16 w-16 text-aqua" /></div>}
                   </div>
-                  <div className="p-3"><h2 className="font-bebas line-clamp-2 text-[24px] font-normal uppercase leading-7 text-ink">{collection.name}</h2></div>
+                  <div className="p-3">
+                    <h2 className="font-bebas line-clamp-2 text-[24px] font-normal uppercase leading-7 text-ink">{collection.name}</h2>
+                    <p className="mt-1 text-xs text-slate-500">{collection.movieCount} {collection.movieCount === 1 ? 'título' : 'títulos'}</p>
+                  </div>
                 </Link>
                 <div className="absolute right-2 top-2" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpenMenuId(null); }}>
                   <button type="button" onClick={() => setOpenMenuId((current) => current === collection.id ? null : collection.id)} className="moviebox-translucent-action grid h-8 w-8 place-items-center rounded-md border border-white/60 bg-white/80 text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white" title="Más acciones" aria-label={`Acciones de ${collection.name}`} aria-expanded={openMenuId === collection.id}><MoreVertical className="h-4 w-4" /></button>
