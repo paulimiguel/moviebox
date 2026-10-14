@@ -100,7 +100,7 @@ export const MoviePlatformSearchModal = ({ isOpen, onClose }: MoviePlatformSearc
         watchlist: false,
         instagramRecommendation: false,
         personalRating: null,
-        imdbRating: item.rating || null,
+        imdbRating: null,
         tmdbId: item.tmdbId || null,
         imdbId: item.imdbId || null,
         imdbUrl: item.imdbId ? `https://www.imdb.com/title/${item.imdbId}` : null,

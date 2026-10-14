@@ -107,6 +107,46 @@ const tmdbRequest = async <T>(path: string): Promise<T> => {
   return response.json() as Promise<T>;
 };
 
+const parseImdbRating = (value: unknown) => {
+  if (value == null || String(value).trim() === '') return null;
+  const rating = Number(value);
+  return Number.isFinite(rating) && rating > 0 && rating <= 10
+    ? Math.round(rating * 10) / 10
+    : null;
+};
+
+const getCurrentImdbRating = async (imdbId: string, fallbackValue: unknown) => {
+  const fallbackRating = parseImdbRating(fallbackValue);
+  try {
+    const query = `
+      query Rating($id: ID!) {
+        title(id: $id) {
+          ratingsSummary { aggregateRating }
+        }
+      }
+    `;
+    const response = await fetch('https://api.graphql.imdb.com/', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-imdb-client-name': 'imdb-web-next-localized',
+        'x-imdb-user-language': 'es-ES',
+        'Accept-Language': 'es-ES,es;q=0.9',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      },
+      body: JSON.stringify({ query, variables: { id: imdbId } }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) return fallbackRating;
+    const payload = await response.json() as {
+      data?: { title?: { ratingsSummary?: { aggregateRating?: number | null } | null } | null };
+    };
+    return parseImdbRating(payload.data?.title?.ratingsSummary?.aggregateRating) ?? fallbackRating;
+  } catch {
+    return fallbackRating;
+  }
+};
+
 const parseYear = (value: unknown) => {
   const match = String(value || '').match(/\d{4}/);
   return match ? Number(match[0]) : null;
@@ -319,10 +359,12 @@ router.post('/import', async (req, res) => {
       [details.poster, details.background, details.logo].filter(Boolean) as string[],
     ));
     const trailer = (details.trailers || []).find((item: any) => item.source);
-    const rating = Number(details.imdbRating);
     const tmdbId = Number(details.moviedb_id);
     const knownTmdbId = Number.isInteger(tmdbId) && tmdbId > 0 ? tmdbId : null;
-    const localized = await getLocalizedTmdbDetails(imdbId, type, knownTmdbId);
+    const [localized, imdbRating] = await Promise.all([
+      getLocalizedTmdbDetails(imdbId, type, knownTmdbId),
+      getCurrentImdbRating(imdbId, details.imdbRating),
+    ]);
     const year = parseYear(details.year || details.releaseInfo);
     const justwatchUrl = await getJustWatchUrl(details.name, localized?.title || null, year, type);
 
@@ -343,7 +385,7 @@ router.post('/import', async (req, res) => {
       durationMinutes: parseRuntime(details.runtime),
       seasons,
       totalEpisodes: episodes.length || null,
-      imdbRating: Number.isFinite(rating) ? rating : null,
+      imdbRating,
       tmdbId: importedTmdbId,
       tmdbUrl: importedTmdbId ? `https://www.themoviedb.org/${type === 'movie' ? 'movie' : 'tv'}/${importedTmdbId}` : null,
       imdbId,
