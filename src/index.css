@@ -906,3 +906,22 @@ html.cursor-thinking * {
   max-width: 1rem;
   max-height: 1rem;
 }
+
+/* Tarjetas pequeñas: solo el icono sobre la portada, sin fondo. */
+.moviebox-icon-only {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.85));
+  max-width: 1.125rem;
+  max-height: 1.125rem;
+}
+
+.moviebox-icon-only:not([aria-pressed="true"]) {
+  color: #fff;
+}
+
+.moviebox-icon-only svg {
+  max-width: 0.8125rem;
+  max-height: 0.8125rem;
+}
