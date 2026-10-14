@@ -4,6 +4,7 @@ import { Bookmark, Check, ChevronLeft, ChevronRight, Film, Heart, Library, Spark
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { MovieDetailModal } from '@/components/MovieDetailModal';
+import { MovieEditModal } from '@/components/MovieEditModal';
 import { PLATFORM_PREFERENCES } from '@/constants/platformPreferences';
 import { useAuth } from '@/contexts/AuthContext';
 import { api, resolveMovieImageUrl } from '@/services/api';
@@ -77,21 +78,21 @@ const SectionTitle = ({ title, subtitle, to, color }: { title: string; subtitle:
 
 type HomeNewsItem = TmdbSuggestionCandidate & { platformNames: string[] };
 
-const NewsCard = ({ item }: { item: HomeNewsItem }) => (
-  <Link to="/novedades" className="group/card w-[132px] shrink-0 snap-start sm:w-[156px]" title={`Ver novedades: ${item.title}`}>
+const NewsCard = ({ item, onSelect }: { item: HomeNewsItem; onSelect: (item: HomeNewsItem) => void }) => (
+  <button type="button" onClick={() => onSelect(item)} className="group/card w-[132px] shrink-0 snap-start text-left sm:w-[156px]" title={`Ver ficha: ${item.title}`}>
     <div className="relative aspect-[2/3] overflow-hidden rounded-lg border border-slate-200 bg-mist shadow-card transition group-hover/card:-translate-y-1 group-hover/card:border-coral">
       {item.posterUrl ? <img src={item.posterUrl} alt={item.title} className="h-full w-full object-cover" loading="lazy" /> : <div className="grid h-full place-items-center text-slate-400"><Film className="h-8 w-8" /></div>}
     </div>
     <h3 className="mt-2 line-clamp-1 font-bebas text-lg uppercase leading-tight text-ink transition-colors group-hover/card:text-coral">{item.title}</h3>
     <p className="mt-0.5 truncate text-xs text-slate-500">{item.type === 'series' ? 'Serie' : 'Película'}{item.year ? ` · ${item.year}` : ''}</p>
     <p className="mt-0.5 truncate text-[11px] font-medium text-aqua">{item.platformNames.join(' · ')}</p>
-  </Link>
+  </button>
 );
 
-const LibraryCard = ({ movie }: { movie: MovieItem }) => {
+const LibraryCard = ({ movie, onSelect }: { movie: MovieItem; onSelect: (movie: MovieItem) => void }) => {
   const image = imageFor(movie);
   return (
-    <Link to={`/titulo/${movie.id}`} className="group/card w-[132px] shrink-0 snap-start sm:w-[156px]" title={`Abrir ${titleFor(movie)}`}>
+    <button type="button" onClick={() => onSelect(movie)} className="group/card w-[132px] shrink-0 snap-start text-left sm:w-[156px]" title={`Abrir ${titleFor(movie)}`}>
       <div className="relative aspect-[2/3] overflow-hidden rounded-lg border border-slate-200 bg-mist shadow-card transition group-hover/card:-translate-y-1 group-hover/card:border-aqua">
         {image ? <img src={image} alt={titleFor(movie)} className="h-full w-full object-cover" loading="lazy" /> : <div className="grid h-full place-items-center text-slate-400"><Film className="h-8 w-8" /></div>}
         <div className="absolute left-2 top-2 flex flex-wrap gap-1">
@@ -103,7 +104,7 @@ const LibraryCard = ({ movie }: { movie: MovieItem }) => {
       <h3 className="mt-2 line-clamp-1 font-bebas text-lg uppercase leading-tight text-ink transition-colors group-hover/card:text-aqua">{titleFor(movie)}</h3>
       <p className="mt-0.5 truncate text-xs text-slate-500">{movie.type === 'series' ? 'Serie' : 'Película'}{movie.year ? ` · ${movie.year}` : ''}</p>
       <p className="mt-0.5 truncate text-[11px] font-medium text-aqua">{movie.platforms.length ? movie.platforms.map((platform) => platform.name).join(' · ') : 'Sin plataforma asociada'}</p>
-    </Link>
+    </button>
   );
 };
 
@@ -154,29 +155,34 @@ export const HomePage = () => {
   });
   const banner = platformBanners[activeBanner] || platformBanners[0];
   const bannerKey = banner ? `${banner.platform.id}-${banner.tmdbId}` : 'moviebox';
-  const bannerLibraryMovie = banner
-    ? library.find((movie) => (banner.tmdbId && movie.tmdbId === banner.tmdbId) || (banner.imdbId && movie.imdbId === banner.imdbId)) || null
+  const [editingMovie, setEditingMovie] = useState<MovieItem | null>(null);
+  const [modalTarget, setModalTarget] = useState<{ candidate: TmdbSuggestionCandidate; platformNames: string[] } | { libraryId: string } | null>(null);
+  const modalCandidate = modalTarget && 'candidate' in modalTarget ? modalTarget.candidate : null;
+  const modalPlatformNames = modalTarget && 'candidate' in modalTarget ? modalTarget.platformNames : [];
+  const modalLibraryMovie = modalTarget
+    ? ('libraryId' in modalTarget
+      ? library.find((movie) => movie.id === modalTarget.libraryId)
+      : library.find((movie) => (modalTarget.candidate.tmdbId && movie.tmdbId === modalTarget.candidate.tmdbId) || (modalTarget.candidate.imdbId && movie.imdbId === modalTarget.candidate.imdbId))) || null
     : null;
-  const [bannerModalOpen, setBannerModalOpen] = useState(false);
-  const bannerDetails = useQuery({
-    queryKey: ['candidateDetails', banner?.imdbId],
-    queryFn: () => api.imdb.import({ imdbId: banner!.imdbId, type: banner!.type }),
-    enabled: Boolean(bannerModalOpen && banner?.imdbId && !bannerLibraryMovie),
+  const modalDetails = useQuery({
+    queryKey: ['candidateDetails', modalCandidate?.imdbId],
+    queryFn: () => api.imdb.import({ imdbId: modalCandidate!.imdbId, type: modalCandidate!.type }),
+    enabled: Boolean(modalCandidate?.imdbId && !modalLibraryMovie),
     staleTime: 1000 * 60 * 30,
   });
-  const bannerMovie: MovieItem | null = useMemo(() => {
-    if (!banner) return null;
-    if (bannerLibraryMovie) return bannerLibraryMovie;
-    const details = bannerDetails.data;
+  const modalMovie: MovieItem | null = useMemo(() => {
+    if (modalLibraryMovie) return modalLibraryMovie;
+    if (!modalCandidate) return null;
+    const details = modalDetails.data;
     const now = new Date().toISOString();
     return {
-      id: `preview-${banner.tmdbId}`,
+      id: `preview-${modalCandidate.tmdbId}`,
       userId: 'preview',
-      type: banner.type,
-      originalTitle: details?.originalTitle || banner.title,
-      spanishTitle: details?.spanishTitle || banner.title,
-      year: details?.year || banner.year || null,
-      synopsis: details?.synopsis || banner.overview || 'Sin descripción disponible.',
+      type: modalCandidate.type,
+      originalTitle: details?.originalTitle || modalCandidate.title,
+      spanishTitle: details?.spanishTitle || modalCandidate.title,
+      year: details?.year || modalCandidate.year || null,
+      synopsis: details?.synopsis || modalCandidate.overview || 'Sin descripción disponible.',
       durationMinutes: details?.durationMinutes ?? null,
       seasons: details?.seasons ?? null,
       totalEpisodes: details?.totalEpisodes ?? null,
@@ -186,10 +192,10 @@ export const HomePage = () => {
       instagramRecommendation: false,
       personalRating: null,
       imdbRating: details?.imdbRating ?? null,
-      tmdbId: banner.tmdbId || null,
-      imdbId: banner.imdbId || null,
-      imdbUrl: banner.imdbId ? `https://www.imdb.com/title/${banner.imdbId}` : null,
-      tmdbUrl: banner.tmdbId ? `https://www.themoviedb.org/${banner.type === 'movie' ? 'movie' : 'tv'}/${banner.tmdbId}` : null,
+      tmdbId: modalCandidate.tmdbId || null,
+      imdbId: modalCandidate.imdbId || null,
+      imdbUrl: modalCandidate.imdbId ? `https://www.imdb.com/title/${modalCandidate.imdbId}` : null,
+      tmdbUrl: modalCandidate.tmdbId ? `https://www.themoviedb.org/${modalCandidate.type === 'movie' ? 'movie' : 'tv'}/${modalCandidate.tmdbId}` : null,
       justwatchUrl: details?.justwatchUrl || null,
       trailerUrl: details?.trailerUrl || null,
       tmdbCollectionId: details?.tmdbCollectionId ?? null,
@@ -200,15 +206,15 @@ export const HomePage = () => {
       updatedAt: now,
       images: details?.images?.length
         ? details.images.map((img, i) => ({ id: String(i), url: img.url, localPath: null, tmdbFilePath: null, order: i, isPrimary: i === 0, altText: null }))
-        : banner.posterUrl
-          ? [{ id: '1', url: banner.posterUrl, localPath: null, tmdbFilePath: null, order: 0, isPrimary: true, altText: null }]
+        : modalCandidate.posterUrl
+          ? [{ id: '1', url: modalCandidate.posterUrl, localPath: null, tmdbFilePath: null, order: 0, isPrimary: true, altText: null }]
           : [],
-      genres: (details?.genres || (banner.genres || []).map((name) => ({ name }))).map((genre, i) => ({
+      genres: (details?.genres || (modalCandidate.genres || []).map((name) => ({ name }))).map((genre, i) => ({
         id: String(i),
         name: genre.name,
         normalizedName: genre.name.toLowerCase(),
         tmdbGenreId: null,
-        tmdbMediaType: banner.type,
+        tmdbMediaType: modalCandidate.type,
         imagePath: null,
         order: i,
       })),
@@ -221,7 +227,7 @@ export const HomePage = () => {
           isPrimary: platform.isPrimary ?? index === 0,
           order: platform.order ?? index,
         }))
-        : [{ id: `preview-platform-${banner.platform.id}`, name: banner.platform.name, tmdbProviderId: null, logoPath: null, isPrimary: true, order: 0 }],
+        : modalPlatformNames.map((name, order) => ({ id: `preview-platform-${name}`, name, tmdbProviderId: null, logoPath: null, isPrimary: order === 0, order })),
       keywords: [],
       credits: (details?.credits || []).map((credit, i) => ({
         id: String(i),
@@ -242,16 +248,16 @@ export const HomePage = () => {
       })),
       collections: [],
     };
-  }, [banner, bannerLibraryMovie, bannerDetails.data]);
+  }, [modalCandidate, modalPlatformNames, modalLibraryMovie, modalDetails.data]);
   const refreshLibrary = () => {
     queryClient.invalidateQueries({ queryKey: ['movies'] });
     queryClient.invalidateQueries({ queryKey: ['metadata'] });
     queryClient.invalidateQueries({ queryKey: ['collections'] });
   };
-  const addBannerMutation = useMutation({
+  const addModalMutation = useMutation({
     mutationFn: async (candidate: TmdbSuggestionCandidate) => {
-      const imported = bannerDetails.data && bannerDetails.data.imdbId === candidate.imdbId
-        ? bannerDetails.data
+      const imported = modalDetails.data && modalDetails.data.imdbId === candidate.imdbId
+        ? modalDetails.data
         : await api.imdb.import({ imdbId: candidate.imdbId, type: candidate.type });
       return api.movies.create({ ...imported, favorite: false, watched: false, watchlist: false, personalRating: null, collectionIds: [] });
     },
@@ -295,10 +301,12 @@ export const HomePage = () => {
   }, [activeBanner, platformBanners.length]);
 
   useEffect(() => {
-    if (platformBanners.length < 2 || bannerModalOpen) return undefined;
+    if (platformBanners.length < 2 || modalTarget) return undefined;
     const timer = window.setInterval(() => setActiveBanner((current) => (current + 1) % platformBanners.length), 7000);
     return () => window.clearInterval(timer);
-  }, [platformBanners.length, bannerModalOpen]);
+  }, [platformBanners.length, modalTarget]);
+
+  const openBannerModal = () => banner && setModalTarget({ candidate: banner, platformNames: [banner.platform.name] });
 
   const changeBanner = (direction: -1 | 1) => {
     if (!platformBanners.length) return;
@@ -316,12 +324,12 @@ export const HomePage = () => {
         <div className="relative mx-auto flex h-full max-w-[1500px] items-center gap-4 px-4 sm:gap-8 sm:px-12 lg:gap-12">
           <div key={`poster-${bannerKey}`} className="home-hero-poster relative h-full aspect-[2/3] shrink-0 overflow-hidden border-x shadow-2xl">
             <img src={banner?.posterUrl || '/login-posters/the-matrix.jpg'} alt={banner?.title || ''} className="h-full w-full object-contain" />
-            {banner && <button type="button" onClick={() => setBannerModalOpen(true)} className="absolute inset-0 z-10 cursor-pointer" aria-label={`Ver ficha de ${banner.title}`} title="Ver ficha" />}
+            {banner && <button type="button" onClick={() => openBannerModal()} className="absolute inset-0 z-10 cursor-pointer" aria-label={`Ver ficha de ${banner.title}`} title="Ver ficha" />}
           </div>
           <div key={`copy-${bannerKey}`} className="home-hero-copy min-w-0 max-w-3xl flex-1">
             <span className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-aqua"><Sparkles className="h-4 w-4" /> {banner ? `Novedad en ${banner.platform.name}` : 'Novedades de tus plataformas'}</span>
             <h1 className="font-bebas text-4xl uppercase leading-[0.92] tracking-wide sm:text-6xl lg:text-7xl">
-              {banner ? <button type="button" onClick={() => setBannerModalOpen(true)} className="text-left uppercase transition-opacity hover:opacity-80" title="Ver ficha">{banner.title}</button> : 'MovieBox'}
+              {banner ? <button type="button" onClick={() => openBannerModal()} className="text-left uppercase transition-opacity hover:opacity-80" title="Ver ficha">{banner.title}</button> : 'MovieBox'}
             </h1>
             {banner && <div className="home-hero-muted mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs sm:mt-4 sm:text-sm">
               {banner.year && <span>{banner.year}</span>}
@@ -348,22 +356,24 @@ export const HomePage = () => {
       <div className="mx-auto max-w-[1500px] space-y-9 px-4 pt-7 sm:px-6 sm:pt-9">
         <section>
           <SectionTitle title="Novedades" subtitle="Los últimos estrenos, series y películas que no te podés perder." to="/novedades" color="coral" />
-          {platformQueries.some((query) => query.isLoading) && !news.length ? <div className="h-56 animate-pulse rounded-lg bg-mist" /> : news.length ? <HorizontalRow>{news.map((item) => <NewsCard key={`${item.type}-${item.tmdbId}`} item={item} />)}</HorizontalRow> : <Link to="/novedades" className="grid h-36 place-items-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500">Explorar novedades</Link>}
+          {platformQueries.some((query) => query.isLoading) && !news.length ? <div className="h-56 animate-pulse rounded-lg bg-mist" /> : news.length ? <HorizontalRow>{news.map((item) => <NewsCard key={`${item.type}-${item.tmdbId}`} item={item} onSelect={(selected) => setModalTarget({ candidate: selected, platformNames: selected.platformNames })} />)}</HorizontalRow> : <Link to="/novedades" className="grid h-36 place-items-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500">Explorar novedades</Link>}
         </section>
         <section>
           <SectionTitle title="Mi biblioteca" subtitle="Tus películas y series, en un solo lugar." to="/biblioteca" color="aqua" />
-          {libraryQuery.isLoading ? <div className="h-56 animate-pulse rounded-lg bg-mist" /> : library.length ? <HorizontalRow>{library.slice(0, 14).map((movie) => <LibraryCard key={movie.id} movie={movie} />)}</HorizontalRow> : <Link to="/biblioteca" className="grid h-36 place-items-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500">Tu biblioteca todavía está vacía</Link>}
+          {libraryQuery.isLoading ? <div className="h-56 animate-pulse rounded-lg bg-mist" /> : library.length ? <HorizontalRow>{library.slice(0, 14).map((movie) => <LibraryCard key={movie.id} movie={movie} onSelect={(selected) => setModalTarget({ libraryId: selected.id })} />)}</HorizontalRow> : <Link to="/biblioteca" className="grid h-36 place-items-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500">Tu biblioteca todavía está vacía</Link>}
         </section>
       </div>
-      {bannerModalOpen && bannerMovie && (
+      {modalTarget && modalMovie && (
         <MovieDetailModal
-          movie={bannerMovie}
-          onClose={() => setBannerModalOpen(false)}
-          onAdd={!bannerLibraryMovie && banner ? () => addBannerMutation.mutate(banner) : undefined}
+          movie={modalMovie}
+          onClose={() => setModalTarget(null)}
+          onAdd={!modalLibraryMovie && modalCandidate ? () => addModalMutation.mutate(modalCandidate) : undefined}
+          onEdit={modalLibraryMovie ? (movie) => { setModalTarget(null); setEditingMovie(movie); } : undefined}
           onPersonal={(movie, field) => updatePersonal.mutate({ movie, field })}
           onRating={(movie, rating) => updateRating.mutate({ movie, rating })}
         />
       )}
+      {editingMovie && <MovieEditModal key={editingMovie.id} movie={editingMovie} onClose={() => setEditingMovie(null)} onSaved={() => { refreshLibrary(); setEditingMovie(null); }} />}
     </main>
   );
 };
