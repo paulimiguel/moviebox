@@ -29,7 +29,7 @@ export const CastPhotosModal = ({ title, type, tmdbId, cast, onClose }: {
 
   return createPortal(
     <div className="fixed inset-0 z-[110] grid place-items-center bg-ink/60 p-4" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <section className="movie-detail-modal flex max-h-[82vh] w-full max-w-2xl flex-col overflow-hidden rounded-md bg-canvas shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="cast-photos-title">
+      <section className="movie-detail-modal flex max-h-[82vh] w-fit max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-md bg-canvas shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="cast-photos-title">
         <header className="flex min-h-16 items-center gap-3 border-b border-slate-200 bg-white px-5">
           <div className="min-w-0 flex-1">
             <h2 id="cast-photos-title" className="font-bebas truncate text-[24px] font-normal uppercase leading-7 text-ink">Reparto principal</h2>
@@ -40,7 +40,7 @@ export const CastPhotosModal = ({ title, type, tmdbId, cast, onClose }: {
         <div className="overflow-y-auto p-4 sm:p-5">
           {castQuery.isLoading ? <div className="grid min-h-56 place-items-center"><Loader2 className="h-7 w-7 animate-spin text-aqua" /></div>
             : castQuery.isError ? <p className="grid min-h-40 place-items-center text-center text-sm text-slate-500">No se pudieron cargar las imágenes del reparto.</p>
-              : visibleCast.length ? <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              : visibleCast.length ? <div className="grid w-max max-w-full auto-cols-[112px] grid-flow-col gap-3 overflow-x-auto pb-2 sm:auto-cols-[120px]">
                 {visibleCast.map((member) => <article key={member.id} className="min-w-0 overflow-hidden rounded-md border border-slate-200 bg-white">
                   <div className="aspect-[2/3] bg-slate-100">
                     {member.profileUrl ? <img src={member.profileUrl} alt={member.name} className="h-full w-full object-cover" loading="lazy" /> : <div className="grid h-full place-items-center"><UserRound className="h-12 w-12 text-slate-300" /></div>}

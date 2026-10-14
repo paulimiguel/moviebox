@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CheckSquare, Edit3, FileText, Film, Loader2, Printer, Square, Trash2, X } from 'lucide-react';
+import { CheckSquare, Edit3, FileText, Film, Loader2, Printer, Share2, Square, Trash2, X } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { MovieBulkEditModal } from '@/components/MovieBulkEditModal';
 import { MovieCard, type MovieViewMode } from '@/components/MovieCard';
@@ -78,6 +78,8 @@ export const MovieLibraryPage = () => {
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [exportOptionsOpen, setExportOptionsOpen] = useState(false);
+  const [sharePending, setSharePending] = useState(false);
+  const [shareFeedback, setShareFeedback] = useState('');
   const [platformSearchOpen, setPlatformSearchOpen] = useState(false);
   const [emptyFieldsOpen, setEmptyFieldsOpen] = useState(false);
   const [emptyFields, setEmptyFields] = useState<EmptyMovieField[]>([]);
@@ -170,6 +172,11 @@ export const MovieLibraryPage = () => {
       setBulkMode('exportTxt');
       setSelectedIds(new Set());
     };
+    const handleActionBulkShare = () => {
+      setBulkMode('share');
+      setSelectedIds(new Set());
+      setShareFeedback('');
+    };
     const handleActionEmptyFields = () => {
       setEmptyFieldsOpen(true);
     };
@@ -184,6 +191,7 @@ export const MovieLibraryPage = () => {
     window.addEventListener('moviebox:filter-collection', handleCollectionFilter);
     window.addEventListener('moviebox:action-bulk-edit', handleActionBulkEdit);
     window.addEventListener('moviebox:action-bulk-delete', handleActionBulkDelete);
+    window.addEventListener('moviebox:action-bulk-share', handleActionBulkShare);
     window.addEventListener('moviebox:action-export-txt', handleActionExportTxt);
     window.addEventListener('moviebox:action-empty-fields', handleActionEmptyFields);
     window.addEventListener('moviebox:action-close-bulk', handleActionCloseBulk);
@@ -206,6 +214,7 @@ export const MovieLibraryPage = () => {
       window.removeEventListener('moviebox:filter-collection', handleCollectionFilter);
       window.removeEventListener('moviebox:action-bulk-edit', handleActionBulkEdit);
       window.removeEventListener('moviebox:action-bulk-delete', handleActionBulkDelete);
+      window.removeEventListener('moviebox:action-bulk-share', handleActionBulkShare);
       window.removeEventListener('moviebox:action-export-txt', handleActionExportTxt);
       window.removeEventListener('moviebox:action-empty-fields', handleActionEmptyFields);
       window.removeEventListener('moviebox:action-close-bulk', handleActionCloseBulk);
@@ -329,8 +338,46 @@ export const MovieLibraryPage = () => {
   const handleBulkModeChange = (mode: MovieBulkMode) => {
     setBulkMode(mode);
     setSelectedIds(new Set());
+    setShareFeedback('');
     selectionAnchorId.current = null;
     if (mode) setFiltersOpen(false);
+  };
+  const shareSelectedMovies = async () => {
+    if (!selectedMovies.length) return;
+    const text = selectedMovies.map((movie) => {
+      const title = movie.spanishTitle || movie.originalTitle;
+      const details = [title, movie.year, movie.type === 'movie' ? 'Película' : 'Serie'].filter(Boolean).join(' · ');
+      return `${details}\n${window.location.origin}/titulo/${movie.id}`;
+    }).join('\n\n');
+
+    setSharePending(true);
+    setShareFeedback('');
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Títulos de MovieBox', text });
+        setShareFeedback('Títulos compartidos');
+      } else {
+        await navigator.clipboard.writeText(text);
+        setShareFeedback('Enlaces copiados');
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        textarea.remove();
+        setShareFeedback('Enlaces copiados');
+      } catch {
+        setShareFeedback('No se pudieron compartir');
+      }
+    } finally {
+      setSharePending(false);
+    }
   };
   const adjacentMovie = (movie: MovieItem, offset: -1 | 1) => {
     const index = filteredMovies.findIndex((item) => item.id === movie.id);
@@ -401,6 +448,12 @@ export const MovieLibraryPage = () => {
                   <button type="button" onClick={() => setExportOptionsOpen(true)} disabled={!selectedMovies.length} className="primary-button gap-2">
                     <FileText className="h-4 w-4" />
                     Exportar títulos
+                  </button>
+                )}
+                {bulkMode === 'share' && (
+                  <button type="button" onClick={() => void shareSelectedMovies()} disabled={!selectedMovies.length || sharePending} className="primary-button gap-2">
+                    {sharePending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Share2 className="h-4 w-4" />}
+                    {shareFeedback || 'Compartir títulos'}
                   </button>
                 )}
                 <button type="button" onClick={() => handleBulkModeChange(null)} className="icon-button" title="Cerrar" aria-label="Cerrar"><X className="h-4 w-4" /></button>

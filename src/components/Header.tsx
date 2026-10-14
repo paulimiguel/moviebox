@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Bookmark, ChevronDown, Edit3, Eye, EyeOff, FileText, Film, Heart, LayoutGrid, LogOut, Moon, Plus, Search, Sun, Trash2, Tv } from 'lucide-react';
+import { Bookmark, ChevronDown, Edit3, Eye, EyeOff, FileText, Film, Heart, LayoutGrid, LogOut, Moon, Plus, Search, Share2, Sun, Trash2, Tv } from 'lucide-react';
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/services/api';
@@ -163,7 +163,7 @@ export const Header = () => {
     }
   };
 
-  const handleTriggerAction = (action: 'add' | 'search-platform' | 'bulk-edit' | 'bulk-delete' | 'empty-fields' | 'export-txt') => {
+  const handleTriggerAction = (action: 'add' | 'search-platform' | 'bulk-edit' | 'bulk-delete' | 'bulk-share' | 'empty-fields' | 'export-txt') => {
     setActionsMenuOpen(false);
     setMenuOpen(false);
     window.dispatchEvent(new CustomEvent('moviebox:action-close-bulk'));
@@ -183,6 +183,8 @@ export const Header = () => {
         window.dispatchEvent(new CustomEvent('moviebox:action-bulk-edit'));
       } else if (action === 'bulk-delete') {
         window.dispatchEvent(new CustomEvent('moviebox:action-bulk-delete'));
+      } else if (action === 'bulk-share') {
+        window.dispatchEvent(new CustomEvent('moviebox:action-bulk-share'));
       } else if (action === 'empty-fields') {
         window.dispatchEvent(new CustomEvent('moviebox:action-empty-fields'));
       } else if (action === 'export-txt') {
@@ -327,6 +329,14 @@ export const Header = () => {
                   >
                     <FileText className="h-4 w-4" />
                     <span>Exportar títulos</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTriggerAction('bulk-share')}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                  >
+                    <Share2 className="h-4 w-4" />
+                    <span>Compartir títulos</span>
                   </button>
                   <button
                     type="button"
@@ -632,6 +642,14 @@ export const Header = () => {
                     >
                       <FileText className="h-4 w-4" />
                       <span>Exportar títulos</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleTriggerAction('bulk-share')}
+                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                    >
+                      <Share2 className="h-4 w-4" />
+                      <span>Compartir títulos</span>
                     </button>
                     <button
                       type="button"

@@ -7,7 +7,7 @@ import type { FavoriteFilter, MovieTypeFilter, SortDirection, WatchedFilter, Wat
 import { getGenreIconImage } from '@/utils/genreIcons';
 
 export type MovieLibrarySort = 'title' | 'createdAt' | 'year' | 'collection' | 'genre' | 'imdbRating';
-export type MovieBulkMode = 'edit' | 'print' | 'delete' | 'exportTxt' | null;
+export type MovieBulkMode = 'edit' | 'print' | 'delete' | 'exportTxt' | 'share' | null;
 export type MovieSearchScope = 'name' | 'actor' | 'genre';
 type ToolbarPlatform = { id: string; name: string; logoPath?: string | null };
 
