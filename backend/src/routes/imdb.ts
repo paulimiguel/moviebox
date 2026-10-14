@@ -165,6 +165,54 @@ const normalizeTitle = (value: string) => value
   .trim()
   .toLocaleLowerCase('es');
 
+const findYoutubeTrailerUrl = async (titles: Array<string | null | undefined>, year: number | null) => {
+  const searchTitle = titles.find((title): title is string => Boolean(title?.trim()))?.trim();
+  if (!searchTitle) return null;
+
+  try {
+    const query = [`"${searchTitle}"`, 'trailer oficial', year].filter(Boolean).join(' ');
+    const response = await fetch(`https://www.youtube.com/results?search_query=${encodeURIComponent(query)}&hl=es`, {
+      headers: {
+        Accept: 'text/html',
+        'Accept-Language': 'es-AR,es;q=0.9',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) return null;
+
+    const html = await response.text();
+    const requestedTitles = titles
+      .filter((title): title is string => Boolean(title?.trim()))
+      .map(normalizeTitle);
+    const candidates = Array.from(html.matchAll(/"videoRenderer":\{"videoId":"([a-zA-Z0-9_-]{11})"[\s\S]{0,2500}?"title":\{"runs":\[\{"text":"([^"]+)"/g))
+      .slice(0, 12)
+      .map((match, index) => {
+        let title = match[2];
+        try {
+          title = JSON.parse(`"${match[2]}"`) as string;
+        } catch {
+          // YouTube usually returns JSON-escaped text; use the raw title if decoding fails.
+        }
+        const normalized = normalizeTitle(title);
+        const titleScore = Math.max(...requestedTitles.map((requested) => {
+          const tokens = requested.split(' ').filter((token) => token.length > 2);
+          if (normalized.includes(requested)) return 20;
+          return tokens.filter((token) => normalized.includes(token)).length * 3;
+        }));
+        const trailerScore = /\b(trailer|teaser)\b/.test(normalized) ? 8 : 0;
+        const officialScore = /\b(oficial|official)\b/.test(normalized) ? 4 : 0;
+        return { videoId: match[1], score: titleScore + trailerScore + officialScore - index * 0.1, titleScore, trailerScore };
+      })
+      .filter((candidate) => candidate.titleScore >= 6 && candidate.trailerScore > 0)
+      .sort((left, right) => right.score - left.score);
+
+    return candidates[0] ? `https://www.youtube.com/watch?v=${candidates[0].videoId}` : null;
+  } catch {
+    return null;
+  }
+};
+
 const decodeHtml = (value: string) => value
   .replace(/&quot;/g, '"')
   .replace(/&#(?:x27|39);/gi, "'")
@@ -366,7 +414,17 @@ router.post('/import', async (req, res) => {
       getCurrentImdbRating(imdbId, details.imdbRating),
     ]);
     const year = parseYear(details.year || details.releaseInfo);
-    const justwatchUrl = await getJustWatchUrl(details.name, localized?.title || null, year, type);
+    const cinemetaTrailerUrl = trailer?.source
+      ? String(trailer.source).startsWith('http')
+        ? String(trailer.source)
+        : `https://www.youtube.com/watch?v=${trailer.source}`
+      : null;
+    const [justwatchUrl, trailerUrl] = await Promise.all([
+      getJustWatchUrl(details.name, localized?.title || null, year, type),
+      cinemetaTrailerUrl
+        ? Promise.resolve(cinemetaTrailerUrl)
+        : findYoutubeTrailerUrl([localized?.title, details.name], year),
+    ]);
 
     const importedTmdbId = localized?.id || knownTmdbId;
     const importedCast = Array.from(new Map(
@@ -391,7 +449,7 @@ router.post('/import', async (req, res) => {
       imdbId,
       imdbUrl: `https://www.imdb.com/title/${imdbId}/`,
       justwatchUrl,
-      trailerUrl: trailer ? `https://www.youtube.com/watch?v=${trailer.source}` : null,
+      trailerUrl,
       images: images.slice(0, 5).map((url, order) => ({
         url,
         order,
