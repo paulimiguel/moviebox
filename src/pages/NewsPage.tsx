@@ -992,8 +992,8 @@ export const NewsPage = () => {
       <section id="buscar-novedades" className="library-toolbar scroll-mt-20 border-b border-slate-200/70 bg-canvas px-4 py-5 sm:px-6">
         <div className="mx-auto max-w-[1500px]">
           <h1 className="mb-4 text-center font-bebas text-3xl font-normal uppercase text-ink sm:text-4xl">Buscar novedades</h1>
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-6">
-            <div className="min-w-0 lg:w-72 lg:shrink-0">
+          <div className="flex flex-col gap-3">
+            <div className="order-2 min-w-0">
               <p className="truncate text-xs text-slate-500">Mostrando {hasNewsFilters ? newsSearchResults.length : allNewsCount} de {allNewsCount} títulos</p>
               {(genreFilter.length > 0 || platformFilter.length > 0 || yearFilter.length > 0 || typeFilter !== 'all') && (
                 <div className="mt-2 flex flex-wrap gap-1">
@@ -1008,7 +1008,7 @@ export const NewsPage = () => {
                 </div>
               )}
             </div>
-            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+            <div className="order-1 flex min-w-0 flex-wrap items-center gap-2">
           <div className="relative min-w-0 flex-1">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
             <input

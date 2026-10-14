@@ -198,7 +198,7 @@ export const Header = () => {
 
   return (
     <>
-      <header className="moviebox-header sticky top-0 z-40 w-full border-b border-slate-200 bg-canvas/95 backdrop-blur">
+      <header className="moviebox-header fixed inset-x-0 top-0 z-40 w-full border-b border-slate-200 bg-canvas/95 backdrop-blur">
       <div className="mx-auto flex h-[72px] max-w-[1500px] items-center gap-5 px-4 sm:px-6">
         <Link to="/" className="shrink-0"><img src={theme === 'dark' ? '/moviebox-logo-white.png' : '/moviebox-logo-red.png'} alt="MovieBox" className="h-10 w-auto max-w-[190px] object-contain sm:h-11" /></Link>
         <div className="ml-auto flex h-full min-w-0 items-center gap-1 sm:gap-2 lg:gap-4">
@@ -760,6 +760,7 @@ export const Header = () => {
         </div>
       </div>
     </header>
+    <div aria-hidden="true" className="h-[73px]" />
     <AddMovieModal
       isOpen={addModalOpen}
       onClose={handleCloseAddModal}
