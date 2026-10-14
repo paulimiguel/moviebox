@@ -147,7 +147,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                 title="Agregar a la biblioteca"
                 aria-label="Agregar a la biblioteca"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-5 w-5" strokeWidth={2} />
               </button>
             )}
             {onEdit && <button type="button" onClick={() => onEdit(movie)} className="icon-button rounded-none border-0 shadow-none" title="Editar" aria-label="Editar"><Pencil className="h-4 w-4" /></button>}
@@ -185,19 +185,6 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                   <span className="field-label mb-0 leading-none">Rate</span>
                   <StarRating compact value={movie.personalRating} onChange={(rating) => onRating(movie, rating)} />
                 </div>
-                <div className="relative col-span-2 text-left" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setCollectionMenuOpen(false); }}>
-                  <span className="field-label">Colección</span>
-                  <button type="button" onClick={() => setCollectionMenuOpen((current) => !current)} className="control flex w-full items-center gap-2 text-left" aria-expanded={collectionMenuOpen}>
-                    <span className={`min-w-0 flex-1 truncate ${selectedCollectionIds.length ? 'text-ink' : 'text-slate-400'}`}>{selectedCollectionIds.length ? collections.data?.filter((collection) => selectedCollectionIds.includes(collection.id)).map((collection) => collection.name).join(', ') || `${selectedCollectionIds.length} seleccionada${selectedCollectionIds.length === 1 ? '' : 's'}` : 'Elegir colección'}</span>
-                    <ChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${collectionMenuOpen ? 'rotate-180' : ''}`} />
-                  </button>
-                  {collectionMenuOpen && <div className="absolute bottom-full left-0 right-0 z-[80] mb-1 max-h-48 overflow-y-auto rounded-md border border-slate-200 bg-white p-1.5 shadow-card">
-                    {collections.data?.length ? collections.data.map((collection) => {
-                      const selected = selectedCollectionIds.includes(collection.id);
-                      return <button key={collection.id} type="button" onClick={() => { const next = selected ? selectedCollectionIds.filter((id) => id !== collection.id) : [...selectedCollectionIds, collection.id]; setSelectedCollectionIds(next); onCollections(movie, next); }} className={`flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm ${selected ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`}><Check className={`h-4 w-4 shrink-0 ${selected ? 'text-aqua' : 'text-transparent'}`} />{collection.name}</button>;
-                    }) : <p className="px-2 py-3 text-sm text-slate-400">No hay colecciones.</p>}
-                  </div>}
-                </div>
               </div>
             )}
             </div>
@@ -224,9 +211,30 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                   <dt className="field-label">País</dt>
                   <dd className="text-sm text-ink">{movie.countries.map((item) => item.name).join(', ') || 'Sin datos'}</dd>
                 </div>
-                <div>
-                  <dt className="field-label">Dirección</dt>
-                  <dd className="text-sm text-ink">{movie.credits.filter((item) => item.creditType === 'director').map((item) => item.name).join(', ') || 'Sin datos'}</dd>
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="min-w-0">
+                    <dt className="field-label">Dirección</dt>
+                    <dd className="text-sm text-ink">{movie.credits.filter((item) => item.creditType === 'director').map((item) => item.name).join(', ') || 'Sin datos'}</dd>
+                  </div>
+                  <div className="flex w-full min-w-0 shrink-0 flex-col gap-2 lg:w-52">
+                    {!onAdd && <div className="relative text-left" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setCollectionMenuOpen(false); }}>
+                      <span className="field-label">Colección</span>
+                      <button type="button" onClick={() => setCollectionMenuOpen((current) => !current)} className="control flex w-full items-center gap-2 text-left" aria-expanded={collectionMenuOpen}>
+                        <span className={`min-w-0 flex-1 truncate ${selectedCollectionIds.length ? 'text-ink' : 'text-slate-400'}`}>{selectedCollectionIds.length ? collections.data?.filter((collection) => selectedCollectionIds.includes(collection.id)).map((collection) => collection.name).join(', ') || `${selectedCollectionIds.length} seleccionada${selectedCollectionIds.length === 1 ? '' : 's'}` : 'Elegir colección'}</span>
+                        <ChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${collectionMenuOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      {collectionMenuOpen && <div className="absolute bottom-full left-0 right-0 z-[80] mb-1 max-h-48 overflow-y-auto rounded-md border border-slate-200 bg-white p-1.5 shadow-card">
+                        {collections.data?.length ? collections.data.map((collection) => {
+                          const selected = selectedCollectionIds.includes(collection.id);
+                          return <button key={collection.id} type="button" onClick={() => { const next = selected ? selectedCollectionIds.filter((id) => id !== collection.id) : [...selectedCollectionIds, collection.id]; setSelectedCollectionIds(next); onCollections(movie, next); }} className={`flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm ${selected ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`}><Check className={`h-4 w-4 shrink-0 ${selected ? 'text-aqua' : 'text-transparent'}`} />{collection.name}</button>;
+                        }) : <p className="px-2 py-3 text-sm text-slate-400">No hay colecciones.</p>}
+                      </div>}
+                    </div>}
+                    <a href={watchNowDestination.url} target="_blank" rel="noreferrer" className="primary-button h-8 w-full shrink-0 gap-1.5 px-3 text-xs" title={`Ver ahora en ${watchNowDestination.label}`}>
+                      <Play className="h-3.5 w-3.5 fill-current" />
+                      VER AHORA
+                    </a>
+                  </div>
                 </div>
                 <div>
                   <dt className="field-label flex items-center gap-1.5">Reparto{movie.tmdbId && cast.length > 0 && <button type="button" onClick={() => setCastPhotosOpen(true)} className="grid h-5 w-5 place-items-center rounded text-slate-400 transition-colors hover:bg-mist hover:text-ink" title="Ver imágenes del reparto" aria-label="Ver imágenes del reparto"><ExternalLink className="h-3.5 w-3.5" /></button>}</dt>
@@ -246,12 +254,6 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                     <dd className="text-sm text-ink">{movie.totalEpisodes ?? 'Sin datos'}</dd>
                   </div>
                 </>}
-                <div className="flex items-start">
-                  <a href={watchNowDestination.url} target="_blank" rel="noreferrer" className="secondary-button h-8 gap-1.5 px-3 text-xs" title={`Ver ahora en ${watchNowDestination.label}`}>
-                    <Play className="h-3.5 w-3.5 fill-current" />
-                    VER AHORA
-                  </a>
-                </div>
               </dl>
             </section>
           </div>
