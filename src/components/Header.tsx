@@ -314,6 +314,14 @@ export const Header = () => {
                   </button>
                   <button
                     type="button"
+                    onClick={() => handleTriggerAction('bulk-delete')}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span>Eliminar títulos</span>
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => handleTriggerAction('search-platform')}
                     className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
                   >
@@ -327,14 +335,6 @@ export const Header = () => {
                   >
                     <Edit3 className="h-4 w-4" />
                     <span>Editar campos comunes</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleTriggerAction('bulk-delete')}
-                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span>Eliminar títulos</span>
                   </button>
                   <button
                     type="button"
@@ -619,6 +619,14 @@ export const Header = () => {
                     </button>
                     <button
                       type="button"
+                      onClick={() => handleTriggerAction('bulk-delete')}
+                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span>Eliminar títulos</span>
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => handleTriggerAction('search-platform')}
                       className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
                     >
@@ -632,14 +640,6 @@ export const Header = () => {
                     >
                       <Edit3 className="h-4 w-4" />
                       <span>Editar campos comunes</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleTriggerAction('bulk-delete')}
-                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span>Eliminar títulos</span>
                     </button>
                     <button
                       type="button"

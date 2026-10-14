@@ -892,7 +892,7 @@ export const NewsPage = () => {
       <section className="border-b border-slate-200/70 bg-canvas px-4 py-5 sm:px-6">
         <div className="mx-auto max-w-[1500px]">
           <h1 className="mb-3 font-bebas text-2xl uppercase text-ink sm:text-3xl">Buscar en novedades</h1>
-          <div className="relative w-full max-w-4xl">
+          <div className="relative w-full">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
             <input
               ref={newsSearchInputRef}

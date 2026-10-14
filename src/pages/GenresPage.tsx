@@ -92,6 +92,8 @@ const genreIconImages: Record<string, string> = {
   suspenso: '/genre-icons/suspenso.png',
   suspense: '/genre-icons/suspenso.png',
   thriller: '/genre-icons/suspenso.png',
+  biografia: '/genre-icons/biografia.png',
+  biography: '/genre-icons/biografia.png',
 };
 
 const getGenreIconImage = (name: string) => genreIconImages[normalizeGenreName(name)] || null;
@@ -233,8 +235,8 @@ export const GenresPage = () => {
                       ? <><img src={imageUrl} alt={genre.name} className="h-full w-full object-cover" loading="lazy" /><div className="absolute bottom-2 left-2 grid h-10 w-10 place-items-center rounded-full bg-white/90 text-aqua shadow-sm backdrop-blur-sm" title={`Icono de ${genre.name}`}><GenreIcon className="h-5 w-5" /></div></>
                       : <div className="grid h-full place-items-center" title={`Icono de ${genre.name}`}><GenreIcon className="h-16 w-16 text-aqua" /></div>}
                     <div className="absolute right-2 top-2" onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpenMenuId(null); }}>
-                      <button type="button" onClick={() => setOpenMenuId((current) => current === genre.id ? null : genre.id)} className="moviebox-translucent-action grid h-8 w-8 place-items-center rounded-md border border-white/60 bg-white/80 text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white" title="Más acciones" aria-label={`Acciones de ${genre.name}`} aria-expanded={openMenuId === genre.id}><MoreVertical className="h-4 w-4" /></button>
-                      {openMenuId === genre.id && <div className="movie-card-dropdown absolute right-0 top-9 z-30 w-40 rounded-md border border-slate-200 bg-white p-1.5 text-sm shadow-card">
+                      <button type="button" onClick={() => setOpenMenuId((current) => current === genre.id ? null : genre.id)} className={`moviebox-translucent-action grid place-items-center rounded-md border border-white/60 bg-white/80 text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white ${viewMode === 'large' ? 'h-8 w-8' : 'h-6 w-6'}`} title="Más acciones" aria-label={`Acciones de ${genre.name}`} aria-expanded={openMenuId === genre.id}><MoreVertical className={viewMode === 'large' ? 'h-4 w-4' : 'h-3.5 w-3.5'} /></button>
+                      {openMenuId === genre.id && <div className={`movie-card-dropdown absolute right-0 z-30 w-40 rounded-md border border-slate-200 bg-white p-1.5 text-sm shadow-card ${viewMode === 'large' ? 'top-9' : 'top-7'}`}>
                         <button type="button" onClick={() => beginEdit(genre)} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50"><Pencil className="h-4 w-4" />Editar</button>
                         <button type="button" onClick={() => { setOpenMenuId(null); setDeleting(genre); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" />Eliminar</button>
                       </div>}
