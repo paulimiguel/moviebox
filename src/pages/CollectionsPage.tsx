@@ -195,7 +195,7 @@ export const CollectionsPage = () => {
   return (
     <main className="min-h-screen bg-canvas">
       <Header />
-      <CatalogToolbar title="Colecciones" itemLabel="colecciones" visibleCount={visibleCollections.length} totalCount={collections.data?.length || 0} search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode} sortDirection={sortDirection} onSortDirectionChange={setSortDirection} action={<button type="button" onClick={openCreate} className="primary-button h-9 px-3"><Plus className="h-4 w-4" />Nueva</button>} />
+      <CatalogToolbar title="Colecciones" itemLabel="colecciones" visibleCount={visibleCollections.length} totalCount={collections.data?.length || 0} search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode} sortDirection={sortDirection} onSortDirectionChange={setSortDirection} inlineControlsOnTablet action={<button type="button" onClick={openCreate} className="primary-button h-9 px-3"><Plus className="h-4 w-4" />Nueva</button>} />
 
       <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8">
         {creating && (
