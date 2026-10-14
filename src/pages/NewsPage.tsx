@@ -6,10 +6,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { resolvePlatformLogoUrl } from '@/components/PlatformLogos';
 import { MovieDetailModal } from '@/components/MovieDetailModal';
 import { TinderSuggestions } from '@/components/TinderSuggestions';
-import { Loader2, Film, Tv, ChevronLeft, ChevronRight, Plus, Check, Search, X } from 'lucide-react';
+import { Loader2, Film, Tv, ChevronLeft, ChevronRight, ChevronDown, ChevronsUpDown, Filter, LayoutGrid, Tags, Plus, Check, Search, X } from 'lucide-react';
 import type { JustWatchTop10Item, MovieItem, TmdbSuggestionCandidate } from '@/types/movie';
 import { PLATFORM_PREFERENCES } from '@/constants/platformPreferences';
 import { useAuth } from '@/contexts/AuthContext';
+import { getGenreIconImage } from '@/utils/genreIcons';
 
 const getTop10 = (data: any): TmdbSuggestionCandidate[] => {
   if (!data) return [];
@@ -274,7 +275,9 @@ const HorizontalScrollSection = ({
   isMovieInLibrary,
   isItemAdding,
   onAdd,
+  wrap = false,
 }: {
+  wrap?: boolean;
   items: (JustWatchTop10Item | (TmdbSuggestionCandidate & { subBadge?: string | null; jwId?: string }))[];
   onSelect: (item: TmdbSuggestionCandidate) => void;
   isMovieInLibrary: (item: TmdbSuggestionCandidate) => boolean;
@@ -311,7 +314,7 @@ const HorizontalScrollSection = ({
 
   return (
     <div className="relative group/carousel -mx-4 sm:-mx-6">
-      {canScrollLeft && (
+      {!wrap && canScrollLeft && (
         <button
           type="button"
           onClick={() => scrollByAmount(-400)}
@@ -321,7 +324,7 @@ const HorizontalScrollSection = ({
           <ChevronLeft className="h-4 w-4" />
         </button>
       )}
-      {canScrollRight && (
+      {!wrap && canScrollRight && (
         <button
           type="button"
           onClick={() => scrollByAmount(400)}
@@ -333,7 +336,9 @@ const HorizontalScrollSection = ({
       )}
       <div
         ref={containerRef}
-        className="flex gap-4 overflow-x-auto pb-4 pt-2 px-4 sm:px-6 hide-scrollbar scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        className={wrap
+          ? 'flex flex-wrap gap-4 pb-4 pt-2 px-4 sm:px-6'
+          : 'flex gap-4 overflow-x-auto pb-4 pt-2 px-4 sm:px-6 hide-scrollbar scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden'}
       >
         {items.map((item, idx) => (
           <div
@@ -400,6 +405,71 @@ const HorizontalScrollSection = ({
   );
 };
 
+type NewsFilterOption = { id: string; label: string; icon?: React.ReactNode };
+
+const NewsFilterSelect = ({ label, placeholder, searchPlaceholder, plural, options, selected, onToggle, align = 'left' }: {
+  label: string;
+  placeholder: string;
+  searchPlaceholder: string;
+  plural: string;
+  options: NewsFilterOption[];
+  selected: string[];
+  onToggle: (id: string) => void;
+  align?: 'left' | 'right';
+}) => {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const close = (event: MouseEvent) => { if (!rootRef.current?.contains(event.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [open]);
+
+  const visible = options.filter((option) => option.label.toLocaleLowerCase('es').includes(search.trim().toLocaleLowerCase('es')));
+
+  return (
+    <div ref={rootRef} className={`relative min-w-0 flex-1 ${open ? 'z-50' : ''}`}>
+      <span className="field-label">{label}</span>
+      <button type="button" onClick={() => { setSearch(''); setOpen((current) => !current); }} className={`control flex w-full items-center justify-between gap-2 text-left ${open ? 'border-coral' : ''}`} aria-haspopup="listbox" aria-expanded={open}>
+        <span className={`truncate ${selected.length ? 'text-ink' : 'text-slate-400'}`}>{selected.length ? `${selected.length} ${plural.replace('{s}', selected.length > 1 ? 's' : '')}` : placeholder}</span>
+        <ChevronsUpDown className="h-4 w-4 shrink-0 text-slate-400" />
+      </button>
+      {open && (
+        <div className={`library-toolbar-dropdown absolute ${align === 'right' ? 'right-0 sm:right-auto sm:left-0' : 'left-0'} top-full z-50 mt-1 w-full min-w-[220px] overflow-hidden rounded-md border border-slate-200 bg-white shadow-card`}>
+          <label className="relative block border-b border-slate-200">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input autoFocus type="search" value={search} onChange={(event) => setSearch(event.target.value)} className="h-11 w-full pl-9 pr-3 text-sm outline-none" placeholder={searchPlaceholder} />
+          </label>
+          <div className="max-h-64 overflow-y-auto p-1.5" role="listbox" aria-multiselectable="true">
+            {visible.length ? visible.map((option) => {
+              const isSelected = selected.includes(option.id);
+              return (
+                <button key={option.id} type="button" onClick={() => { onToggle(option.id); setOpen(false); }} className={`flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm ${isSelected ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`} role="option" aria-selected={isSelected}>
+                  <Check className={`h-4 w-4 shrink-0 ${isSelected ? 'text-coral' : 'text-transparent'}`} />
+                  {option.icon}
+                  <span className="min-w-0 flex-1 truncate">{option.label}</span>
+                </button>
+              );
+            }) : <p className="px-3 py-4 text-center text-sm text-slate-400">Sin resultados.</p>}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const NewsPlatformIcon = ({ name }: { name: string }) => {
+  const [failed, setFailed] = useState(false);
+  const url = resolvePlatformLogoUrl({ name, logoPath: null });
+  if (!url || failed) return <span className="grid h-6 w-8 shrink-0 place-items-center" aria-hidden="true"><Tv className="h-4 w-4 text-aqua" /></span>;
+  return <span className="grid h-6 w-8 shrink-0 place-items-center"><img src={url} alt="" className="max-h-6 max-w-8 object-contain" loading="lazy" onError={() => setFailed(true)} /></span>;
+};
+
+const quickTypeButtonClass = (active: boolean) => `library-filter-button moviebox-translucent-action inline-flex h-10 w-full md:w-auto items-center justify-center gap-1.5 rounded-md border px-3 text-[11px] font-semibold uppercase transition-colors shrink-0 ${active ? 'border-coral bg-coral text-white shadow-sm' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`;
+
 export const NewsPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -427,6 +497,12 @@ export const NewsPage = () => {
   const newsSearchInputRef = useRef<HTMLInputElement>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<TmdbSuggestionCandidate | null>(null);
   const [newsSearch, setNewsSearch] = useState('');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'movie' | 'series'>('all');
+  const [genreFilter, setGenreFilter] = useState<string[]>([]);
+  const [platformFilter, setPlatformFilter] = useState<string[]>([]);
+  const [yearFilter, setYearFilter] = useState<number[]>([]);
+  const [yearDraft, setYearDraft] = useState('');
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const pasteNewsSearch = async () => {
     try {
@@ -558,20 +634,44 @@ export const NewsPage = () => {
     })),
   });
 
+  const hasNewsFilters = Boolean(newsSearch.trim()) || typeFilter !== 'all' || genreFilter.length > 0 || platformFilter.length > 0 || yearFilter.length > 0;
+
+  const availableGenres = useMemo(() => {
+    const names = new Set<string>();
+    queries.forEach((query) => {
+      const data = query.data as { movies?: TmdbSuggestionCandidate[]; series?: TmdbSuggestionCandidate[] } | undefined;
+      [...(data?.movies || []), ...(data?.series || [])].forEach((candidate) => (candidate.genres || []).forEach((genre) => names.add(genre)));
+    });
+    return [...names].sort((left, right) => left.localeCompare(right, 'es'));
+  }, [queries]);
+
+  const allNewsCount = useMemo(() => {
+    const keys = new Set<string>();
+    queries.forEach((query) => {
+      const data = query.data as { movies?: TmdbSuggestionCandidate[]; series?: TmdbSuggestionCandidate[] } | undefined;
+      [...(data?.movies || []), ...(data?.series || [])].forEach((candidate) => keys.add(`${candidate.type}-${candidate.tmdbId}`));
+    });
+    return keys.size;
+  }, [queries]);
+
   const newsSearchResults = useMemo(() => {
     const normalizeSearch = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es');
     const search = normalizeSearch(newsSearch.trim());
-    if (!search) return [];
+    if (!hasNewsFilters) return [];
     const unique = new Map<string, TmdbSuggestionCandidate>();
-    queries.forEach((query) => {
+    queries.forEach((query, index) => {
+      if (platformFilter.length && !platformFilter.includes(visiblePlatforms[index].id)) return;
       const data = query.data as { movies?: TmdbSuggestionCandidate[]; series?: TmdbSuggestionCandidate[] } | undefined;
       [...(data?.movies || []), ...(data?.series || [])].forEach((candidate) => {
-        const haystack = normalizeSearch(`${candidate.title} ${candidate.originalTitle || ''}`);
-        if (haystack.includes(search)) unique.set(`${candidate.type}-${candidate.tmdbId}`, candidate);
+        if (typeFilter !== 'all' && candidate.type !== typeFilter) return;
+        if (genreFilter.length && !(candidate.genres || []).some((genre) => genreFilter.includes(genre))) return;
+        if (yearFilter.length && !(candidate.year && yearFilter.includes(candidate.year))) return;
+        if (search && !normalizeSearch(`${candidate.title} ${candidate.originalTitle || ''}`).includes(search)) return;
+        unique.set(`${candidate.type}-${candidate.tmdbId}`, candidate);
       });
     });
-    return [...unique.values()].slice(0, 50);
-  }, [newsSearch, queries]);
+    return [...unique.values()];
+  }, [hasNewsFilters, newsSearch, typeFilter, genreFilter, platformFilter, yearFilter, queries, visiblePlatforms]);
 
   const existingMovie = useMemo(() => {
     if (!selectedCandidate || !library.data) return null;
@@ -889,10 +989,27 @@ export const NewsPage = () => {
   return (
     <main className="news-page min-h-screen bg-canvas pb-20 relative">
       <Header />
-      <section className="border-b border-slate-200/70 bg-canvas px-4 py-5 sm:px-6">
+      <section id="buscar-novedades" className="library-toolbar scroll-mt-20 border-b border-slate-200/70 bg-canvas px-4 py-5 sm:px-6">
         <div className="mx-auto max-w-[1500px]">
-          <h1 className="mb-3 font-bebas text-2xl uppercase text-ink sm:text-3xl">Buscar en novedades</h1>
-          <div className="relative w-full">
+          <h1 className="mb-4 text-center font-bebas text-3xl font-normal uppercase text-ink sm:text-4xl">Buscar novedades</h1>
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:gap-6">
+            <div className="min-w-0 lg:w-72 lg:shrink-0">
+              <p className="truncate text-xs text-slate-500">Mostrando {hasNewsFilters ? newsSearchResults.length : allNewsCount} de {allNewsCount} títulos</p>
+              {(genreFilter.length > 0 || platformFilter.length > 0 || yearFilter.length > 0 || typeFilter !== 'all') && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {genreFilter.map((genre) => <button key={`active-genre-${genre}`} type="button" onClick={() => setGenreFilter((current) => current.filter((name) => name !== genre))} className="inline-flex max-w-full items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar género ${genre}`}><span className="truncate">{genre}</span><X className="h-3 w-3 shrink-0" /></button>)}
+                  {platformFilter.map((id) => {
+                    const platformName = visiblePlatforms.find((platform) => platform.id === id)?.name || id;
+                    return <button key={`active-platform-${id}`} type="button" onClick={() => setPlatformFilter((current) => current.filter((value) => value !== id))} className="inline-flex max-w-full items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar plataforma ${platformName}`}><span className="truncate">{platformName}</span><X className="h-3 w-3 shrink-0" /></button>;
+                  })}
+                  {yearFilter.map((year) => <button key={`active-year-${year}`} type="button" onClick={() => setYearFilter((current) => current.filter((value) => value !== year))} className="inline-flex max-w-full items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar año ${year}`}>{year}<X className="h-3 w-3" /></button>)}
+                  {typeFilter !== 'all' && <button type="button" onClick={() => setTypeFilter('all')} className="inline-flex max-w-full items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title="Quitar filtro de tipo">{typeFilter === 'movie' ? 'Película' : 'Serie'}<X className="h-3 w-3" /></button>}
+                  <button type="button" onClick={() => { setTypeFilter('all'); setGenreFilter([]); setPlatformFilter([]); setYearFilter([]); setYearDraft(''); }} className="ml-1 px-1 py-0.5 text-[11px] font-semibold uppercase text-coral hover:underline">Limpiar</button>
+                </div>
+              )}
+            </div>
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+          <div className="relative min-w-0 flex-1">
             <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
             <input
               ref={newsSearchInputRef}
@@ -900,7 +1017,7 @@ export const NewsPage = () => {
               value={newsSearch}
               onChange={(event) => setNewsSearch(event.target.value)}
               placeholder="Buscar películas o series en novedades..."
-              className="news-search-input control h-12 w-full pl-12 pr-16 text-sm"
+              className="news-search-input control h-10 w-full pl-12 pr-16 text-sm"
               aria-label="Buscar en novedades"
             />
             {newsSearch ? (
@@ -915,18 +1032,79 @@ export const NewsPage = () => {
               </button>
             )}
           </div>
-          {newsSearch.trim() && (
+            <div className="grid w-full grid-cols-3 gap-1.5 md:flex md:w-auto md:shrink-0 md:items-center">
+                <button type="button" aria-pressed={typeFilter === 'all'} onClick={() => setTypeFilter('all')} className={quickTypeButtonClass(typeFilter === 'all')}>
+                  <LayoutGrid className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">Todos</span>
+                </button>
+                <button type="button" aria-pressed={typeFilter === 'movie'} onClick={() => setTypeFilter(typeFilter === 'movie' ? 'all' : 'movie')} className={quickTypeButtonClass(typeFilter === 'movie')}>
+                  <Film className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">Películas</span>
+                </button>
+                <button type="button" aria-pressed={typeFilter === 'series'} onClick={() => setTypeFilter(typeFilter === 'series' ? 'all' : 'series')} className={quickTypeButtonClass(typeFilter === 'series')}>
+                  <Tv className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">Series</span>
+                </button>
+            </div>
+              <button type="button" aria-expanded={filtersOpen} onClick={() => setFiltersOpen((current) => !current)} className="library-toolbar-menu-button inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold uppercase text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50 md:w-auto">
+                <Filter className="h-3.5 w-3.5 shrink-0" />
+                <span>Filtrar</span>
+                <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${filtersOpen ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
+          </div>
+          {filtersOpen && (
+            <div className="relative mt-3 rounded-md border border-slate-200 bg-canvas">
+              <button type="button" onClick={() => setFiltersOpen(false)} className="absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-md text-slate-400 hover:bg-slate-200 hover:text-ink" title="Cerrar filtros" aria-label="Cerrar filtros"><X className="h-4 w-4" /></button>
+              <div className="flex flex-col gap-3 px-4 py-3.5 pr-12">
+                <div className="grid w-full grid-cols-1 gap-1.5 sm:flex sm:flex-row sm:items-end sm:gap-2">
+                  <NewsFilterSelect
+                    label="Género"
+                    placeholder="Filtrar por género"
+                    searchPlaceholder="Buscar género..."
+                    plural="seleccionado{s}"
+                    options={availableGenres.map((genre) => {
+                      const iconImage = getGenreIconImage(genre);
+                      return {
+                        id: genre,
+                        label: genre,
+                        icon: iconImage
+                          ? <img src={iconImage} alt="" className="h-6 w-6 shrink-0 object-contain" loading="lazy" />
+                          : <span className="grid h-6 w-6 shrink-0 place-items-center" aria-hidden="true"><Tags className="h-4 w-4 text-aqua" /></span>,
+                      };
+                    })}
+                    selected={genreFilter}
+                    onToggle={(id) => setGenreFilter((current) => current.includes(id) ? current.filter((name) => name !== id) : [...current, id])}
+                  />
+                  <NewsFilterSelect
+                    label="Plataforma"
+                    placeholder="Filtrar por plataforma"
+                    searchPlaceholder="Buscar plataforma..."
+                    plural="seleccionada{s}"
+                    options={visiblePlatforms.map((platform) => ({ id: platform.id, label: platform.name, icon: <NewsPlatformIcon name={platform.name} /> }))}
+                    selected={platformFilter}
+                    onToggle={(id) => setPlatformFilter((current) => current.includes(id) ? current.filter((value) => value !== id) : [...current, id])}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <label htmlFor="news-year-filter" className="field-label">Año</label>
+                    <input id="news-year-filter" className="control w-full" type="text" inputMode="numeric" value={yearDraft} onChange={(event) => setYearDraft(event.target.value.replace(/\D/g, '').slice(0, 4))} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); const value = Number(yearDraft); if (yearDraft.length === 4 && !yearFilter.includes(value)) setYearFilter((current) => [...current, value]); setYearDraft(''); } }} placeholder="Escribir y Enter" aria-label="Agregar año" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {hasNewsFilters && (
             <div className="mt-5 border-t border-slate-200/70 pt-5">
               <div className="mb-3 flex items-baseline justify-between gap-4">
-                <h2 className="font-bebas text-2xl uppercase text-ink">Resultados para “{newsSearch.trim()}”</h2>
+                <h2 className="font-bebas text-2xl uppercase text-ink">{newsSearch.trim() ? `Resultados para “${newsSearch.trim()}”` : 'Resultados'}</h2>
                 <span className="text-xs text-slate-500">{newsSearchResults.length} {newsSearchResults.length === 1 ? 'título' : 'títulos'}</span>
               </div>
               {queries.some((query) => query.isLoading) && !newsSearchResults.length ? (
                 <div className="grid h-36 place-items-center"><Loader2 className="h-7 w-7 animate-spin text-aqua" /></div>
               ) : newsSearchResults.length ? (
-                <HorizontalScrollSection items={newsSearchResults} onSelect={setSelectedCandidate} isMovieInLibrary={isMovieInLibrary} isItemAdding={isItemAdding} onAdd={(item) => importMutation.mutate(item)} />
+                <HorizontalScrollSection wrap items={newsSearchResults} onSelect={setSelectedCandidate} isMovieInLibrary={isMovieInLibrary} isItemAdding={isItemAdding} onAdd={(item) => importMutation.mutate(item)} />
               ) : (
-                <p className="rounded-lg border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500">No se encontraron novedades con ese título.</p>
+                <p className="rounded-lg border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500">No se encontraron novedades con esos filtros.</p>
               )}
             </div>
           )}
