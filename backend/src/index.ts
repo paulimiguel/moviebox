@@ -25,6 +25,8 @@ const allowedOrigins = new Set([
 
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' },
+  // Helmet envía "no-referrer" por defecto y YouTube rechaza el embed sin referrer (error 153).
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   contentSecurityPolicy: {
     directives: {
       imgSrc: ["'self'", 'data:', 'blob:', 'https:'],

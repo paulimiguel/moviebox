@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Bookmark, ChevronDown, Edit3, Eye, EyeOff, FileText, Film, Heart, LayoutGrid, LogOut, Moon, Plus, Search, Share2, Sun, Trash2, Tv } from 'lucide-react';
+import { Bookmark, ChevronDown, Edit3, Eye, EyeOff, FileText, Film, Heart, LayoutGrid, LogOut, Menu, Moon, Plus, Search, Share2, Sun, Trash2, Tv } from 'lucide-react';
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/services/api';
@@ -386,10 +386,11 @@ export const Header = () => {
             className="profile-menu-trigger flex h-10 items-center gap-2 rounded-md px-1.5 text-sm text-slate-600 hover:bg-slate-100"
             aria-expanded={menuOpen}
           >
+            <Menu className="h-6 w-6 md:hidden" aria-hidden="true" />
             {user?.profilePhoto && !profilePhotoFailed
-              ? <img src={user.profilePhoto} alt={user.name} referrerPolicy="no-referrer" onError={() => setProfilePhotoFailed(true)} className="h-8 w-8 rounded-full bg-mist object-cover" />
-              : <span className="grid h-8 w-8 place-items-center rounded-full bg-mist font-semibold text-ink">{initials}</span>}
-            <ChevronDown className="h-4 w-4" />
+              ? <img src={user.profilePhoto} alt={user.name} referrerPolicy="no-referrer" onError={() => setProfilePhotoFailed(true)} className="hidden h-8 w-8 rounded-full bg-mist object-cover md:block" />
+              : <span className="hidden h-8 w-8 place-items-center rounded-full bg-mist font-semibold text-ink md:grid">{initials}</span>}
+            <ChevronDown className="hidden h-4 w-4 md:block" />
           </button>
           {menuOpen && (
             <div className="header-dropdown absolute right-0 top-12 w-64 sm:w-72 max-h-[calc(100vh-80px)] overflow-y-auto rounded-md border border-slate-200 bg-white p-1.5 shadow-card">

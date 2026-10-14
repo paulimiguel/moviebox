@@ -5,9 +5,6 @@ import { X } from "lucide-react";
 type YouTubePlayer = { destroy: () => void };
 type YouTubeApi = {
   Player: new (element: HTMLElement, options: {
-    host?: string;
-    videoId: string;
-    playerVars: Record<string, number | string>;
     events: { onError: () => void };
   }) => YouTubePlayer;
 };
@@ -84,7 +81,7 @@ export const TrailerModal = ({
   onClose: () => void;
 }) => {
   const videoId = getYouTubeVideoId(trailerUrl);
-  const playerContainerRef = useRef<HTMLDivElement>(null);
+  const playerContainerRef = useRef<HTMLIFrameElement>(null);
   const [unavailable, setUnavailable] = useState(!videoId);
 
   useEffect(() => {
@@ -116,9 +113,6 @@ export const TrailerModal = ({
       .then((youtube) => {
         if (cancelled || !playerContainerRef.current) return;
         player = new youtube.Player(playerContainerRef.current, {
-          host: "https://www.youtube-nocookie.com",
-          videoId,
-          playerVars: { autoplay: 1, rel: 0, origin: window.location.origin },
           events: {
             onError: () => {
               if (!cancelled) setUnavailable(true);
@@ -132,7 +126,8 @@ export const TrailerModal = ({
 
     return () => {
       cancelled = true;
-      player?.destroy();
+      // No se llama a destroy(): el iframe pertenece a React y se desmonta con el modal.
+      player = null;
     };
   }, [videoId]);
 
@@ -171,7 +166,18 @@ export const TrailerModal = ({
         <div className="aspect-video w-full bg-black">
           {unavailable
             ? <div className="h-full w-full" />
-            : <div ref={playerContainerRef} className="h-full w-full" title={`Trailer de ${title}`} />}
+            // El iframe propio fuerza su referrer: el servidor envía "no-referrer"/"same-origin" y YouTube
+            // rechaza el embed sin referrer (error 153 de configuración del reproductor).
+            : <iframe
+              ref={playerContainerRef}
+              key={videoId}
+              src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&playsinline=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`}
+              className="h-full w-full border-0"
+              title={`Trailer de ${title}`}
+              referrerPolicy="strict-origin-when-cross-origin"
+              allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+              allowFullScreen
+            />}
         </div>
       </div>
     </div>,
