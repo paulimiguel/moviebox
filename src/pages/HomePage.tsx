@@ -366,6 +366,7 @@ export const HomePage = () => {
       {modalTarget && modalMovie && (
         <MovieDetailModal
           movie={modalMovie}
+          showNavigation={false}
           onClose={() => setModalTarget(null)}
           onAdd={!modalLibraryMovie && modalCandidate ? () => addModalMutation.mutate(modalCandidate) : undefined}
           onEdit={modalLibraryMovie ? (movie) => { setModalTarget(null); setEditingMovie(movie); } : undefined}
