@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { Bookmark, Check, Download, ExternalLink, Eye, Film, Heart, MoreVertical, Pencil, Printer, Share2, Star, Trash2, Tv, Youtube } from 'lucide-react';
+import { MovieCollectionPicker } from '@/components/MovieCollectionPicker';
 import { PlatformLogos } from '@/components/PlatformLogos';
 import { StarRating } from '@/components/StarRating';
 import { TrailerModal } from '@/components/TrailerModal';
@@ -182,10 +183,11 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
           <div className="mt-3" onClick={interactive}>
             <PlatformLogos platforms={movie.platforms} limit={5} large />
             <div className="mt-2 text-xs">{catalogLinks(true, true)}</div>
-            {movie.personalRating != null && movie.personalRating >= 1 && <div className="mt-2">
+            <div className="mt-2">
               <span className="field-label">Rate</span>
-              <StarRating compact allowClear={false} value={movie.personalRating} onChange={(rating) => onRating?.(movie, rating)} disabled={!onRating} />
-            </div>}
+              <StarRating compact value={movie.personalRating} onChange={(rating) => onRating?.(movie, rating)} disabled={!onRating} />
+            </div>
+            <MovieCollectionPicker movie={movie} />
           </div>
 
           <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-4">

@@ -145,7 +145,7 @@ export const CollectionsPage = () => {
 
       <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8">
         {creating && (
-          <form onSubmit={(event) => { event.preventDefault(); if (name.trim()) createCollection.mutate(); }} className="mb-6 border-y border-slate-200 bg-white p-4 sm:rounded-md sm:border sm:p-5">
+          <form onSubmit={(event) => { event.preventDefault(); if (name.trim()) createCollection.mutate(); }} className="movie-detail-modal mb-6 border-y border-slate-200 bg-white p-4 sm:rounded-md sm:border sm:p-5">
             <h2 className="font-bebas text-xl uppercase text-ink">Nueva colección</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_2fr_auto]">
               <input className="control w-full" value={name} onChange={(event) => setName(event.target.value)} placeholder="Nombre" autoFocus />

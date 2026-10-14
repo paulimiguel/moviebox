@@ -925,3 +925,22 @@ html.cursor-thinking * {
   max-width: 0.8125rem;
   max-height: 0.8125rem;
 }
+
+/* Selector de colecciones dentro de la tarjeta: campos y filas oscuros. */
+:root[data-theme="dark"] .movie-card-dropdown .control {
+  border-color: rgb(71 76 83);
+  background-color: rgb(52 56 62);
+  color: #fff;
+}
+
+:root[data-theme="dark"] .movie-card-dropdown label {
+  color: #fff;
+}
+
+:root[data-theme="dark"] .movie-card-dropdown label:hover {
+  background-color: rgb(38 42 47);
+}
+
+:root[data-theme="dark"] .movie-card-dropdown p {
+  color: rgb(203 213 225);
+}
