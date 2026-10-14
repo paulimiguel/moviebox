@@ -206,7 +206,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                 </div>
               </div>
               {movie.synopsis && <div className="mt-6"><h3 className="field-label">Sinopsis</h3><p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-600">{movie.synopsis}</p></div>}
-              <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-slate-200 pt-5">
+              <dl className={`mt-6 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-slate-200 pt-5 ${movie.type === 'series' ? 'auto-rows-fr' : ''}`}>
                 <div>
                   <dt className="field-label">País</dt>
                   <dd className="text-sm text-ink">{movie.countries.map((item) => item.name).join(', ') || 'Sin datos'}</dd>
