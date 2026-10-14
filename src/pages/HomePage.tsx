@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bookmark, Check, ChevronLeft, ChevronRight, Film, Heart, Library, Loader2, Plus, Sparkles, Star } from 'lucide-react';
+import { Bookmark, Check, ChevronLeft, ChevronRight, Film, Heart, Library, Sparkles, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
+import { MovieDetailModal } from '@/components/MovieDetailModal';
 import { PLATFORM_PREFERENCES } from '@/constants/platformPreferences';
 import { useAuth } from '@/contexts/AuthContext';
 import { api, resolveMovieImageUrl } from '@/services/api';
@@ -153,18 +154,124 @@ export const HomePage = () => {
   });
   const banner = platformBanners[activeBanner] || platformBanners[0];
   const bannerKey = banner ? `${banner.platform.id}-${banner.tmdbId}` : 'moviebox';
-  const bannerInLibrary = banner
-    ? library.some((movie) => (banner.tmdbId && movie.tmdbId === banner.tmdbId) || (banner.imdbId && movie.imdbId === banner.imdbId))
-    : false;
+  const bannerLibraryMovie = banner
+    ? library.find((movie) => (banner.tmdbId && movie.tmdbId === banner.tmdbId) || (banner.imdbId && movie.imdbId === banner.imdbId)) || null
+    : null;
+  const [bannerModalOpen, setBannerModalOpen] = useState(false);
+  const bannerDetails = useQuery({
+    queryKey: ['candidateDetails', banner?.imdbId],
+    queryFn: () => api.imdb.import({ imdbId: banner!.imdbId, type: banner!.type }),
+    enabled: Boolean(bannerModalOpen && banner?.imdbId && !bannerLibraryMovie),
+    staleTime: 1000 * 60 * 30,
+  });
+  const bannerMovie: MovieItem | null = useMemo(() => {
+    if (!banner) return null;
+    if (bannerLibraryMovie) return bannerLibraryMovie;
+    const details = bannerDetails.data;
+    const now = new Date().toISOString();
+    return {
+      id: `preview-${banner.tmdbId}`,
+      userId: 'preview',
+      type: banner.type,
+      originalTitle: details?.originalTitle || banner.title,
+      spanishTitle: details?.spanishTitle || banner.title,
+      year: details?.year || banner.year || null,
+      synopsis: details?.synopsis || banner.overview || 'Sin descripción disponible.',
+      durationMinutes: details?.durationMinutes ?? null,
+      seasons: details?.seasons ?? null,
+      totalEpisodes: details?.totalEpisodes ?? null,
+      watched: false,
+      favorite: false,
+      watchlist: false,
+      instagramRecommendation: false,
+      personalRating: null,
+      imdbRating: details?.imdbRating ?? null,
+      tmdbId: banner.tmdbId || null,
+      imdbId: banner.imdbId || null,
+      imdbUrl: banner.imdbId ? `https://www.imdb.com/title/${banner.imdbId}` : null,
+      tmdbUrl: banner.tmdbId ? `https://www.themoviedb.org/${banner.type === 'movie' ? 'movie' : 'tv'}/${banner.tmdbId}` : null,
+      justwatchUrl: details?.justwatchUrl || null,
+      trailerUrl: details?.trailerUrl || null,
+      tmdbCollectionId: details?.tmdbCollectionId ?? null,
+      tmdbCollectionName: details?.tmdbCollectionName ?? null,
+      tmdbImportedAt: null,
+      tmdbLastSyncedAt: null,
+      createdAt: now,
+      updatedAt: now,
+      images: details?.images?.length
+        ? details.images.map((img, i) => ({ id: String(i), url: img.url, localPath: null, tmdbFilePath: null, order: i, isPrimary: i === 0, altText: null }))
+        : banner.posterUrl
+          ? [{ id: '1', url: banner.posterUrl, localPath: null, tmdbFilePath: null, order: 0, isPrimary: true, altText: null }]
+          : [],
+      genres: (details?.genres || (banner.genres || []).map((name) => ({ name }))).map((genre, i) => ({
+        id: String(i),
+        name: genre.name,
+        normalizedName: genre.name.toLowerCase(),
+        tmdbGenreId: null,
+        tmdbMediaType: banner.type,
+        imagePath: null,
+        order: i,
+      })),
+      platforms: details?.platforms?.length
+        ? details.platforms.map((platform, index) => ({
+          id: `preview-platform-${platform.tmdbProviderId || index}`,
+          name: platform.name,
+          tmdbProviderId: platform.tmdbProviderId ?? null,
+          logoPath: platform.logoPath ?? null,
+          isPrimary: platform.isPrimary ?? index === 0,
+          order: platform.order ?? index,
+        }))
+        : [{ id: `preview-platform-${banner.platform.id}`, name: banner.platform.name, tmdbProviderId: null, logoPath: null, isPrimary: true, order: 0 }],
+      keywords: [],
+      credits: (details?.credits || []).map((credit, i) => ({
+        id: String(i),
+        name: credit.name,
+        creditType: credit.creditType,
+        order: credit.order ?? i,
+        characterName: credit.characterName ?? null,
+        tmdbPersonId: credit.tmdbPersonId ?? null,
+        profilePath: credit.profilePath ?? null,
+        tmdbCreditId: null,
+      })),
+      countries: (details?.countries || []).map((country, i) => ({
+        id: String(i),
+        name: typeof country === 'string' ? country : country.name,
+        normalizedName: (typeof country === 'string' ? country : country.name).toLowerCase(),
+        isoCode: typeof country === 'string' ? null : country.isoCode ?? null,
+        order: i,
+      })),
+      collections: [],
+    };
+  }, [banner, bannerLibraryMovie, bannerDetails.data]);
+  const refreshLibrary = () => {
+    queryClient.invalidateQueries({ queryKey: ['movies'] });
+    queryClient.invalidateQueries({ queryKey: ['metadata'] });
+    queryClient.invalidateQueries({ queryKey: ['collections'] });
+  };
   const addBannerMutation = useMutation({
     mutationFn: async (candidate: TmdbSuggestionCandidate) => {
-      const imported = await api.imdb.import({ imdbId: candidate.imdbId, type: candidate.type });
+      const imported = bannerDetails.data && bannerDetails.data.imdbId === candidate.imdbId
+        ? bannerDetails.data
+        : await api.imdb.import({ imdbId: candidate.imdbId, type: candidate.type });
       return api.movies.create({ ...imported, favorite: false, watched: false, watchlist: false, personalRating: null, collectionIds: [] });
     },
     onSuccess: (saved) => {
       queryClient.setQueryData<MovieItem[]>(['movies'], (current = []) => current.some((movie) => movie.id === saved.id) ? current : [saved, ...current]);
-      queryClient.invalidateQueries({ queryKey: ['movies'] });
-      queryClient.invalidateQueries({ queryKey: ['metadata'] });
+      refreshLibrary();
+    },
+  });
+  const updatePersonal = useMutation({
+    mutationFn: ({ movie, field }: { movie: MovieItem; field: 'favorite' | 'watched' | 'watchlist' }) => api.movies.updatePersonal(movie.id, { [field]: !movie[field] }),
+    onSuccess: (updated) => {
+      queryClient.setQueryData<MovieItem[]>(['movies'], (current = []) => current.map((item) => (item.id === updated.id ? updated : item)));
+      refreshLibrary();
+    },
+  });
+  const updateRating = useMutation({
+    mutationFn: ({ movie, rating }: { movie: MovieItem; rating: number | null }) => api.movies.updatePersonal(movie.id, { personalRating: rating }),
+    onSuccess: (updated) => {
+      queryClient.setQueryData<MovieItem[]>(['movies'], (current = []) => current.map((item) => (item.id === updated.id ? updated : item)));
+      refreshLibrary();
     },
   });
 
@@ -188,10 +295,10 @@ export const HomePage = () => {
   }, [activeBanner, platformBanners.length]);
 
   useEffect(() => {
-    if (platformBanners.length < 2) return undefined;
+    if (platformBanners.length < 2 || bannerModalOpen) return undefined;
     const timer = window.setInterval(() => setActiveBanner((current) => (current + 1) % platformBanners.length), 7000);
     return () => window.clearInterval(timer);
-  }, [platformBanners.length]);
+  }, [platformBanners.length, bannerModalOpen]);
 
   const changeBanner = (direction: -1 | 1) => {
     if (!platformBanners.length) return;
@@ -209,25 +316,21 @@ export const HomePage = () => {
         <div className="relative mx-auto flex h-full max-w-[1500px] items-center gap-4 px-4 sm:gap-8 sm:px-12 lg:gap-12">
           <div key={`poster-${bannerKey}`} className="home-hero-poster relative h-full aspect-[2/3] shrink-0 overflow-hidden border-x shadow-2xl">
             <img src={banner?.posterUrl || '/login-posters/the-matrix.jpg'} alt={banner?.title || ''} className="h-full w-full object-contain" />
+            {banner && <button type="button" onClick={() => setBannerModalOpen(true)} className="absolute inset-0 z-10 cursor-pointer" aria-label={`Ver ficha de ${banner.title}`} title="Ver ficha" />}
           </div>
           <div key={`copy-${bannerKey}`} className="home-hero-copy min-w-0 max-w-3xl flex-1">
             <span className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-aqua"><Sparkles className="h-4 w-4" /> {banner ? `Novedad en ${banner.platform.name}` : 'Novedades de tus plataformas'}</span>
-            <h1 className="font-bebas text-4xl uppercase leading-[0.92] tracking-wide sm:text-6xl lg:text-7xl">{banner?.title || 'MovieBox'}</h1>
+            <h1 className="font-bebas text-4xl uppercase leading-[0.92] tracking-wide sm:text-6xl lg:text-7xl">
+              {banner ? <button type="button" onClick={() => setBannerModalOpen(true)} className="text-left uppercase transition-opacity hover:opacity-80" title="Ver ficha">{banner.title}</button> : 'MovieBox'}
+            </h1>
             {banner && <div className="home-hero-muted mt-3 flex flex-wrap gap-x-3 gap-y-1 text-xs sm:mt-4 sm:text-sm">
               {banner.year && <span>{banner.year}</span>}
               <span>{banner.type === 'series' ? 'Serie' : 'Película'}</span>
               {banner.rating != null && banner.rating > 0 && <span>★ {banner.rating.toFixed(1)}</span>}
               {banner.genres.slice(0, 3).map((genre) => <span key={genre}>{genre}</span>)}
-              {bannerInLibrary ? (
-                <span className="grid h-6 w-6 place-items-center rounded bg-[#2cbc63] text-white" title="Ya está en tu biblioteca" aria-label="Ya está en tu biblioteca"><Check className="h-3.5 w-3.5" strokeWidth={3} /></span>
-              ) : (
-                <button type="button" disabled={addBannerMutation.isPending} onClick={() => addBannerMutation.mutate(banner)} className="grid h-6 w-6 place-items-center rounded bg-coral text-white transition hover:brightness-110 disabled:cursor-wait disabled:opacity-60" title="Agregar a mi biblioteca" aria-label="Agregar a mi biblioteca">
-                  {addBannerMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-4 w-4" strokeWidth={2.5} />}
-                </button>
-              )}
             </div>}
-            <p className="home-hero-muted mt-3 line-clamp-2 max-w-xl text-xs leading-relaxed sm:line-clamp-3 sm:text-base">{banner?.overview || 'Descubrí los últimos estrenos disponibles en tus plataformas.'}</p>
-            <div className="mt-4 flex w-full flex-wrap justify-start gap-2 sm:mt-6 sm:gap-3">
+            <p className="home-hero-muted mt-3 hidden max-w-xl text-xs leading-relaxed sm:line-clamp-3 sm:block sm:text-base">{banner?.overview || 'Descubrí los últimos estrenos disponibles en tus plataformas.'}</p>
+            <div className="mt-4 hidden w-full flex-wrap justify-start gap-2 sm:mt-6 sm:flex sm:gap-3">
               <HomeSectionButton to="/novedades" color="coral" />
               <HomeSectionButton to="/biblioteca" color="aqua" />
             </div>
@@ -252,6 +355,15 @@ export const HomePage = () => {
           {libraryQuery.isLoading ? <div className="h-56 animate-pulse rounded-lg bg-mist" /> : library.length ? <HorizontalRow>{library.slice(0, 14).map((movie) => <LibraryCard key={movie.id} movie={movie} />)}</HorizontalRow> : <Link to="/biblioteca" className="grid h-36 place-items-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500">Tu biblioteca todavía está vacía</Link>}
         </section>
       </div>
+      {bannerModalOpen && bannerMovie && (
+        <MovieDetailModal
+          movie={bannerMovie}
+          onClose={() => setBannerModalOpen(false)}
+          onAdd={!bannerLibraryMovie && banner ? () => addBannerMutation.mutate(banner) : undefined}
+          onPersonal={(movie, field) => updatePersonal.mutate({ movie, field })}
+          onRating={(movie, rating) => updateRating.mutate({ movie, rating })}
+        />
+      )}
     </main>
   );
 };
