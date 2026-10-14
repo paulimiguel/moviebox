@@ -944,3 +944,31 @@ html.cursor-thinking * {
 :root[data-theme="dark"] .movie-card-dropdown p {
   color: rgb(203 213 225);
 }
+
+/* Ficha de título en pestaña propia: botones superiores oscuros. */
+:root[data-theme="dark"] .movie-detail-actions .secondary-button,
+:root[data-theme="dark"] .movie-detail-actions .icon-button,
+:root[data-theme="dark"] .movie-detail-actions [class~="bg-white"] {
+  border-color: rgb(71 76 83);
+  background-color: rgb(52 56 62);
+  color: #fff;
+}
+
+:root[data-theme="dark"] .movie-detail-actions [class~="bg-white"] .icon-button {
+  background-color: transparent;
+}
+
+:root[data-theme="dark"] .movie-detail-actions .secondary-button:hover,
+:root[data-theme="dark"] .movie-detail-actions .icon-button:hover {
+  background-color: rgb(58 63 70);
+  color: #fff;
+}
+
+:root[data-theme="dark"] .movie-detail-actions .icon-button:disabled,
+:root[data-theme="dark"] .movie-detail-actions .secondary-button:disabled {
+  opacity: 0.5;
+}
+
+:root[data-theme="dark"] .movie-detail-actions .text-red-600 {
+  color: rgb(248 113 113);
+}

@@ -98,7 +98,7 @@ export const MovieDetailPage = () => {
     <main className="min-h-screen bg-canvas">
       <Header />
       <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-8">
-        <div className="mb-5 flex items-center gap-2">
+        <div className="movie-detail-actions mb-5 flex items-center gap-2">
           <Link to="/" className="icon-button" title="Volver">
             <ArrowLeft className="h-4 w-4" />
           </Link>
