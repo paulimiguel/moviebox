@@ -24,7 +24,26 @@ const dailyIndex = (dayKey: string, platformId: string, length: number) => {
   return ((dayNumber + platformOffset) % length + length) % length;
 };
 
-const titleFor = (movie: MovieItem) => movie.spanishTitle || movie.originalTitle;
+// Mezcla determinista: el mismo día y la misma semilla dan siempre el mismo orden.
+const seededShuffle = <T,>(items: T[], seed: string): T[] => {
+  let state = 0;
+  for (const character of seed) state = (Math.imul(state, 31) + character.charCodeAt(0)) >>> 0;
+  const random = () => {
+    state = (state + 0x6d2b79f5) >>> 0;
+    let value = state;
+    value = Math.imul(value ^ (value >>> 15), value | 1);
+    value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+    return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+  };
+  const result = [...items];
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const swap = Math.floor(random() * (index + 1));
+    [result[index], result[swap]] = [result[swap], result[index]];
+  }
+  return result;
+};
+
+const titleFor =(movie: MovieItem) => movie.spanishTitle || movie.originalTitle;
 
 const imageFor = (movie: MovieItem) => {
   const image = movie.images.find((item) => item.isPrimary) || movie.images[0];
@@ -95,7 +114,7 @@ const LibraryCard = ({ movie, onSelect }: { movie: MovieItem; onSelect: (movie: 
     <button type="button" onClick={() => onSelect(movie)} className="group/card w-[132px] shrink-0 snap-start text-left sm:w-[156px]" title={`Abrir ${titleFor(movie)}`}>
       <div className="relative aspect-[2/3] overflow-hidden rounded-lg border border-slate-200 bg-mist shadow-card transition group-hover/card:-translate-y-1 group-hover/card:border-aqua">
         {image ? <img src={image} alt={titleFor(movie)} className="h-full w-full object-cover" loading="lazy" /> : <div className="grid h-full place-items-center text-slate-400"><Film className="h-8 w-8" /></div>}
-        <div className="absolute left-2 top-2 flex items-center gap-1.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)]">
+        <div className="absolute right-2 top-2 flex items-center gap-1.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)]">
           {movie.watched && <Eye className="h-4 w-4 text-[#2cbc63]" strokeWidth={2.5} aria-label="Vista" />}
           {movie.favorite && <Heart className="h-4 w-4 fill-[#e53935] text-[#e53935]" aria-label="Favorita" />}
           {!movie.watched && movie.watchlist && <Bookmark className="h-4 w-4 fill-aqua text-aqua" aria-label="Pendiente" />}
@@ -131,10 +150,12 @@ export const HomePage = () => {
   const newsByTitle = new Map<string, HomeNewsItem>();
   platformQueries.forEach((query, index) => {
     const data = query.data as { movies?: TmdbSuggestionCandidate[]; series?: TmdbSuggestionCandidate[] } | undefined;
-    [...(data?.movies || []), ...(data?.series || [])]
+    const pool = [...(data?.movies || []), ...(data?.series || [])]
       .filter((candidate) => candidate.posterUrl)
       .sort((left, right) => right.popularity - left.popularity)
-      .slice(0, 3)
+      .slice(0, 24);
+    seededShuffle(pool, `news-${dayKey}-${selectedPlatforms[index].id}`)
+      .slice(0, 5)
       .forEach((candidate) => {
         const key = `${candidate.type}-${candidate.tmdbId}`;
         const current = newsByTitle.get(key);
@@ -142,7 +163,11 @@ export const HomePage = () => {
         else newsByTitle.set(key, { ...candidate, platformNames: [selectedPlatforms[index].name] });
       });
   });
-  const news = [...newsByTitle.values()].slice(0, 14);
+  const news = seededShuffle([...newsByTitle.values()], `news-mix-${dayKey}`).slice(0, 14);
+  const dailyLibrary = useMemo(
+    () => seededShuffle([...library].sort((left, right) => left.id.localeCompare(right.id)), `library-${dayKey}`).slice(0, 14),
+    [library, dayKey],
+  );
   const platformBanners = platformQueries.flatMap((query, index) => {
     const data = query.data as { movies?: TmdbSuggestionCandidate[]; series?: TmdbSuggestionCandidate[] } | undefined;
     const candidates = [...(data?.movies || []), ...(data?.series || [])]
@@ -360,7 +385,7 @@ export const HomePage = () => {
         </section>
         <section>
           <SectionTitle title="Mi biblioteca" subtitle="Tus películas y series, en un solo lugar." to="/biblioteca" color="aqua" />
-          {libraryQuery.isLoading ? <div className="h-56 animate-pulse rounded-lg bg-mist" /> : library.length ? <HorizontalRow>{library.slice(0, 14).map((movie) => <LibraryCard key={movie.id} movie={movie} onSelect={(selected) => setModalTarget({ libraryId: selected.id })} />)}</HorizontalRow> : <Link to="/biblioteca" className="grid h-36 place-items-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500">Tu biblioteca todavía está vacía</Link>}
+          {libraryQuery.isLoading ? <div className="h-56 animate-pulse rounded-lg bg-mist" /> : library.length ? <HorizontalRow>{dailyLibrary.map((movie) => <LibraryCard key={movie.id} movie={movie} onSelect={(selected) => setModalTarget({ libraryId: selected.id })} />)}</HorizontalRow> : <Link to="/biblioteca" className="grid h-36 place-items-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500">Tu biblioteca todavía está vacía</Link>}
         </section>
       </div>
       {modalTarget && modalMovie && (

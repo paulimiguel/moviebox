@@ -868,3 +868,41 @@ html.cursor-thinking * {
     animation: none;
   }
 }
+
+/* Acciones sobre la portada: recuadro translúcido sin borde. */
+.moviebox-bare-action {
+  border: 0;
+  background-color: rgb(255 255 255 / 0.6);
+  box-shadow: none;
+  backdrop-filter: blur(8px);
+}
+
+.moviebox-bare-action:not([aria-pressed="true"]) {
+  color: #64748b;
+}
+
+.moviebox-bare-action:hover {
+  background-color: rgb(255 255 255 / 0.8);
+}
+
+:root[data-theme="dark"] .moviebox-bare-action {
+  background-color: rgb(18 20 23 / 0.68);
+}
+
+:root[data-theme="dark"] .moviebox-bare-action:not([aria-pressed="true"]) {
+  color: #fff;
+}
+
+:root[data-theme="dark"] .moviebox-bare-action:hover {
+  background-color: rgb(18 20 23 / 0.82);
+}
+
+.moviebox-bare-action {
+  max-width: 1.75rem;
+  max-height: 1.75rem;
+}
+
+.moviebox-bare-action svg {
+  max-width: 1rem;
+  max-height: 1rem;
+}
