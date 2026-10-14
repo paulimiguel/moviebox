@@ -99,9 +99,6 @@ export const MovieDetailPage = () => {
       <Header />
       <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-8">
         <div className="movie-detail-actions mb-5 flex items-center gap-2">
-          <Link to="/" className="icon-button" title="Volver">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
           <div className="ml-auto flex items-center gap-2">
             <div className="flex overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
               <button type="button" onClick={() => previousMovie && navigate(`/titulo/${previousMovie.id}`)} disabled={!previousMovie} className="icon-button rounded-none border-0 shadow-none" title="Título anterior" aria-label="Título anterior"><ArrowLeft className="h-5 w-5" /></button>

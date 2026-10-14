@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FolderOpen, ImagePlus, Loader2, MoreVertical, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
+import { CollectionAddTitlesModal } from '@/components/CollectionAddTitlesModal';
 import { CatalogToolbar, catalogGridClass, type CatalogViewMode } from '@/components/CatalogToolbar';
 import { api, resolveMovieImageUrl } from '@/services/api';
 import { getPersistedCatalogView, persistCatalogView } from '@/utils/persistedCatalogView';
@@ -28,6 +29,7 @@ export const CollectionsPage = () => {
   const [editImageRemoved, setEditImageRemoved] = useState(false);
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const [editError, setEditError] = useState('');
+  const [addingTitles, setAddingTitles] = useState(false);
   const [collectionToDelete, setCollectionToDelete] = useState<MovieCollection | null>(null);
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<CatalogViewMode>(() => getPersistedCatalogView('moviebox:collections-view', 'large'));
@@ -307,6 +309,10 @@ export const CollectionsPage = () => {
                 </label>
                 {editPreview && <button type="button" onClick={() => { setEditFile(null); setEditDroppedUrl(null); setEditPreview(null); setEditImageRemoved(true); }} className="secondary-button mt-2 gap-2 text-red-600"><Trash2 className="h-4 w-4" />Eliminar imagen</button>}
               </div>
+              <div>
+                <span className="field-label">Títulos</span>
+                <button type="button" onClick={() => setAddingTitles(true)} className="secondary-button gap-2"><Plus className="h-4 w-4" />Agregar títulos</button>
+              </div>
               {editError && <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">{editError}</p>}
             </div>
             <footer className="flex justify-end gap-2 border-t border-slate-200 bg-white px-5 py-4">
@@ -316,6 +322,8 @@ export const CollectionsPage = () => {
           </form>
         </div>
       )}
+
+      {editing && addingTitles && <CollectionAddTitlesModal collection={collections.data?.find((item) => item.id === editing.id) || editing} onClose={() => setAddingTitles(false)} />}
 
       {collectionToDelete && (
         <div className="fixed inset-0 z-[70] grid place-items-center bg-ink/55 p-4" role="dialog" aria-modal="true" aria-labelledby="delete-collection-title">
