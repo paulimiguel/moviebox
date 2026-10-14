@@ -61,7 +61,7 @@ export const MovieCollectionPicker = ({ movie }: { movie: MovieItem }) => {
         {movie.collections.map((collection) => (
           <span key={collection.id} className="rounded bg-aqua px-1.5 py-0.5 text-[9px] font-semibold uppercase text-white shadow-sm">{collection.name}</span>
         ))}
-        <button type="button" onClick={() => setOpen((current) => !current)} aria-expanded={open} className="grid h-5 w-5 place-items-center rounded bg-aqua text-white shadow-sm transition hover:brightness-110" title="Agregar a una colección" aria-label="Agregar a una colección">
+        <button type="button" onClick={() => setOpen((current) => !current)} aria-expanded={open} className="grid h-5 w-5 place-items-center rounded bg-coral text-white shadow-sm transition hover:brightness-110" title="Agregar a una colección" aria-label="Agregar a una colección">
           <Plus className="h-3.5 w-3.5" strokeWidth={3} />
         </button>
       </div>

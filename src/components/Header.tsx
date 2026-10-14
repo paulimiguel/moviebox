@@ -39,6 +39,7 @@ export const Header = () => {
   const [platformSearchOpen, setPlatformSearchOpen] = useState(false);
   const [platformPreferencesOpen, setPlatformPreferencesOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [mobileSubmenu, setMobileSubmenu] = useState<'library' | 'news' | 'platforms' | 'genres' | 'collections' | 'actions' | null>(null);
   const [profilePhotoFailed, setProfilePhotoFailed] = useState(false);
 
@@ -81,6 +82,7 @@ export const Header = () => {
   const newsMenuRef = useRef<HTMLDivElement>(null);
   const actionsMenuRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
   const metadataQuery = useQuery({ queryKey: ['metadata'], queryFn: api.metadata.getAll });
   const collectionsQuery = useQuery({ queryKey: ['collections'], queryFn: api.collections.getAll });
 
@@ -93,6 +95,7 @@ export const Header = () => {
       if (!newsMenuRef.current?.contains(event.target as Node)) setNewsMenuOpen(false);
       if (!actionsMenuRef.current?.contains(event.target as Node)) setActionsMenuOpen(false);
       if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
+      if (!profileMenuRef.current?.contains(event.target as Node)) setProfileMenuOpen(false);
     };
     document.addEventListener('mousedown', close);
     return () => document.removeEventListener('mousedown', close);
@@ -379,10 +382,40 @@ export const Header = () => {
               </button>
             </div>
           </nav>
+          <div ref={profileMenuRef} className="relative md:hidden">
+            <button type="button" onClick={() => { setMenuOpen(false); setProfileMenuOpen((current) => !current); }} className="profile-menu-trigger flex h-10 items-center rounded-md px-1" aria-expanded={profileMenuOpen} aria-label="Perfil">
+              {user?.profilePhoto && !profilePhotoFailed
+                ? <img src={user.profilePhoto} alt={user.name} referrerPolicy="no-referrer" onError={() => setProfilePhotoFailed(true)} className="h-8 w-8 rounded-full bg-mist object-cover" />
+                : <span className="grid h-8 w-8 place-items-center rounded-full bg-mist font-semibold text-ink">{initials}</span>}
+            </button>
+            {profileMenuOpen && (
+              <div className="header-dropdown absolute right-0 top-12 w-64 rounded-md border border-slate-200 bg-white p-1.5 shadow-card">
+                <div className="border-b border-slate-100 px-3 py-2.5">
+                  <p className="truncate text-sm font-semibold text-ink">{user?.name}</p>
+                  <p className="truncate text-xs text-slate-500">{user?.email}</p>
+                </div>
+                <button type="button" onClick={() => { setProfileMenuOpen(false); setPlatformPreferencesOpen(true); }} className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink">
+                  <Tv className="h-4 w-4 text-aqua" />
+                  <span>Plataformas que utilizo</span>
+                </button>
+                <div className="border-b border-slate-100 px-3 py-2">
+                  <p className="mb-2 text-xs font-semibold uppercase text-slate-400">Temas</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button type="button" onClick={() => { setTheme('light'); setProfileMenuOpen(false); }} className={`flex items-center justify-center gap-2 rounded-md border px-2 py-2 text-sm ${theme === 'light' ? 'border-coral text-ink' : 'border-slate-200 text-slate-600'}`}><Sun className="h-4 w-4" />Claro</button>
+                    <button type="button" onClick={() => { setTheme('dark'); setProfileMenuOpen(false); }} className={`flex items-center justify-center gap-2 rounded-md border px-2 py-2 text-sm ${theme === 'dark' ? 'border-coral text-ink' : 'border-slate-200 text-slate-600'}`}><Moon className="h-4 w-4" />Oscuro</button>
+                  </div>
+                </div>
+                <button type="button" onClick={logout} className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50">
+                  <LogOut className="h-4 w-4" />
+                  Cerrar sesion
+                </button>
+              </div>
+            )}
+          </div>
           <div ref={menuRef} className="relative">
           <button
             type="button"
-            onClick={() => setMenuOpen((current) => !current)}
+            onClick={() => { setProfileMenuOpen(false); setMenuOpen((current) => !current); }}
             className="profile-menu-trigger flex h-10 items-center gap-2 rounded-md px-1.5 text-sm text-slate-600 hover:bg-slate-100"
             aria-expanded={menuOpen}
           >
@@ -394,7 +427,7 @@ export const Header = () => {
           </button>
           {menuOpen && (
             <div className="header-dropdown absolute right-0 top-12 w-64 sm:w-72 max-h-[calc(100vh-80px)] overflow-y-auto rounded-md border border-slate-200 bg-white p-1.5 shadow-card">
-              <div className="border-b border-slate-100 px-3 py-2.5">
+              <div className="hidden border-b border-slate-100 px-3 py-2.5 md:block">
                 <p className="truncate text-sm font-semibold text-ink">{user?.name}</p>
                 <p className="truncate text-xs text-slate-500">{user?.email}</p>
               </div>
@@ -402,7 +435,7 @@ export const Header = () => {
               <button
                 type="button"
                 onClick={() => { setMenuOpen(false); setPlatformPreferencesOpen(true); }}
-                className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink"
+                className="mt-1 hidden w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink md:flex"
               >
                 <Tv className="h-4 w-4 text-aqua" />
                 <span>Plataformas que utilizo</span>
@@ -681,7 +714,7 @@ export const Header = () => {
               </div>
 
               {/* Temas */}
-              <div className="border-b border-slate-100 px-3 py-2">
+              <div className="hidden border-b border-slate-100 px-3 py-2 md:block">
                 <p className="mb-2 text-xs font-semibold uppercase text-slate-400">Temas</p>
                 <div className="grid grid-cols-2 gap-2">
                   <button type="button" onClick={() => { setTheme('light'); setMenuOpen(false); }} className={`flex items-center justify-center gap-2 rounded-md border px-2 py-2 text-sm ${theme === 'light' ? 'border-coral text-ink' : 'border-slate-200 text-slate-600'}`}><Sun className="h-4 w-4" />Claro</button>
@@ -703,7 +736,7 @@ export const Header = () => {
               </button>
 
               {/* Cerrar sesión */}
-              <button type="button" onClick={logout} className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50">
+              <button type="button" onClick={logout} className="mt-1 hidden w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 md:flex">
                 <LogOut className="h-4 w-4" />
                 Cerrar sesion
               </button>
