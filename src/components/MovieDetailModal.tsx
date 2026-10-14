@@ -52,7 +52,7 @@ const getWatchNowDestination = (movie: MovieItem) => {
   };
 };
 
-export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal, onRating, onCollections, onPrevious, onNext, onAdd, showNavigation = true }: {
+export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal, onRating, onCollections, onPrevious, onNext, onAdd, showNavigation = true, overlayClassName = 'z-50' }: {
   movie: MovieItem;
   onClose: () => void;
   onEdit?: (movie: MovieItem) => void;
@@ -64,6 +64,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
   onNext?: () => void;
   onAdd?: (movie: MovieItem) => void;
   showNavigation?: boolean;
+  overlayClassName?: string;
 }) => {
   const collections = useQuery({ queryKey: ['collections'], queryFn: api.collections.getAll });
   const [collectionMenuOpen, setCollectionMenuOpen] = useState(false);
@@ -94,7 +95,6 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
     { label: 'IMDb', url: movie.imdbUrl },
     { label: 'TMDB', url: tmdbUrl },
     { label: 'JustWatch', url: justWatchUrl },
-    { label: 'Trailer', url: movie.trailerUrl },
   ].filter((item) => item.url);
   const startDragging = (event: ReactPointerEvent<HTMLElement>) => {
     if (event.button !== 0 || window.innerWidth < 640 || (event.target as HTMLElement).closest('button, a, input')) return;
@@ -132,7 +132,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
   };
 
   return (<>
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/55 sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="movie-detail-title">
+    <div className={`fixed inset-0 ${overlayClassName} flex items-end justify-center bg-ink/55 sm:items-center sm:p-5`} role="dialog" aria-modal="true" aria-labelledby="movie-detail-title">
       <div ref={modalRef} className="movie-detail-modal flex flex-col max-h-[85vh] sm:max-h-[92vh] sm:min-h-[560px] md:min-h-[600px] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-5xl sm:rounded-md lg:max-w-6xl" style={{ transform: `translate3d(${modalOffset.x}px, ${modalOffset.y}px, 0)` }}>
         <header onPointerDown={startDragging} onPointerMove={dragModal} onPointerUp={stopDragging} onPointerCancel={stopDragging} className="flex min-h-16 shrink-0 touch-none select-none items-center gap-4 border-b border-slate-200 bg-white px-4 py-3 sm:cursor-move sm:px-6">
           <div className="min-w-0 flex-1">
@@ -143,7 +143,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
               <button
                 type="button"
                 onClick={() => onAdd(movie)}
-                className="icon-button rounded-none border-0 text-coral shadow-none hover:bg-red-50"
+                className="movie-detail-add-button icon-button rounded-none border-0 shadow-none"
                 title="Agregar a la biblioteca"
                 aria-label="Agregar a la biblioteca"
               >
@@ -204,13 +204,20 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
             <section className="min-w-0">
               <h1 className="font-bebas text-[28px] font-normal uppercase leading-8 text-ink">{title}</h1>
               {spanishTitle && <p className="mt-0.5 text-sm font-medium text-slate-600">{spanishTitle}</p>}
-              <div className="mt-2 flex flex-wrap items-center gap-3">
-                <span className="text-base font-bold text-slate-500">{movie.year || 'Año desconocido'}</span>
-                {movie.imdbRating != null && <span className="inline-flex items-center gap-1 text-sm font-semibold text-slate-500"><Star className="h-4 w-4 fill-amber-400 text-amber-400" />{movie.imdbRating}</span>}
-                {movie.trailerUrl ? <button type="button" onClick={() => setTrailerOpen(true)} className="movie-trailer-link ml-auto mr-4 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-opacity hover:opacity-70"><img src="/youtube-play.png" alt="" className="h-4 w-[23px] object-contain" aria-hidden="true" />Ver trailer</button> : <span className="ml-auto mr-4 text-sm text-slate-400">No disponible</span>}
+              <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-base font-bold text-slate-500">{movie.year || 'Año desconocido'}</span>
+                    {movie.imdbRating != null && <span className="inline-flex items-center gap-1 text-sm font-semibold text-slate-500"><Star className="h-4 w-4 fill-amber-400 text-amber-400" />{movie.imdbRating}</span>}
+                  </div>
+                  <p className="mt-1 text-sm text-slate-500">{movie.durationMinutes ? `${movie.durationMinutes} minutos` : 'Duración desconocida'}</p>
+                  <p className="mt-1 text-sm text-slate-500">{movie.genres.map((item) => item.name).join(', ') || 'Sin género'}</p>
+                </div>
+                <div className="flex shrink-0 flex-col items-start gap-2 sm:mr-4 sm:items-end">
+                  <div className="flex flex-wrap items-center gap-2">{links.map((item) => <a key={item.label} href={item.url!} target="_blank" rel="noreferrer" aria-label={item.label} className="inline-flex items-center transition-opacity hover:opacity-70">{item.label === 'IMDb' ? <img src="/imdb-logo.png" alt="IMDb" className="h-6 w-[50px] object-contain" /> : item.label === 'TMDB' ? <img src="/tmdb.png" alt="TMDB" className="h-5 w-[96px] object-contain" /> : <img src="/justwatch.png" alt="JustWatch" className="h-5 w-[85px] object-contain" />}</a>)}</div>
+                  {movie.trailerUrl && <button type="button" onClick={() => setTrailerOpen(true)} className="movie-trailer-link inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-opacity hover:opacity-70"><img src="/youtube-play.png" alt="" className="h-4 w-[23px] object-contain" aria-hidden="true" />Ver trailer</button>}
+                </div>
               </div>
-              <p className="mt-1 text-sm text-slate-500">{movie.durationMinutes ? `${movie.durationMinutes} minutos` : 'Duración desconocida'}</p>
-              <p className="mt-1 text-sm text-slate-500">{movie.genres.map((item) => item.name).join(', ') || 'Sin género'}</p>
               {movie.synopsis && <div className="mt-6"><h3 className="field-label">Sinopsis</h3><p className="mt-2 whitespace-pre-line text-sm leading-6 text-slate-600">{movie.synopsis}</p></div>}
               <dl className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-slate-200 pt-5">
                 <div>
@@ -226,8 +233,8 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                   <dd className="text-sm text-ink">{cast.map((item) => item.name).join(', ') || 'Sin datos'}</dd>
                 </div>
                 <div>
-                  <dt className="field-label">Links</dt>
-                  <dd className="mt-1 flex flex-wrap items-center gap-2">{links.filter((item) => item.label !== 'Trailer').map((item) => <a key={item.label} href={item.url!} target="_blank" rel="noreferrer" aria-label={item.label} className="inline-flex items-center transition-opacity hover:opacity-70">{item.label === 'IMDb' ? <img src="/imdb-logo.png" alt="IMDb" className="h-6 w-[50px] object-contain" /> : item.label === 'TMDB' ? <img src="/tmdb.png" alt="TMDB" className="h-5 w-[96px] object-contain" /> : item.label === 'JustWatch' ? <img src="/justwatch.png" alt="JustWatch" className="h-5 w-[85px] object-contain" /> : <>{item.label}<ExternalLink className="h-4 w-4" /></>}</a>)}</dd>
+                  <dt className="field-label">Plataformas</dt>
+                  <dd className="mt-1"><PlatformLogos platforms={movie.platforms} large /></dd>
                 </div>
                 {movie.type === 'series' && <>
                   <div>
@@ -239,10 +246,6 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                     <dd className="text-sm text-ink">{movie.totalEpisodes ?? 'Sin datos'}</dd>
                   </div>
                 </>}
-                <div>
-                  <dt className="field-label">Plataformas</dt>
-                  <dd className="mt-1"><PlatformLogos platforms={movie.platforms} large /></dd>
-                </div>
                 <div className="flex items-start">
                   <a href={watchNowDestination.url} target="_blank" rel="noreferrer" className="secondary-button h-8 gap-1.5 px-3 text-xs" title={`Ver ahora en ${watchNowDestination.label}`}>
                     <Play className="h-3.5 w-3.5 fill-current" />

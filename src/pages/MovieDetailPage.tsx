@@ -93,7 +93,6 @@ export const MovieDetailPage = () => {
     { label: "IMDb", url: movie.imdbUrl },
     { label: "TMDB", url: tmdbUrl },
     { label: "JustWatch", url: justWatchUrl },
-    { label: "Trailer", url: movie.trailerUrl },
   ].filter((item) => item.url);
   return (
     <main className="min-h-screen bg-canvas">
@@ -205,15 +204,27 @@ export const MovieDetailPage = () => {
                   {spanishTitle}
                 </p>
               )}
-            <p className="mt-3 text-sm text-slate-500">
-              {[
-                movie.year,
-                movie.countries.map((country) => country.name).join(", "),
-                movie.durationMinutes ? `${movie.durationMinutes} min` : null,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <p className="text-sm text-slate-500">
+                {[
+                  movie.year,
+                  movie.countries.map((country) => country.name).join(", "),
+                  movie.durationMinutes ? `${movie.durationMinutes} min` : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+              <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+                <div className="flex flex-wrap items-center gap-2">
+                  {links.map((item) => (
+                    <a key={item.label} href={item.url!} target="_blank" rel="noreferrer" aria-label={item.label} className="inline-flex items-center transition-opacity hover:opacity-70">
+                      {item.label === "IMDb" ? <img src="/imdb-logo.png" alt="IMDb" className="h-6 w-[50px] object-contain" /> : item.label === "TMDB" ? <img src="/tmdb.png" alt="TMDB" className="h-5 w-[96px] object-contain" /> : <img src="/justwatch.png" alt="JustWatch" className="h-5 w-[85px] object-contain" />}
+                    </a>
+                  ))}
+                </div>
+                {movie.trailerUrl && <button type="button" onClick={() => setTrailerOpen(true)} className="movie-trailer-link inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-opacity hover:opacity-70"><img src="/youtube-play.png" alt="" className="h-4 w-[23px] object-contain" aria-hidden="true" />Ver trailer</button>}
+              </div>
+            </div>
             <div className="mt-6 grid gap-3 sm:max-w-xl sm:grid-cols-[minmax(280px,1.5fr)_minmax(160px,1fr)]">
               <div className="rounded-md border border-slate-200 bg-white p-4">
                 <p className="text-xs font-semibold uppercase text-slate-400">
@@ -262,6 +273,12 @@ export const MovieDetailPage = () => {
                   </dd>
                 </div>
               )}
+              <div className="sm:col-start-1">
+                  <dt className="text-xs font-semibold uppercase text-slate-400">
+                    Plataformas
+                  </dt>
+                  <dd className="mt-2"><PlatformLogos platforms={movie.platforms} large /></dd>
+              </div>
               {movie.genres.length > 0 && (
                 <div>
                   <dt className="text-xs font-semibold uppercase text-slate-400">
@@ -272,13 +289,6 @@ export const MovieDetailPage = () => {
                   </dd>
                 </div>
               )}
-              <div>
-                  <dt className="text-xs font-semibold uppercase text-slate-400">
-                    Plataformas
-                  </dt>
-                  <dd className="mt-2"><PlatformLogos platforms={movie.platforms} large /></dd>
-                  {movie.trailerUrl && <button type="button" onClick={() => setTrailerOpen(true)} className="movie-trailer-link mt-3 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-opacity hover:opacity-70"><img src="/youtube-play.png" alt="" className="h-4 w-[23px] object-contain" aria-hidden="true" />Ver trailer</button>}
-              </div>
               {movie.type === "series" && (
                 <div>
                   <dt className="text-xs font-semibold uppercase text-slate-400">
@@ -305,32 +315,6 @@ export const MovieDetailPage = () => {
                 </div>
               )}
             </dl>
-            {links.length > 0 && (
-              <div className="mt-7 flex flex-wrap items-center justify-start gap-2">
-                {links.filter((item) => item.label !== "Trailer").map((item) => (
-                  <a
-                    key={item.label}
-                    href={item.url!}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-opacity hover:opacity-70"
-                  >
-                    {item.label === "IMDb" ? (
-                      <img src="/imdb-logo.png" alt="IMDb" className="h-6 w-[50px] object-contain" />
-                    ) : item.label === "TMDB" ? (
-                      <img src="/tmdb.png" alt="TMDB" className="h-5 w-[96px] object-contain" />
-                    ) : item.label === "JustWatch" ? (
-                      <img src="/justwatch.png" alt="JustWatch" className="h-5 w-[85px] object-contain" />
-                    ) : (
-                      <>
-                        {item.label}
-                        <ExternalLink className="h-4 w-4" />
-                      </>
-                    )}
-                  </a>
-                ))}
-              </div>
-            )}
             <p className="mt-8 inline-flex items-center gap-1 text-xs text-slate-400">
               <Check className="h-3.5 w-3.5" />
               Datos personales protegidos para futuras sincronizaciones TMDB

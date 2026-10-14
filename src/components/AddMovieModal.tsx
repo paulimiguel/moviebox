@@ -1345,6 +1345,7 @@ export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQ
         onRating={(movie, rating) => updateRating.mutate({ movie, rating })}
         onCollections={() => {}}
         showNavigation={false}
+        overlayClassName="z-[105]"
       />
     )}
   </>

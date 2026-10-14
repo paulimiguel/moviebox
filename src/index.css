@@ -568,6 +568,18 @@ body {
   color: #fff;
 }
 
+.movie-detail-modal .movie-detail-add-button,
+:root[data-theme="dark"] .movie-detail-modal .movie-detail-add-button {
+  background-color: #ef5544;
+  color: #fff;
+}
+
+.movie-detail-modal .movie-detail-add-button:hover,
+:root[data-theme="dark"] .movie-detail-modal .movie-detail-add-button:hover {
+  background-color: #dc493a;
+  color: #fff;
+}
+
 :root[data-theme="dark"] .movie-detail-modal [class~="border-t"],
 :root[data-theme="dark"] .movie-detail-modal [class~="border-b"],
 :root[data-theme="dark"] .movie-detail-modal [class~="divide-slate-100"] > * + * {

@@ -51,7 +51,18 @@ export const CastPhotosModal = ({ title, type, tmdbId, cast, onClose }: {
                   </div>
                 </article>)}
               </div> : <p className="grid min-h-40 place-items-center text-center text-sm text-slate-500">No hay imágenes disponibles para el reparto mencionado.</p>}
-          <p className="mt-4 text-right text-[10px] font-medium uppercase text-slate-400">Imágenes de TMDB</p>
+          <div className="mt-4 flex justify-end">
+            <a
+              href={`https://www.themoviedb.org/${type === 'movie' ? 'movie' : 'tv'}/${tmdbId}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center transition-opacity hover:opacity-70"
+              title={`Ver ${title} en TMDB`}
+              aria-label={`Ver ${title} en TMDB`}
+            >
+              <img src="/tmdb.png" alt="TMDB" className="h-4 w-[76px] object-contain" />
+            </a>
+          </div>
         </div>
       </section>
     </div>,

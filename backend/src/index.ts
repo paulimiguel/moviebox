@@ -28,6 +28,8 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+      scriptSrc: ["'self'", 'https://www.youtube.com', 'https://s.ytimg.com'],
+      frameSrc: ["'self'", 'https://www.youtube.com', 'https://www.youtube-nocookie.com'],
     },
   },
 }));
