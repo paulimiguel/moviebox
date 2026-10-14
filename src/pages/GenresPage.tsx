@@ -7,6 +7,7 @@ import { CatalogCreateForm } from '@/components/CatalogCreateForm';
 import { CatalogToolbar, catalogGridClass, type CatalogViewMode } from '@/components/CatalogToolbar';
 import { api, resolveMovieImageUrl } from '@/services/api';
 import { getGenreIconImage, normalizeGenreName } from '@/utils/genreIcons';
+import { getPersistedCatalogView, persistCatalogView } from '@/utils/persistedCatalogView';
 import { getPersistedSortDirection, persistSortDirection } from '@/utils/persistedSort';
 import type { GenreCatalogItem, SortDirection } from '@/types/movie';
 
@@ -59,10 +60,11 @@ export const GenresPage = () => {
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const [editError, setEditError] = useState('');
   const [search, setSearch] = useState('');
-  const [viewMode, setViewMode] = useState<CatalogViewMode>('large');
+  const [viewMode, setViewMode] = useState<CatalogViewMode>(() => getPersistedCatalogView('moviebox:genres-view', 'large'));
   const [sortDirection, setSortDirection] = useState<SortDirection>(() => getPersistedSortDirection('moviebox:genres-sort'));
 
   useEffect(() => persistSortDirection('moviebox:genres-sort', sortDirection), [sortDirection]);
+  useEffect(() => persistCatalogView('moviebox:genres-view', viewMode), [viewMode]);
 
   const visibleGenres = useMemo(() => {
     const query = search.trim().toLocaleLowerCase('es');
