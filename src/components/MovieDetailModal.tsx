@@ -211,12 +211,12 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                   <dt className="field-label">País</dt>
                   <dd className="text-sm text-ink">{movie.countries.map((item) => item.name).join(', ') || 'Sin datos'}</dd>
                 </div>
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <div className="relative flex flex-col gap-3 lg:block lg:pr-56">
                   <div className="min-w-0">
                     <dt className="field-label">Dirección</dt>
                     <dd className="text-sm text-ink">{movie.credits.filter((item) => item.creditType === 'director').map((item) => item.name).join(', ') || 'Sin datos'}</dd>
                   </div>
-                  <div className="flex w-full min-w-0 shrink-0 flex-col gap-2 lg:w-52">
+                  <div className="flex w-full min-w-0 shrink-0 flex-col gap-2 lg:absolute lg:right-0 lg:top-0 lg:w-52">
                     {!onAdd && <div className="relative text-left" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setCollectionMenuOpen(false); }}>
                       <span className="field-label">Colección</span>
                       <button type="button" onClick={() => setCollectionMenuOpen((current) => !current)} className="control flex w-full items-center gap-2 text-left" aria-expanded={collectionMenuOpen}>
