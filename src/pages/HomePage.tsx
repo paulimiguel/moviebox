@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bookmark, Check, ChevronLeft, ChevronRight, Film, Heart, Library, Sparkles, Star } from 'lucide-react';
+import { Bookmark, ChevronLeft, ChevronRight, Eye, Film, Heart, Library, Sparkles, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { MovieDetailModal } from '@/components/MovieDetailModal';
@@ -95,10 +95,10 @@ const LibraryCard = ({ movie, onSelect }: { movie: MovieItem; onSelect: (movie: 
     <button type="button" onClick={() => onSelect(movie)} className="group/card w-[132px] shrink-0 snap-start text-left sm:w-[156px]" title={`Abrir ${titleFor(movie)}`}>
       <div className="relative aspect-[2/3] overflow-hidden rounded-lg border border-slate-200 bg-mist shadow-card transition group-hover/card:-translate-y-1 group-hover/card:border-aqua">
         {image ? <img src={image} alt={titleFor(movie)} className="h-full w-full object-cover" loading="lazy" /> : <div className="grid h-full place-items-center text-slate-400"><Film className="h-8 w-8" /></div>}
-        <div className="absolute left-2 top-2 flex flex-wrap gap-1">
-          {movie.watched && <span className="inline-flex items-center gap-1 rounded-full bg-[#2cbc63] px-2 py-0.5 text-[10px] font-semibold text-white"><Check className="h-3 w-3" />Vista</span>}
-          {movie.favorite && <span className="inline-flex items-center gap-1 rounded-full bg-coral px-2 py-0.5 text-[10px] font-semibold text-white"><Heart className="h-3 w-3 fill-current" />Like</span>}
-          {!movie.watched && movie.watchlist && <span className="inline-flex items-center gap-1 rounded-full bg-aqua px-2 py-0.5 text-[10px] font-semibold text-white"><Bookmark className="h-3 w-3 fill-current" />Pendiente</span>}
+        <div className="absolute left-2 top-2 flex items-center gap-1.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)]">
+          {movie.watched && <Eye className="h-4 w-4 text-[#2cbc63]" strokeWidth={2.5} aria-label="Vista" />}
+          {movie.favorite && <Heart className="h-4 w-4 fill-[#e53935] text-[#e53935]" aria-label="Favorita" />}
+          {!movie.watched && movie.watchlist && <Bookmark className="h-4 w-4 fill-aqua text-aqua" aria-label="Pendiente" />}
         </div>
       </div>
       <h3 className="mt-2 line-clamp-1 font-bebas text-lg uppercase leading-tight text-ink transition-colors group-hover/card:text-aqua">{titleFor(movie)}</h3>
