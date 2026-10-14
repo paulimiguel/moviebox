@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } f
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, ArrowRight, Bookmark, Check, ChevronDown, ExternalLink, Eye, Film, Heart, Pencil, Play, Star, Trash2, X, Plus } from 'lucide-react';
 import { PlatformLogos } from '@/components/PlatformLogos';
+import { CastPhotosModal } from '@/components/CastPhotosModal';
 import { StarRating } from '@/components/StarRating';
 import { TrailerModal } from '@/components/TrailerModal';
 import { api, resolveMovieImageUrl } from '@/services/api';
@@ -51,7 +52,7 @@ const getWatchNowDestination = (movie: MovieItem) => {
   };
 };
 
-export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal, onRating, onCollections, onPrevious, onNext, onAdd }: {
+export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal, onRating, onCollections, onPrevious, onNext, onAdd, showNavigation = true }: {
   movie: MovieItem;
   onClose: () => void;
   onEdit?: (movie: MovieItem) => void;
@@ -62,10 +63,12 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
   onPrevious?: () => void;
   onNext?: () => void;
   onAdd?: (movie: MovieItem) => void;
+  showNavigation?: boolean;
 }) => {
   const collections = useQuery({ queryKey: ['collections'], queryFn: api.collections.getAll });
   const [collectionMenuOpen, setCollectionMenuOpen] = useState(false);
   const [trailerOpen, setTrailerOpen] = useState(false);
+  const [castPhotosOpen, setCastPhotosOpen] = useState(false);
   const [selectedCollectionIds, setSelectedCollectionIds] = useState(movie.collections.map((collection) => collection.id));
   const [modalOffset, setModalOffset] = useState({ x: 0, y: 0 });
   const modalRef = useRef<HTMLDivElement>(null);
@@ -83,6 +86,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
   const title = movie.originalTitle;
   const spanishTitle = movie.spanishTitle && movie.spanishTitle !== movie.originalTitle ? movie.spanishTitle : null;
   const image = movie.images.find((item) => item.isPrimary) || movie.images[0];
+  const cast = movie.credits.filter((item) => item.creditType === 'cast');
   const watchNowDestination = getWatchNowDestination(movie);
   const tmdbUrl = movie.tmdbUrl || (movie.tmdbId ? `https://www.themoviedb.org/${movie.type === 'movie' ? 'movie' : 'tv'}/${movie.tmdbId}` : null);
   const justWatchUrl = movie.justwatchUrl || `https://www.justwatch.com/ar/buscar?q=${encodeURIComponent([spanishTitle || title, movie.year].filter(Boolean).join(' '))}`;
@@ -148,8 +152,8 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
             )}
             {onEdit && <button type="button" onClick={() => onEdit(movie)} className="icon-button rounded-none border-0 shadow-none" title="Editar" aria-label="Editar"><Pencil className="h-4 w-4" /></button>}
             {onDelete && <button type="button" onClick={() => onDelete(movie)} className="icon-button rounded-none border-0 border-l border-slate-200 text-red-600 shadow-none" title="Eliminar" aria-label="Eliminar"><Trash2 className="h-4 w-4" /></button>}
-            <button type="button" onClick={onPrevious} disabled={!onPrevious} className="icon-button rounded-none border-0 border-l border-slate-200 shadow-none" title="Título anterior" aria-label="Título anterior"><ArrowLeft className="h-5 w-5" /></button>
-            <button type="button" onClick={onNext} disabled={!onNext} className="icon-button rounded-none border-0 border-l border-slate-200 shadow-none" title="Título siguiente" aria-label="Título siguiente"><ArrowRight className="h-5 w-5" /></button>
+            {showNavigation && <button type="button" onClick={onPrevious} disabled={!onPrevious} className="icon-button rounded-none border-0 border-l border-slate-200 shadow-none" title="Título anterior" aria-label="Título anterior"><ArrowLeft className="h-5 w-5" /></button>}
+            {showNavigation && <button type="button" onClick={onNext} disabled={!onNext} className="icon-button rounded-none border-0 border-l border-slate-200 shadow-none" title="Título siguiente" aria-label="Título siguiente"><ArrowRight className="h-5 w-5" /></button>}
             <button type="button" onClick={onClose} className="icon-button rounded-none border-0 border-l border-slate-200 shadow-none" title="Cerrar" aria-label="Cerrar"><X className="h-5 w-5" /></button>
           </div>
         </header>
@@ -218,8 +222,8 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                   <dd className="text-sm text-ink">{movie.credits.filter((item) => item.creditType === 'director').map((item) => item.name).join(', ') || 'Sin datos'}</dd>
                 </div>
                 <div>
-                  <dt className="field-label">Reparto</dt>
-                  <dd className="text-sm text-ink">{movie.credits.filter((item) => item.creditType === 'cast').map((item) => item.name).join(', ') || 'Sin datos'}</dd>
+                  <dt className="field-label flex items-center gap-1.5">Reparto{movie.tmdbId && cast.length > 0 && <button type="button" onClick={() => setCastPhotosOpen(true)} className="grid h-5 w-5 place-items-center rounded text-slate-400 transition-colors hover:bg-mist hover:text-ink" title="Ver imágenes del reparto" aria-label="Ver imágenes del reparto"><ExternalLink className="h-3.5 w-3.5" /></button>}</dt>
+                  <dd className="text-sm text-ink">{cast.map((item) => item.name).join(', ') || 'Sin datos'}</dd>
                 </div>
                 <div>
                   <dt className="field-label">Links</dt>
@@ -252,5 +256,6 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
       </div>
     </div>
     {trailerOpen && movie.trailerUrl && <TrailerModal title={title} trailerUrl={movie.trailerUrl} onClose={() => setTrailerOpen(false)} />}
+    {castPhotosOpen && movie.tmdbId && <CastPhotosModal title={title} type={movie.type} tmdbId={movie.tmdbId} cast={cast} onClose={() => setCastPhotosOpen(false)} />}
   </>);
 };

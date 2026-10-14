@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Header } from "@/components/Header";
+import { CastPhotosModal } from "@/components/CastPhotosModal";
 import { MovieEditModal } from "@/components/MovieEditModal";
 import { TrailerModal } from "@/components/TrailerModal";
 import { StarRating } from "@/components/StarRating";
@@ -28,6 +29,7 @@ export const MovieDetailPage = () => {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [trailerOpen, setTrailerOpen] = useState(false);
+  const [castPhotosOpen, setCastPhotosOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const movieQuery = useQuery({
     queryKey: ["movie", id],
@@ -252,8 +254,8 @@ export const MovieDetailPage = () => {
               )}
               {cast.length > 0 && (
                 <div>
-                  <dt className="text-xs font-semibold uppercase text-slate-400">
-                    Reparto principal
+                  <dt className="flex items-center gap-1.5 text-xs font-semibold uppercase text-slate-400">
+                    Reparto principal{movie.tmdbId && <button type="button" onClick={() => setCastPhotosOpen(true)} className="grid h-5 w-5 place-items-center rounded text-slate-400 transition-colors hover:bg-mist hover:text-ink" title="Ver imágenes del reparto" aria-label="Ver imágenes del reparto"><ExternalLink className="h-3.5 w-3.5" /></button>}
                   </dt>
                   <dd className="mt-1 text-sm text-ink">
                     {cast.map((item) => item.name).join(", ")}
@@ -351,6 +353,9 @@ export const MovieDetailPage = () => {
       )}
       {trailerOpen && movie.trailerUrl && (
         <TrailerModal title={title} trailerUrl={movie.trailerUrl} onClose={() => setTrailerOpen(false)} />
+      )}
+      {castPhotosOpen && movie.tmdbId && (
+        <CastPhotosModal title={title} type={movie.type} tmdbId={movie.tmdbId} cast={cast} onClose={() => setCastPhotosOpen(false)} />
       )}
     </main>
   );

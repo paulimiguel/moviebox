@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ArrowDown, ArrowUp, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronsUpDown, Edit3, Eye, EyeOff, FileText, Film, Filter, Grid3x3, Heart, LayoutGrid, List, ListChecks, Plus, Search, Square, Tv, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronsUpDown, Edit3, Eye, EyeOff, FileText, Film, Filter, Grid3x3, Heart, LayoutGrid, List, ListChecks, Plus, Search, Square, Tags, Tv, X } from 'lucide-react';
 import type { MovieViewMode } from '@/components/MovieCard';
+import { resolvePlatformLogoUrl } from '@/components/PlatformLogos';
 import type { FavoriteFilter, MovieTypeFilter, SortDirection, WatchedFilter, WatchlistFilter } from '@/types/movie';
+import { getGenreIconImage } from '@/utils/genreIcons';
 
 export type MovieLibrarySort = 'title' | 'createdAt' | 'year' | 'collection' | 'genre' | 'imdbRating';
 export type MovieBulkMode = 'edit' | 'print' | 'delete' | 'exportTxt' | null;
 export type MovieSearchScope = 'name' | 'actor' | 'genre';
+type ToolbarPlatform = { id: string; name: string; logoPath?: string | null };
 
 interface ToolbarProps {
   onAddClick?: () => void;
@@ -34,7 +37,7 @@ interface ToolbarProps {
   genres: { id: string; name: string }[];
   onGenreChange: (value: string[]) => void;
   platformIds: string[];
-  platforms: { id: string; name: string }[];
+  platforms: ToolbarPlatform[];
   onPlatformChange: (value: string[]) => void;
   collectionIds?: string[];
   collections?: { id: string; name: string }[];
@@ -62,6 +65,17 @@ const searchScopeOptions: { value: MovieSearchScope; label: string }[] = [
   { value: 'actor', label: 'Actor' },
   { value: 'genre', label: 'Género' },
 ];
+
+const PlatformFilterIcon = ({ platform }: { platform: ToolbarPlatform }) => {
+  const [imageFailed, setImageFailed] = useState(false);
+  const imageUrl = resolvePlatformLogoUrl({ name: platform.name, logoPath: platform.logoPath || null });
+
+  if (!imageUrl || imageFailed) {
+    return <span className="grid h-6 w-8 shrink-0 place-items-center" aria-hidden="true"><Tv className="h-4 w-4 text-aqua" /></span>;
+  }
+
+  return <span className="grid h-6 w-8 shrink-0 place-items-center"><img src={imageUrl} alt="" className="max-h-6 max-w-8 object-contain" loading="lazy" onError={() => setImageFailed(true)} /></span>;
+};
 
 export const MovieLibraryToolbar = (props: ToolbarProps) => {
   const [, setSearchParams] = useSearchParams();
@@ -336,8 +350,8 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
       {props.filtersOpen && (
         <div className="relative border-t border-slate-100 bg-canvas">
           <button type="button" onClick={() => { setGenreSearch(''); setPlatformSearch(''); setOpenMenu(null); props.onFiltersToggle(); }} className="absolute right-3 top-3 z-10 grid h-8 w-8 place-items-center rounded-md text-slate-400 hover:bg-slate-200 hover:text-ink" title="Cerrar filtros" aria-label="Cerrar filtros"><X className="h-4 w-4" /></button>
-          <div className="mx-auto flex max-w-[1500px] flex-col gap-3 px-4 py-3.5 pr-12 sm:px-6 sm:pr-14 2xl:flex-row 2xl:items-end 2xl:pr-14">
-            <div className="grid grid-cols-2 sm:flex sm:flex-row sm:items-end gap-1.5 sm:gap-2 w-full max-w-[960px]">
+          <div className="mx-auto flex max-w-[1500px] flex-col gap-3 px-4 py-3.5 pr-12 sm:px-6 sm:pr-14">
+            <div className="grid w-full grid-cols-2 gap-1.5 sm:flex sm:flex-row sm:items-end sm:gap-2">
               <div className={`relative min-w-0 flex-1 ${openMenu === 'genre' ? 'z-50' : ''}`}>
                 <span className="field-label">Género</span>
                 <button type="button" onClick={() => { setGenreSearch(''); setOpenMenu(openMenu === 'genre' ? null : 'genre'); }} className={`control flex w-full items-center justify-between gap-2 text-left ${openMenu === 'genre' ? 'border-coral' : ''}`} aria-haspopup="listbox" aria-expanded={openMenu === 'genre'}>
@@ -353,7 +367,8 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
                     <div className="max-h-64 overflow-y-auto p-1.5" role="listbox" aria-multiselectable="true">
                       {filteredGenres.length ? filteredGenres.map((genre) => {
                         const selected = props.genreIds.includes(genre.id);
-                        return <button key={genre.id} type="button" onClick={() => toggleGenre(genre.id)} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${selected ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`} role="option" aria-selected={selected}><Check className={`h-4 w-4 shrink-0 ${selected ? 'text-coral' : 'text-transparent'}`} /><span className="min-w-0 flex-1 truncate">{genre.name}</span></button>;
+                        const iconImage = getGenreIconImage(genre.name);
+                        return <button key={genre.id} type="button" onClick={() => toggleGenre(genre.id)} className={`flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm ${selected ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`} role="option" aria-selected={selected}><Check className={`h-4 w-4 shrink-0 ${selected ? 'text-coral' : 'text-transparent'}`} />{iconImage ? <img src={iconImage} alt="" className="h-6 w-6 shrink-0 object-contain" loading="lazy" /> : <span className="grid h-6 w-6 shrink-0 place-items-center" aria-hidden="true"><Tags className="h-4 w-4 text-aqua" /></span>}<span className="min-w-0 flex-1 truncate">{genre.name}</span></button>;
                       }) : <p className="px-3 py-4 text-center text-sm text-slate-400">Sin resultados.</p>}
                     </div>
                   </div>
@@ -375,7 +390,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
                     <div className="max-h-64 overflow-y-auto p-1.5" role="listbox" aria-multiselectable="true">
                       {filteredPlatforms.length ? filteredPlatforms.map((platform) => {
                         const selected = props.platformIds.includes(platform.id);
-                        return <button key={platform.id} type="button" onClick={() => togglePlatform(platform.id)} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${selected ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`} role="option" aria-selected={selected}><Check className={`h-4 w-4 shrink-0 ${selected ? 'text-coral' : 'text-transparent'}`} /><span className="min-w-0 flex-1 truncate">{platform.name}</span></button>;
+                        return <button key={platform.id} type="button" onClick={() => togglePlatform(platform.id)} className={`flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm ${selected ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`} role="option" aria-selected={selected}><Check className={`h-4 w-4 shrink-0 ${selected ? 'text-coral' : 'text-transparent'}`} /><PlatformFilterIcon platform={platform} /><span className="min-w-0 flex-1 truncate">{platform.name}</span></button>;
                       }) : <p className="px-3 py-4 text-center text-sm text-slate-400">Sin resultados.</p>}
                     </div>
                   </div>
@@ -406,13 +421,13 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
                 </div>
               )}
 
-              <div className="w-full sm:w-36 md:w-44 shrink-0">
+              <div className="min-w-0 flex-1">
                 <label htmlFor="movie-year-filter" className="field-label">Año</label>
                 <input id="movie-year-filter" className="control w-full" type="text" inputMode="numeric" value={yearDraft} onChange={(event) => setYearDraft(event.target.value.replace(/\D/g, '').slice(0, 4))} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addYear(); } }} placeholder="Escribir y Enter" aria-label="Agregar año" />
               </div>
             </div>
 
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-7 gap-1.5 sm:gap-2 w-full max-w-[960px]">
+            <div className="grid w-full grid-cols-3 gap-1.5 sm:grid-cols-4 sm:gap-2 md:grid-cols-7">
               <button type="button" aria-pressed={props.type === 'movie'} onClick={() => props.onTypeChange(props.type === 'movie' ? 'all' : 'movie')} className={filterButtonClass(props.type === 'movie')}><Film className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">Película</span></button>
               <button type="button" aria-pressed={props.type === 'series'} onClick={() => props.onTypeChange(props.type === 'series' ? 'all' : 'series')} className={filterButtonClass(props.type === 'series')}><Tv className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">Serie</span></button>
               <button type="button" aria-pressed={props.watched === 'watched'} onClick={() => props.onWatchedChange(props.watched === 'watched' ? 'all' : 'watched')} className={filterButtonClass(props.watched === 'watched')}><Eye className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">Watched</span></button>

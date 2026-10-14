@@ -158,6 +158,76 @@ router.get('/public/justwatch-posters', async (_req, res) => {
 
 router.use(authenticateToken);
 router.get('/status', (_req, res) => res.json({ configured: Boolean(token), protectedFields: ['favorite', 'watched', 'watchlist', 'personalRating', 'collectionIds'] }));
+router.get('/cast', async (req, res) => {
+  if (!token) return res.status(503).json({ error: 'TMDB todavía no está configurado' });
+  const type = String(req.query.type || '');
+  const tmdbId = Number(req.query.id);
+  let requestedNames: string[] = [];
+  try {
+    const parsedNames = JSON.parse(String(req.query.names || '[]'));
+    if (Array.isArray(parsedNames)) requestedNames = parsedNames.filter((name): name is string => typeof name === 'string' && name.trim().length > 0).slice(0, 12);
+  } catch {
+    return res.status(400).json({ error: 'Nombres del reparto inválidos' });
+  }
+  if ((type !== 'movie' && type !== 'series') || !Number.isInteger(tmdbId) || tmdbId <= 0) {
+    return res.status(400).json({ error: 'Título de TMDB inválido' });
+  }
+
+  try {
+    const resource = type === 'movie' ? 'movie' : 'tv';
+    const payload = await tmdbRequest<{
+      cast?: Array<{
+        id: number;
+        name: string;
+        character?: string | null;
+        profile_path?: string | null;
+        order?: number;
+      }>;
+    }>(`/${resource}/${tmdbId}/credits?language=es-AR`);
+    const cast = (payload.cast || []).map((member, index) => ({
+      id: member.id,
+      name: member.name,
+      character: member.character || null,
+      profileUrl: member.profile_path ? `https://image.tmdb.org/t/p/w342${member.profile_path}` : null,
+      order: member.order ?? index,
+    }));
+    const normalizeName = (name: string) => name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es').trim();
+    const returnedNames = new Set(cast.map((member) => normalizeName(member.name)));
+    const missingNames = requestedNames.filter((name) => !returnedNames.has(normalizeName(name)));
+    const searchedPeople = await Promise.allSettled(missingNames.map(async (name, index) => {
+      const search = await tmdbRequest<{
+        results?: Array<{
+          id: number;
+          name: string;
+          profile_path?: string | null;
+          known_for?: Array<{ id?: number }>;
+        }>;
+      }>(`/search/person?language=es-AR&include_adult=false&query=${encodeURIComponent(name)}`);
+      const person = (search.results || []).find((candidate) => candidate.known_for?.some((item) => item.id === tmdbId)) || search.results?.[0];
+      if (!person) return null;
+      return {
+        id: person.id,
+        name,
+        character: null,
+        profileUrl: person.profile_path ? `https://image.tmdb.org/t/p/w342${person.profile_path}` : null,
+        order: cast.length + index,
+      };
+    }));
+    searchedPeople.forEach((result) => {
+      if (result.status !== 'fulfilled' || !result.value) return;
+      const existing = cast.find((member) => member.id === result.value!.id);
+      if (existing) {
+        existing.name = result.value.name;
+        existing.profileUrl ||= result.value.profileUrl;
+      } else {
+        cast.push(result.value);
+      }
+    });
+    return res.json(cast.sort((left, right) => left.order - right.order).slice(0, 8));
+  } catch {
+    return res.status(502).json({ error: 'No se pudo obtener el reparto desde TMDB' });
+  }
+});
 router.get('/search', async (req, res) => {
   if (!token) return res.status(503).json({ error: 'TMDB todavia no esta configurado' });
   const query = String(req.query.query || '').trim(); if (!query) return res.json([]);

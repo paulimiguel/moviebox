@@ -1,18 +1,38 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Bookmark, Eye, Heart, ImagePlus, Loader2, Plus, Trash2, X } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Bookmark, Eye, Heart, ImagePlus, Loader2, Plus, Tags, Trash2, Tv, X } from 'lucide-react';
 import { api, resolveMovieImageUrl } from '@/services/api';
+import { resolvePlatformLogoUrl } from '@/components/PlatformLogos';
 import { StarRating } from '@/components/StarRating';
+import { getGenreIconImage } from '@/utils/genreIcons';
 import { movieToInput } from '@/utils/movieInput';
+import { MAX_PRINCIPAL_CAST } from '@/types/movie';
 import type { MovieItem, MovieType } from '@/types/movie';
 
 const normalizeValue = (value: string) => value.trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es');
 const splitValues = (value: string) => Array.from(new Map(value.split(',').map((item) => item.trim()).filter(Boolean).map((item) => [normalizeValue(item), item])).values());
 const numberOrNull = (value: string) => value.trim() === '' ? null : Number(value);
 
-const AssociationPicker = ({ label, options, selected, onChange }: {
+type AssociationOption = { id: string; name: string; logoPath?: string | null };
+type AssociationKind = 'genre' | 'platform';
+
+const AssociationOptionIcon = ({ kind, option }: { kind: AssociationKind; option: AssociationOption }) => {
+  const [imageFailed, setImageFailed] = useState(false);
+  const imageUrl = kind === 'genre'
+    ? getGenreIconImage(option.name)
+    : resolvePlatformLogoUrl({ name: option.name, logoPath: option.logoPath || null });
+
+  if (!imageUrl || imageFailed) {
+    return <span className="grid h-6 w-8 shrink-0 place-items-center" aria-hidden="true">{kind === 'genre' ? <Tags className="h-4 w-4 text-aqua" /> : <Tv className="h-4 w-4 text-aqua" />}</span>;
+  }
+
+  return <span className="grid h-6 w-8 shrink-0 place-items-center"><img src={imageUrl} alt="" className="max-h-6 max-w-8 object-contain" loading="lazy" onError={() => setImageFailed(true)} /></span>;
+};
+
+const AssociationPicker = ({ label, kind, options, selected, onChange }: {
   label: string;
-  options: { id: string; name: string }[];
+  kind: AssociationKind;
+  options: AssociationOption[];
   selected: string[];
   onChange: (names: string[]) => void;
 }) => {
@@ -44,6 +64,7 @@ const AssociationPicker = ({ label, options, selected, onChange }: {
         {visibleOptions.length ? visibleOptions.map((option) => (
           <label key={option.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-slate-50">
             <input type="checkbox" checked={selected.includes(option.name)} onChange={() => toggle(option.name)} className="h-4 w-4 accent-aqua" />
+            <AssociationOptionIcon kind={kind} option={option} />
             <span>{option.name}</span>
           </label>
         )) : <p className="px-2 py-3 text-sm text-slate-400">No hay opciones.</p>}
@@ -128,7 +149,7 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
   const save = useMutation({
     mutationFn: () => {
       const castNames = splitValues(cast);
-      if (castNames.length > 6) throw new Error('El reparto principal admite hasta 6 personas');
+      if (castNames.length > MAX_PRINCIPAL_CAST) throw new Error(`El reparto principal admite hasta ${MAX_PRINCIPAL_CAST} personas`);
       return api.movies.update(movie.id, {
         ...movieToInput(movie),
         watched,
@@ -247,7 +268,7 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
       <form onSubmit={(event) => { event.preventDefault(); setError(''); save.mutate(); }} className="movie-detail-modal flex flex-col max-h-[85vh] sm:max-h-[92vh] sm:min-h-[560px] md:min-h-[600px] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-5xl sm:rounded-md">
         <header className="flex h-16 shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-4 sm:px-6">
           <div className="min-w-0 flex-1">
-            <h2 id="movie-edit-title" className="truncate text-lg font-semibold text-ink">Editar {movie.originalTitle}</h2>
+            <h2 id="movie-edit-title" className="font-bebas truncate text-[24px] font-normal uppercase leading-7 text-ink">Editar {movie.originalTitle}</h2>
             <p className="text-xs text-slate-500">Todos los datos del título</p>
           </div>
           <div className="ml-auto flex shrink-0 overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
@@ -268,8 +289,8 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
           </section>
 
           <div className="mt-5 grid gap-5 sm:grid-cols-2">
-            <AssociationPicker label="Género" options={metadata.data?.genres || []} selected={genreNames} onChange={setGenreNames} />
-            <AssociationPicker label="Plataforma" options={metadata.data?.platforms || []} selected={platformNames} onChange={setPlatformNames} />
+            <AssociationPicker label="Género" kind="genre" options={metadata.data?.genres || []} selected={genreNames} onChange={setGenreNames} />
+            <AssociationPicker label="Plataforma" kind="platform" options={metadata.data?.platforms || []} selected={platformNames} onChange={setPlatformNames} />
           </div>
 
           <div className="mt-5 grid gap-5 sm:grid-cols-2">
@@ -344,7 +365,7 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
               <label className="sm:col-span-2 lg:col-span-3"><span className="field-label">Sinopsis</span><textarea value={synopsis} onChange={(event) => setSynopsis(event.target.value)} className="control min-h-32 w-full py-2" maxLength={10000} /></label>
               <label><span className="field-label">País</span><input value={countries} onChange={(event) => setCountries(event.target.value)} className="control w-full" placeholder="Separar con comas" /></label>
               <label><span className="field-label">Dirección</span><input value={directors} onChange={(event) => setDirectors(event.target.value)} className="control w-full" placeholder="Separar con comas" /></label>
-              <label><span className="field-label">Reparto</span><input value={cast} onChange={(event) => setCast(event.target.value)} className="control w-full" placeholder="Hasta 6, separados con comas" /></label>
+              <label><span className="field-label">Reparto</span><input value={cast} onChange={(event) => setCast(event.target.value)} className="control w-full" placeholder={`Hasta ${MAX_PRINCIPAL_CAST}, separados con comas`} /></label>
               <label className="sm:col-span-2 lg:col-span-3"><span className="field-label">Palabras clave</span><input value={keywords} onChange={(event) => setKeywords(event.target.value)} className="control w-full" placeholder="Separar con comas" /></label>
               <label><span className="field-label">Link IMDb</span><input type="url" value={imdbUrl} onChange={(event) => setImdbUrl(event.target.value)} className="control w-full" placeholder="https://..." /></label>
               <label><span className="field-label">Link TMDB</span><input type="url" value={tmdbUrl} onChange={(event) => setTmdbUrl(event.target.value)} className="control w-full" placeholder="https://..." /></label>

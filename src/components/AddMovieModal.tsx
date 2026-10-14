@@ -1344,6 +1344,7 @@ export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQ
         onPersonal={(movie, field) => updatePersonal.mutate({ movie, field })}
         onRating={(movie, rating) => updateRating.mutate({ movie, rating })}
         onCollections={() => {}}
+        showNavigation={false}
       />
     )}
   </>

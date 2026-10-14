@@ -1,6 +1,56 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+
+type YouTubePlayer = { destroy: () => void };
+type YouTubeApi = {
+  Player: new (element: HTMLElement, options: {
+    host?: string;
+    videoId: string;
+    playerVars: Record<string, number | string>;
+    events: { onError: () => void };
+  }) => YouTubePlayer;
+};
+
+declare global {
+  interface Window {
+    YT?: YouTubeApi;
+    onYouTubeIframeAPIReady?: () => void;
+  }
+}
+
+let youtubeApiPromise: Promise<YouTubeApi> | null = null;
+
+const loadYouTubeApi = () => {
+  if (window.YT?.Player) return Promise.resolve(window.YT);
+  if (youtubeApiPromise) return youtubeApiPromise;
+
+  youtubeApiPromise = new Promise<YouTubeApi>((resolve, reject) => {
+    const previousReady = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      previousReady?.();
+      if (window.YT?.Player) resolve(window.YT);
+      else reject(new Error("YouTube IFrame API no disponible"));
+    };
+
+    const existingScript = document.querySelector<HTMLScriptElement>('script[src="https://www.youtube.com/iframe_api"]');
+    if (existingScript) {
+      existingScript.addEventListener("error", () => reject(new Error("No se pudo cargar YouTube")), { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://www.youtube.com/iframe_api";
+    script.async = true;
+    script.addEventListener("error", () => {
+      youtubeApiPromise = null;
+      reject(new Error("No se pudo cargar YouTube"));
+    }, { once: true });
+    document.head.appendChild(script);
+  });
+
+  return youtubeApiPromise;
+};
 
 const getYouTubeVideoId = (url: string) => {
   try {
@@ -34,6 +84,8 @@ export const TrailerModal = ({
   onClose: () => void;
 }) => {
   const videoId = getYouTubeVideoId(trailerUrl);
+  const playerContainerRef = useRef<HTMLDivElement>(null);
+  const [unavailable, setUnavailable] = useState(!videoId);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -49,6 +101,40 @@ export const TrailerModal = ({
       window.removeEventListener("keydown", closeOnEscape);
     };
   }, [onClose]);
+
+  useEffect(() => {
+    if (!videoId || !playerContainerRef.current) {
+      setUnavailable(true);
+      return;
+    }
+
+    let cancelled = false;
+    let player: YouTubePlayer | null = null;
+    setUnavailable(false);
+
+    void loadYouTubeApi()
+      .then((youtube) => {
+        if (cancelled || !playerContainerRef.current) return;
+        player = new youtube.Player(playerContainerRef.current, {
+          host: "https://www.youtube-nocookie.com",
+          videoId,
+          playerVars: { autoplay: 1, rel: 0, origin: window.location.origin },
+          events: {
+            onError: () => {
+              if (!cancelled) setUnavailable(true);
+            },
+          },
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setUnavailable(true);
+      });
+
+    return () => {
+      cancelled = true;
+      player?.destroy();
+    };
+  }, [videoId]);
 
   return createPortal(
     <div
@@ -83,20 +169,9 @@ export const TrailerModal = ({
         </header>
 
         <div className="aspect-video w-full bg-black">
-          {videoId ? (
-            <iframe
-              src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?autoplay=1&rel=0`}
-              title={`Trailer de ${title}`}
-              className="h-full w-full border-0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allowFullScreen
-            />
-          ) : (
-            <div className="grid h-full place-items-center px-6 text-center text-sm text-white/70">
-              No se pudo reproducir este enlace de YouTube.
-            </div>
-          )}
+          {unavailable
+            ? <div className="h-full w-full" />
+            : <div ref={playerContainerRef} className="h-full w-full" title={`Trailer de ${title}`} />}
         </div>
       </div>
     </div>,

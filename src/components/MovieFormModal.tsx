@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, ChevronDown, ImagePlus, Loader2, Plus, Search, Trash2, X } from "lucide-react";
 import { api, resolveMovieImageUrl } from "@/services/api";
+import { MAX_PRINCIPAL_CAST } from "@/types/movie";
 import type { CreateMovieInput, MovieItem, MovieType } from "@/types/movie";
 
 const split = (value: string) =>
@@ -355,7 +356,7 @@ export const MovieFormModal = ({
       setError("El titulo original es obligatorio");
       return;
     }
-    const castNames = split(cast).slice(0, 6);
+    const castNames = split(cast).slice(0, MAX_PRINCIPAL_CAST);
     mutation.mutate({
       type,
       originalTitle: originalTitle.trim(),
@@ -536,7 +537,7 @@ export const MovieFormModal = ({
               onChange={setDirectors}
             />
             <label className="sm:col-span-2">
-              <span className="field-label">Reparto principal, hasta 6</span>
+              <span className="field-label">Reparto principal, hasta {MAX_PRINCIPAL_CAST}</span>
               <input
                 className="control w-full"
                 value={cast}

@@ -2,7 +2,7 @@ export const MOVIE_TYPES = ["movie", "series"] as const;
 export const CREDIT_TYPES = ["director", "cast"] as const;
 
 export const MAX_MOVIE_IMAGES = 5;
-export const MAX_PRINCIPAL_CAST = 6;
+export const MAX_PRINCIPAL_CAST = 8;
 export const RATING_MIN = 1;
 export const RATING_MAX = 5;
 
@@ -328,6 +328,14 @@ export interface TmdbSearchCandidate {
   originalTitle: string;
   year: number | null;
   posterPath: string | null;
+}
+
+export interface TmdbCastMember {
+  id: number;
+  name: string;
+  character: string | null;
+  profileUrl: string | null;
+  order: number;
 }
 
 export interface TmdbSuggestionCandidate {

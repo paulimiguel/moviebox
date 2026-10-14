@@ -332,7 +332,7 @@ router.post('/import', async (req, res) => {
         .map((name: unknown) => String(name || '').trim())
         .filter(Boolean)
         .map((name: string) => [normalizeTitle(name), name]),
-    ).values()).slice(0, 6);
+    ).values()).slice(0, 8);
 
     return res.json({
       type,

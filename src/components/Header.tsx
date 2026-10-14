@@ -322,6 +322,14 @@ export const Header = () => {
                   </button>
                   <button
                     type="button"
+                    onClick={() => handleTriggerAction('export-txt')}
+                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                  >
+                    <FileText className="h-4 w-4" />
+                    <span>Exportar títulos</span>
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => handleTriggerAction('search-platform')}
                     className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
                   >
@@ -343,14 +351,6 @@ export const Header = () => {
                   >
                     <Search className="h-4 w-4" />
                     <span>Buscar campos vacíos</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleTriggerAction('export-txt')}
-                    className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
-                  >
-                    <FileText className="h-4 w-4" />
-                    <span>Exportar títulos</span>
                   </button>
                 </div>
               )}
@@ -627,6 +627,14 @@ export const Header = () => {
                     </button>
                     <button
                       type="button"
+                      onClick={() => handleTriggerAction('export-txt')}
+                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                    >
+                      <FileText className="h-4 w-4" />
+                      <span>Exportar títulos</span>
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => handleTriggerAction('search-platform')}
                       className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
                     >
@@ -648,14 +656,6 @@ export const Header = () => {
                     >
                       <Search className="h-4 w-4" />
                       <span>Buscar campos vacíos</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleTriggerAction('export-txt')}
-                      className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
-                    >
-                      <FileText className="h-4 w-4" />
-                      <span>Exportar títulos</span>
                     </button>
                   </div>
                 )}
