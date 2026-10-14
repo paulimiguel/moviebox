@@ -3,19 +3,24 @@ import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/rea
 import { Bookmark, Check, ChevronLeft, ChevronRight, Film, Heart, Library, Loader2, Plus, Sparkles, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
+import { PLATFORM_PREFERENCES } from '@/constants/platformPreferences';
+import { useAuth } from '@/contexts/AuthContext';
 import { api, resolveMovieImageUrl } from '@/services/api';
 import type { MovieItem, TmdbSuggestionCandidate } from '@/types/movie';
 import './HomePage.css';
 
-const HOME_PLATFORMS = [
-  { id: 'netflix', name: 'Netflix' },
-  { id: 'prime', name: 'Amazon Prime Video' },
-  { id: 'disney', name: 'Disney+' },
-  { id: 'max', name: 'HBO Max' },
-  { id: 'apple', name: 'Apple TV' },
-  { id: 'paramount', name: 'Paramount+' },
-  { id: 'flow', name: 'Flow' },
-] as const;
+const localDayKey = () => {
+  const today = new Date();
+  return [today.getFullYear(), String(today.getMonth() + 1).padStart(2, '0'), String(today.getDate()).padStart(2, '0')].join('-');
+};
+
+const dailyIndex = (dayKey: string, platformId: string, length: number) => {
+  const [year, month, day] = dayKey.split('-').map(Number);
+  const dayNumber = Math.floor(Date.UTC(year, month - 1, day) / 86_400_000);
+  let platformOffset = 0;
+  for (const character of platformId) platformOffset = ((platformOffset << 5) - platformOffset + character.charCodeAt(0)) | 0;
+  return ((dayNumber + platformOffset) % length + length) % length;
+};
 
 const titleFor = (movie: MovieItem) => movie.spanishTitle || movie.originalTitle;
 
@@ -44,12 +49,12 @@ const HorizontalRow = ({ children }: { children: React.ReactNode }) => {
 };
 
 const HomeSectionButton = ({ to, color }: { to: string; color: 'coral' | 'aqua' }) => color === 'coral' ? (
-  <Link to={to} className="home-hero-primary-button inline-flex h-9 items-center gap-2 overflow-hidden rounded-md bg-coral px-3 text-xs font-semibold uppercase text-white transition hover:brightness-110 sm:h-11 sm:px-5 sm:text-sm">
+  <Link to={to} className="home-hero-primary-button inline-flex h-9 w-40 items-center justify-center gap-2 overflow-hidden rounded-md bg-coral px-3 text-xs font-semibold uppercase text-white transition hover:brightness-110 sm:h-10 sm:w-48 sm:px-4 sm:text-sm">
     <Star className="relative z-10 h-4 w-4 fill-current" />
     <span className="relative z-10">Ver novedades</span>
   </Link>
 ) : (
-  <Link to={to} className="inline-flex h-9 items-center gap-2 rounded-md border border-aqua bg-aqua px-3 text-xs font-semibold uppercase text-white transition hover:brightness-110 sm:h-11 sm:px-5 sm:text-sm">
+  <Link to={to} className="inline-flex h-9 w-40 items-center justify-center gap-2 rounded-md border border-aqua bg-aqua px-3 text-xs font-semibold uppercase text-white transition hover:brightness-110 sm:h-10 sm:w-48 sm:px-4 sm:text-sm">
     <Library className="h-4 w-4" />
     Mi biblioteca
   </Link>
@@ -102,14 +107,19 @@ const LibraryCard = ({ movie }: { movie: MovieItem }) => {
 };
 
 export const HomePage = () => {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [dayKey, setDayKey] = useState(localDayKey);
+  const selectedPlatforms = useMemo(
+    () => PLATFORM_PREFERENCES.filter((platform) => user?.preferredPlatforms.includes(platform.id)),
+    [user?.preferredPlatforms],
+  );
   const libraryQuery = useQuery({ queryKey: ['movies'], queryFn: api.movies.getAll });
   const platformQueries = useQueries({
-    queries: HOME_PLATFORMS.map((platform) => ({
-      queryKey: ['newReleases', platform.id],
+    queries: selectedPlatforms.map((platform) => ({
+      queryKey: ['newReleases', platform.id, dayKey],
       queryFn: () => api.tmdb.newReleases(platform.id),
-      staleTime: 60 * 60 * 1000,
-      refetchInterval: 60 * 60 * 1000,
+      staleTime: 24 * 60 * 60 * 1000,
     })),
   });
   const [activeBanner, setActiveBanner] = useState(0);
@@ -126,17 +136,20 @@ export const HomePage = () => {
       .forEach((candidate) => {
         const key = `${candidate.type}-${candidate.tmdbId}`;
         const current = newsByTitle.get(key);
-        if (current) current.platformNames.push(HOME_PLATFORMS[index].name);
-        else newsByTitle.set(key, { ...candidate, platformNames: [HOME_PLATFORMS[index].name] });
+        if (current) current.platformNames.push(selectedPlatforms[index].name);
+        else newsByTitle.set(key, { ...candidate, platformNames: [selectedPlatforms[index].name] });
       });
   });
   const news = [...newsByTitle.values()].slice(0, 14);
   const platformBanners = platformQueries.flatMap((query, index) => {
     const data = query.data as { movies?: TmdbSuggestionCandidate[]; series?: TmdbSuggestionCandidate[] } | undefined;
-    const item = [...(data?.movies || []), ...(data?.series || [])]
+    const candidates = [...(data?.movies || []), ...(data?.series || [])]
       .filter((candidate) => candidate.posterUrl)
-      .sort((left, right) => right.popularity - left.popularity)[0];
-    return item ? [{ ...item, platform: HOME_PLATFORMS[index] }] : [];
+      .sort((left, right) => right.popularity - left.popularity)
+      .slice(0, 12);
+    const platform = selectedPlatforms[index];
+    const item = platform && candidates.length ? candidates[dailyIndex(dayKey, platform.id, candidates.length)] : null;
+    return item && platform ? [{ ...item, platform }] : [];
   });
   const banner = platformBanners[activeBanner] || platformBanners[0];
   const bannerKey = banner ? `${banner.platform.id}-${banner.tmdbId}` : 'moviebox';
@@ -154,6 +167,13 @@ export const HomePage = () => {
       queryClient.invalidateQueries({ queryKey: ['metadata'] });
     },
   });
+
+  useEffect(() => {
+    const now = new Date();
+    const nextDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const timer = window.setTimeout(() => setDayKey(localDayKey()), nextDay.getTime() - now.getTime() + 1000);
+    return () => window.clearTimeout(timer);
+  }, [dayKey]);
 
   useEffect(() => {
     const nextPoster = banner?.posterUrl || '/login-posters/the-matrix.jpg';

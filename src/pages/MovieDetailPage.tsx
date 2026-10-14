@@ -226,7 +226,7 @@ export const MovieDetailPage = () => {
               </div>
             </div>
             <div className="mt-6 grid gap-3 sm:max-w-xl sm:grid-cols-[minmax(280px,1.5fr)_minmax(160px,1fr)]">
-              <div className="rounded-md border border-slate-200 bg-white p-4">
+              <div className="movie-detail-rating-box rounded-md border border-slate-200 bg-white p-4">
                 <p className="text-xs font-semibold uppercase text-slate-400">
                   Rate
                 </p>
@@ -235,7 +235,7 @@ export const MovieDetailPage = () => {
                 </div>
                 <p className="mt-1 text-xs text-slate-400">{movie.personalRating ? `${movie.personalRating} de 5` : "Sin puntuación"}</p>
               </div>
-              <div className="rounded-md border border-slate-200 bg-white p-4">
+              <div className="movie-detail-rating-box rounded-md border border-slate-200 bg-white p-4">
                 <p className="text-xs font-semibold uppercase text-slate-400">
                   IMDb
                 </p>

@@ -52,6 +52,10 @@ const genreIconImages: Record<string, string> = {
   suspenso: '/genre-icons/suspenso.png',
   suspense: '/genre-icons/suspenso.png',
   thriller: '/genre-icons/suspenso.png',
+  'reality show': '/genre-icons/reality-show.png',
+  reality: '/genre-icons/reality-show.png',
+  telerealidad: '/genre-icons/reality-show.png',
+  telerrealidad: '/genre-icons/reality-show.png',
   biografia: '/genre-icons/biografia.png',
   biography: '/genre-icons/biografia.png',
 };

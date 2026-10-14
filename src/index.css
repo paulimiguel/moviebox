@@ -586,6 +586,20 @@ body {
   border-color: rgb(71 76 83);
 }
 
+:root[data-theme="dark"] .movie-detail-rating-box {
+  background-color: rgb(38 42 47);
+  border-color: rgb(71 76 83);
+  color: #e2e8f0;
+}
+
+:root[data-theme="dark"] .movie-detail-rating-box p[class~="text-slate-400"] {
+  color: #94a3b8;
+}
+
+:root[data-theme="dark"] .movie-detail-rating-box p[class~="text-\\[\\#92700f\\]"] {
+  color: #d4a913;
+}
+
 :root[data-theme="dark"] .auth-page .control,
 :root[data-theme="dark"] .auth-page .auth-google-button {
   border-color: rgb(71 76 83);

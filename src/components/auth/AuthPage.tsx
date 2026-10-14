@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import React, { useEffect, useState, type FormEvent } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -44,7 +44,10 @@ const LOGIN_EDGE_POSTERS = [
   { src: "/login-posters/youve-got-mail.jpg", title: "You've Got Mail" },
 ] as const;
 
-const ALL_LOGIN_POSTERS: { src: string; title: string }[] = [...LOGIN_POSTERS, ...LOGIN_EDGE_POSTERS];
+const ALL_LOGIN_POSTERS: { src: string; title: string }[] = [
+  ...LOGIN_POSTERS,
+  ...LOGIN_EDGE_POSTERS,
+];
 
 const COLUMN_CONFIGS = [
   { direction: "up" as const, duration: 105 },
@@ -53,6 +56,29 @@ const COLUMN_CONFIGS = [
   { direction: "down" as const, duration: 120 },
   { direction: "up" as const, duration: 110 },
 ];
+
+/** Vertical film strip separator between poster columns. */
+const FilmStrip = ({ id }: { id: number }) => {
+  const pid = `fs${id}`;
+  return (
+    <div className="flex h-full w-8 shrink-0 items-stretch">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 48" preserveAspectRatio="none" className="h-full w-full">
+        <defs>
+          <pattern id={pid} x="0" y="0" width="32" height="48" patternUnits="userSpaceOnUse">
+            <rect x="0" y="0" width="32" height="48" fill="#111" />
+            <rect x="1.5" y="4" width="4" height="6" rx="1" fill="#e5e5e5" />
+            <rect x="1.5" y="18" width="4" height="6" rx="1" fill="#e5e5e5" />
+            <rect x="1.5" y="32" width="4" height="6" rx="1" fill="#e5e5e5" />
+            <rect x="26.5" y="4" width="4" height="6" rx="1" fill="#e5e5e5" />
+            <rect x="26.5" y="18" width="4" height="6" rx="1" fill="#e5e5e5" />
+            <rect x="26.5" y="32" width="4" height="6" rx="1" fill="#e5e5e5" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill={`url(#${pid})`} />
+      </svg>
+    </div>
+  );
+};
 
 export const AuthPage = () => {
   const { login, register } = useAuth();
@@ -243,7 +269,7 @@ export const AuthPage = () => {
         className="group relative hidden max-h-screen min-h-screen overflow-hidden bg-black lg:block"
         aria-hidden="true"
       >
-        <div className="grid h-full grid-cols-5 gap-3 px-3">
+        <div className="flex h-full px-3">
           {COLUMN_CONFIGS.map((config, colIndex) => {
             const columnPosters = posters.filter(
               (_, posterIndex) => posterIndex % 5 === colIndex,
@@ -254,51 +280,51 @@ export const AuthPage = () => {
                 : "auth-marquee-down";
 
             return (
-              <div
-                key={colIndex}
-                className="relative h-full overflow-hidden"
-              >
-                <div
-                  className={`flex flex-col group-hover:[animation-play-state:paused] ${animationClass}`}
-                  style={{ animationDuration: `${config.duration}s` }}
-                >
-                  {/* First set of posters */}
-                  <div className="flex flex-col gap-3 pb-3">
-                    {columnPosters.map((poster) => (
-                      <div
-                        key={poster.src}
-                        className="relative aspect-[2/3] flex-none overflow-hidden rounded-md bg-white shadow-card transition-all duration-300 ease-out hover:scale-105 hover:z-20 hover:shadow-2xl cursor-pointer"
-                        title={poster.title}
-                      >
-                        <img
-                          src={poster.src}
-                          alt={poster.title}
-                          className="h-full w-full object-cover"
-                          loading="eager"
-                        />
-                      </div>
-                    ))}
-                  </div>
+              <React.Fragment key={colIndex}>
+                {colIndex > 0 && <FilmStrip id={colIndex} />}
+                <div className="relative h-full flex-1 overflow-hidden">
+                  <div
+                    className={`flex flex-col group-hover:[animation-play-state:paused] ${animationClass}`}
+                    style={{ animationDuration: `${config.duration}s` }}
+                  >
+                    {/* First set of posters */}
+                    <div className="flex flex-col gap-3 pb-3">
+                      {columnPosters.map((poster) => (
+                        <div
+                          key={poster.src}
+                          className="relative aspect-[2/3] flex-none overflow-hidden rounded-md bg-white shadow-card transition-all duration-300 ease-out hover:scale-105 hover:z-20 hover:shadow-2xl cursor-pointer"
+                          title={poster.title}
+                        >
+                          <img
+                            src={poster.src}
+                            alt={poster.title}
+                            className="h-full w-full object-cover"
+                            loading="eager"
+                          />
+                        </div>
+                      ))}
+                    </div>
 
-                  {/* Duplicate set for seamless infinite loop */}
-                  <div className="flex flex-col gap-3 pb-3" aria-hidden="true">
-                    {columnPosters.map((poster, duplicateIndex) => (
-                      <div
-                        key={`${poster.src}-dup-${duplicateIndex}`}
-                        className="relative aspect-[2/3] flex-none overflow-hidden rounded-md bg-white shadow-card transition-all duration-300 ease-out hover:scale-105 hover:z-20 hover:shadow-2xl cursor-pointer"
-                        title={poster.title}
-                      >
-                        <img
-                          src={poster.src}
-                          alt={poster.title}
-                          className="h-full w-full object-cover"
-                          loading="eager"
-                        />
-                      </div>
-                    ))}
+                    {/* Duplicate set for seamless infinite loop */}
+                    <div className="flex flex-col gap-3 pb-3" aria-hidden="true">
+                      {columnPosters.map((poster, duplicateIndex) => (
+                        <div
+                          key={`${poster.src}-dup-${duplicateIndex}`}
+                          className="relative aspect-[2/3] flex-none overflow-hidden rounded-md bg-white shadow-card transition-all duration-300 ease-out hover:scale-105 hover:z-20 hover:shadow-2xl cursor-pointer"
+                          title={poster.title}
+                        >
+                          <img
+                            src={poster.src}
+                            alt={poster.title}
+                            className="h-full w-full object-cover"
+                            loading="eager"
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
+              </React.Fragment>
             );
           })}
         </div>

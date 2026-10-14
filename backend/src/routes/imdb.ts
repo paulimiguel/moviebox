@@ -7,16 +7,54 @@ const router = Router();
 const CINEMETA_URL = 'https://v3-cinemeta.strem.io';
 const TMDB_URL = 'https://api.themoviedb.org/3';
 const JUSTWATCH_URL = 'https://www.justwatch.com';
-const LOCALIZED_TMDB_GENRES: Record<string, string> = {
-  'action & adventure': 'Acción y aventura',
-  kids: 'Infantil',
-  news: 'Noticias',
-  reality: 'Telerrealidad',
-  'sci-fi & fantasy': 'Ciencia ficción y fantasía',
-  soap: 'Telenovela',
-  talk: 'Programa de entrevistas',
-  'war & politics': 'Guerra y política',
+const LOCALIZED_TMDB_GENRES: Record<string, string[]> = {
+  action: ['Acción'],
+  'action & adventure': ['Acción y aventura'],
+  adventure: ['Aventura'],
+  animation: ['Animación'],
+  comedy: ['Comedia'],
+  crime: ['Crimen'],
+  familiar: ['Familia'],
+  family: ['Familia'],
+  fantasy: ['Fantasía'],
+  history: ['Historia'],
+  kids: ['Infantil'],
+  mistery: ['Misterio'],
+  mystery: ['Misterio'],
+  music: ['Música'],
+  musical: ['Música'],
+  news: ['Noticias'],
+  reality: ['Reality Show'],
+  'reality show': ['Reality Show'],
+  'science fiction': ['Ciencia ficción'],
+  'sci-fi & fantasy': ['Ciencia ficción', 'Fantasía'],
+  soap: ['Telenovela'],
+  suspense: ['Suspenso'],
+  talk: ['Programa de entrevistas'],
+  telerealidad: ['Reality Show'],
+  telerrealidad: ['Reality Show'],
+  thriller: ['Suspenso'],
+  war: ['Bélica'],
+  'war & politics': ['Guerra y política'],
+  western: ['Western'],
+  'ciencia ficcion y fantasia': ['Ciencia ficción', 'Fantasía'],
 };
+
+const normalizeGenreKey = (name: string) => name
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .trim()
+  .toLocaleLowerCase('es');
+
+const localizeGenreNames = (names: string[]) => Array.from(new Map(
+  names
+    .flatMap((name) => {
+      const trimmedName = name.trim();
+      return LOCALIZED_TMDB_GENRES[normalizeGenreKey(trimmedName)] || [trimmedName];
+    })
+    .filter(Boolean)
+    .map((name) => [normalizeGenreKey(name), name]),
+).values());
 
 interface TmdbSearchResult {
   id: number;
@@ -326,9 +364,7 @@ const getLocalizedTmdbDetails = async (
     id: tmdbId,
     title: (argentina.title || argentina.name || spain.title || spain.name || '').trim() || null,
     synopsis: (argentina.overview || spain.overview || translatedSpanishSynopsis || '').trim() || null,
-    genres: (argentinaGenres.length ? argentinaGenres : spainGenres).map((genre) => (
-      LOCALIZED_TMDB_GENRES[genre.name.toLocaleLowerCase('en')] || genre.name
-    )),
+    genres: localizeGenreNames((argentinaGenres.length ? argentinaGenres : spainGenres).map((genre) => genre.name)),
     cast: (argentina.credits?.cast || spain.credits?.cast || [])
       .map((person) => person.name?.trim() || '')
       .filter(Boolean),
@@ -474,8 +510,8 @@ router.post('/import', async (req, res) => {
           order,
           })),
       ],
-      genres: (localized?.genres.length ? localized.genres : details.genres || [])
-        .map((name: string, order: number) => ({ name, order })),
+      genres: localizeGenreNames(localized?.genres.length ? localized.genres : details.genres || [])
+        .map((name, order) => ({ name, order })),
       keywords: [],
       platforms: (localized?.platforms || []).map((platform, order) => ({
         name: platform.provider_name,
