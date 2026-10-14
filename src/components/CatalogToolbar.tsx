@@ -16,6 +16,7 @@ interface CatalogToolbarProps {
   sortDirection: SortDirection;
   onSortDirectionChange: (value: SortDirection) => void;
   action?: React.ReactNode;
+  inlineControlsOnTablet?: boolean;
 }
 
 const menuButton = 'library-toolbar-menu-button inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold uppercase text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50 xl:w-[150px]';
@@ -52,8 +53,8 @@ export const CatalogToolbar = (props: CatalogToolbarProps) => {
 
   return (
     <section ref={toolbarRef} className="library-toolbar sticky top-[72px] z-30 border-b border-slate-200 bg-white shadow-sm">
-      <div className="mx-auto grid max-w-[1500px] gap-3 px-4 py-3 sm:px-6 xl:grid-cols-[300px_minmax(280px,1fr)_auto] xl:items-center">
-        <div className="flex min-w-0 items-center gap-3">
+      <div className={`mx-auto grid max-w-[1500px] gap-3 px-4 py-3 sm:px-6 xl:grid-cols-[300px_minmax(280px,1fr)_auto] xl:items-center ${props.inlineControlsOnTablet ? 'md:grid-cols-[minmax(0,1fr)_auto] md:items-center' : ''}`}>
+        <div className={`flex min-w-0 items-center gap-3 ${props.inlineControlsOnTablet ? 'md:col-span-2 xl:col-span-1' : ''}`}>
           <div className="min-w-0">
             <h1 className="font-bebas truncate text-2xl font-normal uppercase text-ink">{props.title}</h1>
             <p className="mt-0.5 truncate text-xs text-slate-500">Mostrando {props.visibleCount} de {props.totalCount} {props.itemLabel}</p>
@@ -66,7 +67,7 @@ export const CatalogToolbar = (props: CatalogToolbarProps) => {
           <input type="search" value={props.search} onChange={(event) => props.onSearchChange(event.target.value)} className="control w-full pl-9" placeholder="Buscar" />
         </label>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className={`grid grid-cols-2 gap-2 ${props.inlineControlsOnTablet ? 'md:w-[280px] xl:w-auto' : ''}`}>
           <div className="relative">
             <button type="button" onClick={() => setOpenMenu(openMenu === 'view' ? null : 'view')} className={menuButton} aria-expanded={openMenu === 'view'}>{activeViewIcon}Ver<ChevronDown className="h-4 w-4 shrink-0" /></button>
             {openMenu === 'view' && <div className="library-toolbar-dropdown absolute right-0 top-10 z-40 w-52 rounded-md border border-slate-200 bg-white p-1.5 shadow-card">

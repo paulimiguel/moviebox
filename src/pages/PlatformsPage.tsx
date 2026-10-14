@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ImagePlus, Loader2, MonitorPlay, MoreVertical, Pencil, Trash2, X } from 'lucide-react';
+import { ImagePlus, Loader2, MonitorPlay, MoreVertical, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
+import { CatalogCreateForm } from '@/components/CatalogCreateForm';
 import { CatalogToolbar, catalogGridClass, type CatalogViewMode } from '@/components/CatalogToolbar';
 import { resolvePlatformLogoUrl } from '@/components/PlatformLogos';
 import { api } from '@/services/api';
@@ -16,6 +17,7 @@ export const PlatformsPage = () => {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [editing, setEditing] = useState<PlatformCatalogItem | null>(null);
   const [deleting, setDeleting] = useState<PlatformCatalogItem | null>(null);
+  const [creating, setCreating] = useState(false);
   const [editName, setEditName] = useState('');
   const [editFile, setEditFile] = useState<File | null>(null);
   const [editDroppedUrl, setEditDroppedUrl] = useState<string | null>(null);
@@ -44,8 +46,15 @@ export const PlatformsPage = () => {
     return () => URL.revokeObjectURL(previewUrl);
   }, [editFile]);
 
+  const createPlatform = async (name: string, logoPath: string | null) => {
+    const created = await api.metadata.create('platforms', name);
+    if (logoPath) await api.platforms.update(created.id, { name: created.name, logoPath });
+    queryClient.invalidateQueries({ queryKey: ['platforms'] });
+    queryClient.invalidateQueries({ queryKey: ['metadata'] });
+  };
   const beginEdit = (platform: PlatformCatalogItem) => {
     setOpenMenuId(null);
+    setCreating(false);
     setEditing(platform);
     setEditName(platform.name);
     setEditFile(null);
@@ -127,9 +136,10 @@ export const PlatformsPage = () => {
   return (
     <main className="min-h-screen bg-canvas">
       <Header />
-      <CatalogToolbar title="Plataformas" itemLabel="plataformas" visibleCount={visiblePlatforms.length} totalCount={platforms.data?.length || 0} search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode} sortDirection={sortDirection} onSortDirectionChange={setSortDirection} />
+      <CatalogToolbar title="Plataformas" itemLabel="plataformas" visibleCount={visiblePlatforms.length} totalCount={platforms.data?.length || 0} search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode} sortDirection={sortDirection} onSortDirectionChange={setSortDirection} inlineControlsOnTablet action={<button type="button" onClick={() => { setEditing(null); setCreating(true); }} className="primary-button h-9 px-3"><Plus className="h-4 w-4" />Nueva</button>} />
 
       <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8">
+        {creating && <CatalogCreateForm heading="Nueva plataforma" nameLabel="Título" duplicateMessage="Ya existe una plataforma con ese título" existingNames={(platforms.data || []).map((platform) => platform.name)} imageFit="contain" onCreate={createPlatform} onClose={() => setCreating(false)} />}
         {platforms.isLoading ? (
           <div className="grid min-h-[45vh] place-items-center"><Loader2 className="h-8 w-8 animate-spin text-aqua" /></div>
         ) : platforms.isError ? (

@@ -16,6 +16,10 @@ export const CollectionsPage = () => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
+  const [createFile, setCreateFile] = useState<File | null>(null);
+  const [createDroppedUrl, setCreateDroppedUrl] = useState<string | null>(null);
+  const [createPreview, setCreatePreview] = useState<string | null>(null);
+  const [isDraggingCreateImage, setIsDraggingCreateImage] = useState(false);
   const [editName, setEditName] = useState('');
   const [editFile, setEditFile] = useState<File | null>(null);
   const [editDroppedUrl, setEditDroppedUrl] = useState<string | null>(null);
@@ -45,14 +49,39 @@ export const CollectionsPage = () => {
     return () => URL.revokeObjectURL(previewUrl);
   }, [editFile]);
 
+  useEffect(() => {
+    if (!createFile) return undefined;
+    const previewUrl = URL.createObjectURL(createFile);
+    setCreatePreview(previewUrl);
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [createFile]);
+
+  const resetCreateImage = () => {
+    setCreateFile(null);
+    setCreateDroppedUrl(null);
+    setCreatePreview(null);
+    setIsDraggingCreateImage(false);
+  };
+
   const createCollection = useMutation({
-    mutationFn: () => api.collections.create({ name, description: description || null }),
+    mutationFn: async () => {
+      let coverImage: string | null = null;
+      if (createFile) {
+        const uploaded = await api.uploads.images([createFile]);
+        coverImage = uploaded.images[0]?.url || null;
+        if (!coverImage) throw new Error('No se pudo guardar la imagen');
+      } else if (createDroppedUrl) {
+        coverImage = createDroppedUrl;
+      }
+      return api.collections.create({ name, description: description || null, ...(coverImage ? { coverImage } : {}) });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['collections'] });
       setCreating(false);
       setName('');
       setDescription('');
       setError('');
+      resetCreateImage();
     },
     onError: (reason: Error) => setError(reason.message),
   });
@@ -107,10 +136,35 @@ export const CollectionsPage = () => {
     setName('');
     setDescription('');
     setError('');
+    resetCreateImage();
   };
   const closeEditor = () => {
     setCreating(false);
     setError('');
+    resetCreateImage();
+  };
+  const handleCreateImageDrop = (event: React.DragEvent<HTMLLabelElement>) => {
+    event.preventDefault();
+    setIsDraggingCreateImage(false);
+    setError('');
+    const file = Array.from(event.dataTransfer.files).find((item) => /^image\/(jpeg|png|webp)$/i.test(item.type));
+    if (file) {
+      setCreateDroppedUrl(null);
+      setCreateFile(file);
+      return;
+    }
+    const html = event.dataTransfer.getData('text/html');
+    const htmlUrls = html ? Array.from(new DOMParser().parseFromString(html, 'text/html').querySelectorAll('img')).map((image) => image.src) : [];
+    const uriUrls = event.dataTransfer.getData('text/uri-list').split(/\r?\n/).map((url) => url.trim()).filter((url) => url && !url.startsWith('#'));
+    const plainUrl = event.dataTransfer.getData('text/plain').trim();
+    const imageUrl = [...htmlUrls, ...uriUrls, plainUrl].find((url) => /^https?:\/\//i.test(url));
+    if (imageUrl) {
+      setCreateFile(null);
+      setCreateDroppedUrl(imageUrl);
+      setCreatePreview(imageUrl);
+      return;
+    }
+    setError('Arrastrá un archivo JPG, PNG o WebP, o una imagen desde una página web.');
   };
   const handleImageDrop = (event: React.DragEvent<HTMLLabelElement>) => {
     event.preventDefault();
@@ -154,6 +208,27 @@ export const CollectionsPage = () => {
                 <button type="button" onClick={closeEditor} className="secondary-button">Cancelar</button>
                 <button type="submit" className="primary-button" disabled={createCollection.isPending || !name.trim()}>{createCollection.isPending && <Loader2 className="h-4 w-4 animate-spin" />}Guardar</button>
               </div>
+            </div>
+            <div className="mt-3">
+              <span className="field-label">Imagen de portada</span>
+              <label
+                className={`relative flex cursor-pointer items-center gap-4 rounded-md border-2 border-dashed bg-white p-3 transition-colors ${isDraggingCreateImage ? 'border-coral bg-red-50' : 'border-slate-300 hover:border-aqua'}`}
+                onDragEnter={(event) => { event.preventDefault(); setIsDraggingCreateImage(true); }}
+                onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; setIsDraggingCreateImage(true); }}
+                onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsDraggingCreateImage(false); }}
+                onDrop={handleCreateImageDrop}
+              >
+                {isDraggingCreateImage && <span className="pointer-events-none absolute inset-0 z-10 grid place-items-center rounded-md bg-white/90 text-sm font-semibold text-coral"><span className="flex items-center gap-2"><ImagePlus className="h-5 w-5" />Soltar imagen</span></span>}
+                <span className="grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-md bg-slate-100">
+                  {createPreview ? <img src={createPreview} alt="Vista previa" className="h-full w-full object-cover" /> : <FolderOpen className="h-8 w-8 text-aqua" />}
+                </span>
+                <span>
+                  <span className="block text-sm font-semibold text-ink">Elegir o arrastrar imagen</span>
+                  <span className="mt-1 block text-xs text-slate-500">Archivo JPG, PNG o WebP, o imagen de una página web. Es opcional.</span>
+                </span>
+                <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { const file = event.target.files?.[0] || null; setCreateDroppedUrl(null); setCreateFile(file); if (!file) setCreatePreview(null); }} className="hidden" />
+              </label>
+              {createPreview && <button type="button" onClick={resetCreateImage} className="secondary-button mt-2 gap-2 text-red-600"><Trash2 className="h-4 w-4" />Quitar imagen</button>}
             </div>
             {error && <p className="mt-3 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
           </form>

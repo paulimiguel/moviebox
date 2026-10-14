@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Clapperboard, Compass, Drama, Eye, Ghost, Heart, ImagePlus, Landmark, Laugh, Loader2, MoreVertical, Mountain, Music2, Pencil, Rocket, Search, ShieldAlert, Sparkles, Swords, Tags, Trash2, Tv, UsersRound, WandSparkles, X, type LucideIcon } from 'lucide-react';
+import { Clapperboard, Compass, Drama, Eye, Ghost, Heart, ImagePlus, Landmark, Laugh, Loader2, MoreVertical, Mountain, Music2, Pencil, Rocket, Search, ShieldAlert, Sparkles, Swords, Plus, Tags, Trash2, Tv, UsersRound, WandSparkles, X, type LucideIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
+import { CatalogCreateForm } from '@/components/CatalogCreateForm';
 import { CatalogToolbar, catalogGridClass, type CatalogViewMode } from '@/components/CatalogToolbar';
 import { api, resolveMovieImageUrl } from '@/services/api';
 import { getGenreIconImage, normalizeGenreName } from '@/utils/genreIcons';
@@ -49,6 +50,7 @@ export const GenresPage = () => {
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [editing, setEditing] = useState<GenreCatalogItem | null>(null);
   const [deleting, setDeleting] = useState<GenreCatalogItem | null>(null);
+  const [creating, setCreating] = useState(false);
   const [editName, setEditName] = useState('');
   const [editFile, setEditFile] = useState<File | null>(null);
   const [editDroppedUrl, setEditDroppedUrl] = useState<string | null>(null);
@@ -86,8 +88,15 @@ export const GenresPage = () => {
     navigate('/biblioteca');
   };
 
+  const createGenre = async (name: string, imagePath: string | null) => {
+    const created = await api.metadata.create('genres', name);
+    if (imagePath) await api.genres.update(created.id, { name: created.name, imagePath });
+    queryClient.invalidateQueries({ queryKey: ['genres'] });
+    queryClient.invalidateQueries({ queryKey: ['metadata'] });
+  };
   const beginEdit = (genre: GenreCatalogItem) => {
     setOpenMenuId(null);
+    setCreating(false);
     setEditing(genre);
     setEditName(genre.name);
     setEditFile(null);
@@ -161,9 +170,10 @@ export const GenresPage = () => {
   return (
     <main className="min-h-screen bg-canvas">
       <Header />
-      <CatalogToolbar title="Géneros" itemLabel="géneros" visibleCount={visibleGenres.length} totalCount={genres.data?.length || 0} search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode} sortDirection={sortDirection} onSortDirectionChange={setSortDirection} />
+      <CatalogToolbar title="Géneros" itemLabel="géneros" visibleCount={visibleGenres.length} totalCount={genres.data?.length || 0} search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode} sortDirection={sortDirection} onSortDirectionChange={setSortDirection} action={<button type="button" onClick={() => { setEditing(null); setCreating(true); }} className="primary-button h-9 px-3"><Plus className="h-4 w-4" />Nueva</button>} />
 
       <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8">
+        {creating && <CatalogCreateForm heading="Nuevo género" nameLabel="Nombre" duplicateMessage="Ya existe un género con ese nombre" existingNames={(genres.data || []).map((genre) => genre.name)} onCreate={createGenre} onClose={() => setCreating(false)} />}
         {genres.isLoading ? <div className="grid min-h-[45vh] place-items-center"><Loader2 className="h-8 w-8 animate-spin text-aqua" /></div>
           : genres.isError ? <div className="grid min-h-[45vh] place-items-center text-center"><div><p className="font-semibold text-ink">No se pudieron cargar los géneros</p><button type="button" onClick={() => genres.refetch()} className="primary-button mt-4">Reintentar</button></div></div>
             : genres.data?.length ? visibleGenres.length ? <section className={catalogGridClass[viewMode]}>
