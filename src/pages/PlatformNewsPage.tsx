@@ -283,7 +283,6 @@ export const PlatformNewsPage = () => {
           onClose={() => setSelectedCandidate(null)}
           onPersonal={() => {}}
           onRating={() => {}}
-          onCollections={() => {}}
         />
       )}
       <main className="mx-auto max-w-[1500px] p-4 sm:p-6 pb-20">

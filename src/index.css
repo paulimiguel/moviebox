@@ -558,6 +558,28 @@ body {
   background-color: rgb(65 70 77);
 }
 
+:root[data-theme="dark"] .movie-detail-modal .movie-detail-watched[aria-pressed="true"] {
+  border-color: #2cbc63 !important;
+  background-color: rgb(18 20 23 / 0.82) !important;
+  color: #218f4c;
+}
+
+:root[data-theme="dark"] .movie-detail-modal .movie-detail-favorite[aria-pressed="true"] {
+  border-color: #ef5544 !important;
+  background-color: rgb(18 20 23 / 0.82) !important;
+  color: #ef5544;
+}
+
+:root[data-theme="dark"] .movie-detail-modal .movie-detail-watchlist[aria-pressed="true"] {
+  border-color: #65b9bb !important;
+  background-color: rgb(18 20 23 / 0.82) !important;
+  color: #65b9bb;
+}
+
+:root[data-theme="dark"] .movie-detail-modal .star-rating button.text-amber-400 {
+  color: #f6d36f !important;
+}
+
 :root[data-theme="dark"] .movie-detail-modal .secondary-button:hover,
 :root[data-theme="dark"] .movie-detail-modal .icon-button:hover,
 :root[data-theme="dark"] .movie-detail-modal .control:hover,

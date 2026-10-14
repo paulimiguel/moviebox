@@ -7,7 +7,7 @@ export const StarRating = ({ value, onChange, disabled = false, allowClear = tru
   allowClear?: boolean;
   compact?: boolean;
 }) => (
-  <div className={`flex items-center ${compact ? 'flex-nowrap gap-0' : 'flex-wrap gap-1'}`} role="group" aria-label="Rate">
+  <div className={`star-rating flex items-center ${compact ? 'flex-nowrap gap-0' : 'flex-wrap gap-1'}`} role="group" aria-label="Rate">
     {Array.from({ length: 5 }, (_, index) => index + 1).map((rating) => {
       const selected = value != null && rating <= value;
       return (

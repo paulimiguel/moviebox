@@ -239,14 +239,6 @@ export const MovieLibraryPage = () => {
       setDetailMovie((current) => current?.id === saved.id ? saved : current);
     },
   });
-  const collectionsMutation = useMutation({
-    mutationFn: ({ movie, collectionIds }: { movie: MovieItem; collectionIds: string[] }) => api.movies.updatePersonal(movie.id, { collectionIds }),
-    onSuccess: (saved) => {
-      queryClient.invalidateQueries({ queryKey: ['movies'] });
-      queryClient.invalidateQueries({ queryKey: ['collections'] });
-      setDetailMovie((current) => current?.id === saved.id ? saved : current);
-    },
-  });
   const deleteMutation = useMutation({
     mutationFn: (ids: string[]) => Promise.all(ids.map(api.movies.remove)),
     onSuccess: () => {
@@ -471,7 +463,7 @@ export const MovieLibraryPage = () => {
           : <section className="overflow-hidden rounded-md">{filteredMovies.map((movie) => <MovieCard key={movie.id} movie={movie} mode={viewMode} onOpen={setDetailMovie} onPersonal={(item, field) => personalMutation.mutate({ movie: item, field })} onRating={(item, rating) => ratingMutation.mutate({ movie: item, rating })} onEdit={setEditingMovie} onDelete={(item) => { setSelectedIds(new Set([item.id])); setDeleteConfirmOpen(true); }} selectionMode={Boolean(bulkMode)} selected={selectedIds.has(movie.id)} onSelectionChange={toggleSelection} />)}</section>}
       </div>
 
-      {detailMovie && <MovieDetailModal movie={detailMovie} onClose={() => setDetailMovie(null)} onEdit={(movie) => { setDetailMovie(null); setEditingMovie(movie); }} onDelete={(movie) => { setSelectedIds(new Set([movie.id])); setDetailMovie(null); setDeleteConfirmOpen(true); }} onPersonal={(movie, field) => personalMutation.mutate({ movie, field })} onRating={(movie, rating) => ratingMutation.mutate({ movie, rating })} onCollections={(movie, collectionIds) => collectionsMutation.mutate({ movie, collectionIds })} onPrevious={adjacentMovie(detailMovie, -1) ? () => setDetailMovie(adjacentMovie(detailMovie, -1)) : undefined} onNext={adjacentMovie(detailMovie, 1) ? () => setDetailMovie(adjacentMovie(detailMovie, 1)) : undefined} />}
+      {detailMovie && <MovieDetailModal movie={detailMovie} onClose={() => setDetailMovie(null)} onEdit={(movie) => { setDetailMovie(null); setEditingMovie(movie); }} onDelete={(movie) => { setSelectedIds(new Set([movie.id])); setDetailMovie(null); setDeleteConfirmOpen(true); }} onPersonal={(movie, field) => personalMutation.mutate({ movie, field })} onRating={(movie, rating) => ratingMutation.mutate({ movie, rating })} onPrevious={adjacentMovie(detailMovie, -1) ? () => setDetailMovie(adjacentMovie(detailMovie, -1)) : undefined} onNext={adjacentMovie(detailMovie, 1) ? () => setDetailMovie(adjacentMovie(detailMovie, 1)) : undefined} />}
       {editingMovie && <MovieEditModal key={editingMovie.id} movie={editingMovie} onClose={() => setEditingMovie(null)} onSaved={() => { refreshLibrary(); setEditingMovie(null); }} onPrevious={adjacentMovie(editingMovie, -1) ? () => setEditingMovie(adjacentMovie(editingMovie, -1)) : undefined} onNext={adjacentMovie(editingMovie, 1) ? () => setEditingMovie(adjacentMovie(editingMovie, 1)) : undefined} />}
       {emptyFieldsOpen && <EmptyFieldsModal selected={emptyFields} onClose={() => setEmptyFieldsOpen(false)} onApply={(fields) => { setEmptyFields(fields); setEmptyFieldsOpen(false); }} />}
       {bulkEditOpen && <MovieBulkEditModal movies={selectedMovies} genres={metadataQuery.data?.genres || []} platforms={metadataQuery.data?.platforms || []} countries={metadataQuery.data?.countries || []} collections={collectionsQuery.data || []} onClose={() => setBulkEditOpen(false)} onSaved={() => { refreshLibrary(); setBulkEditOpen(false); setSelectedIds(new Set()); }} />}

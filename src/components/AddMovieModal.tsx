@@ -1343,7 +1343,6 @@ export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQ
         onAdd={!existingMovie ? () => selectedCandidate && importSuggestion.mutate(selectedCandidate) : undefined}
         onPersonal={(movie, field) => updatePersonal.mutate({ movie, field })}
         onRating={(movie, rating) => updateRating.mutate({ movie, rating })}
-        onCollections={() => {}}
         showNavigation={false}
         overlayClassName="z-[105]"
       />

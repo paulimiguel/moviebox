@@ -1245,7 +1245,6 @@ export const NewsPage = () => {
           onAdd={!existingMovie ? () => selectedCandidate && importMutation.mutate(selectedCandidate) : undefined}
           onPersonal={(movie, field) => updatePersonal.mutate({ movie, field })}
           onRating={(movie, rating) => updateRating.mutate({ movie, rating })}
-          onCollections={() => {}}
         />
       )}
     </main>
