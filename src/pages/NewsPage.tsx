@@ -139,7 +139,7 @@ const Top10FeaturedSection = ({
       <div
         ref={containerRef}
         className={compact
-          ? 'flex gap-4 overflow-x-auto pb-4 pt-2 px-4 sm:px-6 lg:grid lg:grid-cols-10 lg:gap-2 lg:overflow-visible hide-scrollbar scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden'
+          ? 'flex gap-2 overflow-x-auto pb-4 pt-2 px-4 sm:px-6 lg:grid lg:grid-cols-10 lg:gap-1 lg:overflow-visible hide-scrollbar scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden'
           : 'flex gap-6 sm:gap-10 overflow-x-auto pb-6 pt-2 px-4 sm:px-6 hide-scrollbar scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden'}
       >
         {items.map((item) => (
@@ -159,12 +159,12 @@ const Top10FeaturedSection = ({
             aria-label={`Ver características de ${item.title}`}
           >
             {/* Número de ranking amplio y visible a la izquierda con sutil solapamiento */}
-            <span className={`justwatch-rank-number font-sans font-black leading-[0.8] tracking-tighter select-none z-0 transition-all duration-200 group-hover/jw:scale-105 pointer-events-none ${compact ? 'w-[72px] shrink-0 text-right text-[60px] -mr-1 lg:w-[50px] lg:text-[44px] xl:w-[58px] xl:text-[52px]' : 'text-[130px] sm:text-[165px] -mr-2 sm:-mr-3'}`}>
+            <span className={`justwatch-rank-number font-sans font-black leading-[0.8] tracking-tighter select-none z-0 transition-all duration-200 group-hover/jw:scale-105 pointer-events-none ${compact ? 'w-[54px] shrink-0 text-right text-[44px] -mr-1 lg:w-[38px] lg:text-[34px] xl:w-[46px] xl:text-[40px]' : 'text-[130px] sm:text-[165px] -mr-2 sm:-mr-3'}`}>
               {item.rank}
             </span>
 
             {/* Tarjeta de póster */}
-            <div className={`relative z-10 aspect-[2/3] overflow-hidden rounded-lg bg-mist shadow-md transition-all duration-200 group-hover/jw:scale-105 group-hover/jw:shadow-xl ring-1 ring-black/5 dark:ring-white/10 ${compact ? 'w-[84px] lg:w-auto lg:min-w-0 lg:flex-1' : 'w-[135px] sm:w-[160px]'}`}>
+            <div className={`relative z-10 aspect-[2/3] overflow-hidden rounded-lg bg-mist shadow-md transition-all duration-200 group-hover/jw:scale-105 group-hover/jw:shadow-xl ring-1 ring-black/5 dark:ring-white/10 ${compact ? 'w-[104px] lg:w-auto lg:min-w-0 lg:flex-1' : 'w-[135px] sm:w-[160px]'}`}>
               {item.posterUrl ? (
                 <img src={item.posterUrl} alt={item.title} className="h-full w-full object-cover" loading="lazy" />
               ) : (
@@ -187,7 +187,7 @@ const Top10FeaturedSection = ({
                     {item.subBadge}
                   </span>
                 )}
-                <span className={`rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase text-white shadow-sm ${compact ? 'hidden lg:inline-block' : ''} ${item.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>
+                <span className={`rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase text-white shadow-sm ${compact ? 'hidden xl:inline-block' : ''} ${item.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>
                   {item.type === 'series' ? 'Serie' : 'Película'}
                 </span>
               </div>
