@@ -17,6 +17,7 @@ interface CatalogToolbarProps {
   onSortDirectionChange: (value: SortDirection) => void;
   action?: React.ReactNode;
   inlineControlsOnTablet?: boolean;
+  hideControlsOnMobile?: boolean;
 }
 
 const menuButton = 'library-toolbar-menu-button inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold uppercase text-slate-500 transition-colors hover:border-slate-300 hover:bg-slate-50 xl:w-[150px]';
@@ -62,12 +63,12 @@ export const CatalogToolbar = (props: CatalogToolbarProps) => {
           {props.action && <div className="ml-auto shrink-0">{props.action}</div>}
         </div>
 
-        <label className="relative block min-w-0 xl:ml-2">
+        <label className={`relative min-w-0 xl:ml-2 ${props.hideControlsOnMobile ? 'hidden md:block' : 'block'}`}>
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input type="search" value={props.search} onChange={(event) => props.onSearchChange(event.target.value)} className="control w-full pl-9" placeholder="Buscar" />
         </label>
 
-        <div className={`grid grid-cols-2 gap-2 ${props.inlineControlsOnTablet ? 'md:w-[280px] xl:w-auto' : ''}`}>
+        <div className={`grid-cols-2 gap-2 ${props.hideControlsOnMobile ? 'hidden md:grid' : 'grid'} ${props.inlineControlsOnTablet ? 'md:w-[280px] xl:w-auto' : ''}`}>
           <div className="relative">
             <button type="button" onClick={() => setOpenMenu(openMenu === 'view' ? null : 'view')} className={menuButton} aria-expanded={openMenu === 'view'}>{activeViewIcon}Ver<ChevronDown className="h-4 w-4 shrink-0" /></button>
             {openMenu === 'view' && <div className="library-toolbar-dropdown absolute right-0 top-10 z-40 w-52 rounded-md border border-slate-200 bg-white p-1.5 shadow-card">

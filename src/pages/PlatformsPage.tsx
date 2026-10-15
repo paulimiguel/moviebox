@@ -138,7 +138,7 @@ export const PlatformsPage = () => {
   return (
     <main className="min-h-screen bg-canvas">
       <Header />
-      <CatalogToolbar title="Plataformas" itemLabel="plataformas" visibleCount={visiblePlatforms.length} totalCount={platforms.data?.length || 0} search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode} sortDirection={sortDirection} onSortDirectionChange={setSortDirection} inlineControlsOnTablet action={<button type="button" onClick={() => { setEditing(null); setCreating(true); }} className="primary-button h-9 px-3"><Plus className="h-4 w-4" />Nueva</button>} />
+      <CatalogToolbar title="Plataformas" itemLabel="plataformas" visibleCount={visiblePlatforms.length} totalCount={platforms.data?.length || 0} search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode} sortDirection={sortDirection} onSortDirectionChange={setSortDirection} inlineControlsOnTablet hideControlsOnMobile={creating} action={<button type="button" onClick={() => { setEditing(null); setCreating(true); }} className="primary-button h-9 px-3"><Plus className="h-4 w-4" />Nueva</button>} />
 
       <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8">
         {creating && <CatalogCreateForm heading="Nueva plataforma" nameLabel="Título" duplicateMessage="Ya existe una plataforma con ese título" existingNames={(platforms.data || []).map((platform) => platform.name)} imageFit="contain" onCreate={createPlatform} onClose={() => setCreating(false)} />}
