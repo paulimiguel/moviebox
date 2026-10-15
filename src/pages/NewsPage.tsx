@@ -78,8 +78,10 @@ const Top10FeaturedSection = ({
   isItemAdding,
   onAdd,
   compact = false,
+  hideTypeBadge = false,
 }: {
   compact?: boolean;
+  hideTypeBadge?: boolean;
   items: JustWatchTop10Item[];
   onSelect: (item: TmdbSuggestionCandidate) => void;
   isMovieInLibrary: (item: TmdbSuggestionCandidate) => boolean;
@@ -187,7 +189,7 @@ const Top10FeaturedSection = ({
                     {item.subBadge}
                   </span>
                 )}
-                <span className={`rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase text-white shadow-sm ${compact ? 'hidden xl:inline-block' : ''} ${item.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>
+                <span className={`rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase text-white shadow-sm ${compact ? 'hidden xl:inline-block' : ''} ${hideTypeBadge ? 'hidden' : ''} ${item.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>
                   {item.type === 'series' ? 'Serie' : 'Película'}
                 </span>
               </div>
@@ -1043,6 +1045,7 @@ export const NewsPage = () => {
                 </h2>
               </div>
               <Top10FeaturedSection
+                hideTypeBadge
                 items={platformPopularQuery.data.featuredMovies || []}
                 onSelect={setSelectedCandidate}
                 isMovieInLibrary={isMovieInLibrary}
@@ -1059,6 +1062,7 @@ export const NewsPage = () => {
                 </h2>
               </div>
               <Top10FeaturedSection
+                hideTypeBadge
                 items={platformPopularQuery.data.featuredSeries || []}
                 onSelect={setSelectedCandidate}
                 isMovieInLibrary={isMovieInLibrary}
