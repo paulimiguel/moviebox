@@ -129,6 +129,7 @@ export const CollectionAddTitlesModal = ({ collection, onClose }: { collection: 
     setAddedTitles(null);
     setFailedCount(0);
     setError('');
+    clearFilters();
   };
 
   return (
