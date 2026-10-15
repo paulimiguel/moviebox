@@ -258,13 +258,6 @@ export const Header = () => {
                   >
                     Populares por plataforma
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => navigateToNewsSection('top-10-plataforma')}
-                    className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
-                  >
-                    Top 10 por plataforma
-                  </button>
                   {user?.preferredPlatforms.includes('justwatch') && <button
                     type="button"
                     onClick={() => navigateToNewsSection('top-10-ar')}
@@ -272,6 +265,13 @@ export const Header = () => {
                   >
                     Top 10 en AR
                   </button>}
+                  <button
+                    type="button"
+                    onClick={() => navigateToNewsSection('top-10-plataforma')}
+                    className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                  >
+                    Top 10 por plataforma
+                  </button>
                   <button
                     type="button"
                     onClick={() => navigateToNewsSection('sugerencias-plataforma')}
@@ -519,13 +519,6 @@ export const Header = () => {
                     >
                       Populares por plataforma
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => navigateToNewsSection('top-10-plataforma')}
-                      className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
-                    >
-                      Top 10 por plataforma
-                    </button>
                     {user?.preferredPlatforms.includes('justwatch') && <button
                       type="button"
                       onClick={() => navigateToNewsSection('top-10-ar')}
@@ -533,6 +526,13 @@ export const Header = () => {
                     >
                       Top 10 en AR
                     </button>}
+                    <button
+                      type="button"
+                      onClick={() => navigateToNewsSection('top-10-plataforma')}
+                      className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                    >
+                      Top 10 por plataforma
+                    </button>
                     <button
                       type="button"
                       onClick={() => navigateToNewsSection('sugerencias-plataforma')}

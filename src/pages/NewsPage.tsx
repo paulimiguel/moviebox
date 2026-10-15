@@ -71,78 +71,15 @@ const CoverAddButton = ({
   );
 };
 
-const Top10Item = ({
-  item,
-  rank,
-  onSelect,
-  isAdded = false,
-  isAdding = false,
-  onAdd,
-}: {
-  item: TmdbSuggestionCandidate;
-  rank: number;
-  onSelect: (item: TmdbSuggestionCandidate) => void;
-  isAdded?: boolean;
-  isAdding?: boolean;
-  onAdd?: (item: TmdbSuggestionCandidate) => void;
-}) => {
-  return (
-    <article className="flex items-center gap-3 group/item">
-      <div className="news-ranking-number relative flex shrink-0 items-center justify-center w-[52px] font-black text-[42px] tracking-tighter text-slate-400">
-        {rank}
-      </div>
-      <div className="relative h-[84px] w-[58px] shrink-0">
-        <button
-          type="button"
-          onClick={() => onSelect(item)}
-          className="h-full w-full overflow-hidden rounded bg-mist relative text-left transition-transform group-hover/item:scale-105 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-coral block"
-          title={`Ver características de ${item.title}`}
-          aria-label={`Ver características de ${item.title}`}
-        >
-          {item.posterUrl ? (
-            <img src={item.posterUrl} alt={item.title} className="h-full w-full object-cover" />
-          ) : (
-            <div className="grid h-full place-items-center text-aqua/50">
-              {item.type === 'movie' ? <Film className="h-5 w-5" /> : <Tv className="h-5 w-5" />}
-            </div>
-          )}
-        </button>
-        {onAdd && (
-          <div className="absolute bottom-1 right-1 z-10">
-            <CoverAddButton
-              item={item}
-              isAdded={isAdded}
-              isAdding={isAdding}
-              onAdd={onAdd}
-              size="sm"
-            />
-          </div>
-        )}
-      </div>
-      <div className="flex-1 min-w-0">
-        <button
-          type="button"
-          onClick={() => onSelect(item)}
-          className="text-left group/title focus:outline-none block w-full"
-          title={`Ver características de ${item.title}`}
-        >
-          <h4 className="font-bebas text-xl uppercase leading-5 text-ink line-clamp-2 transition-colors group-hover/item:text-coral group-hover/title:text-coral">
-            {item.title}
-          </h4>
-        </button>
-        <p className="truncate text-xs text-slate-500 mt-0.5">{item.year || ''}</p>
-      </div>
-    </article>
-  );
-};
-
 const Top10FeaturedSection = ({
   items,
   onSelect,
   isMovieInLibrary,
   isItemAdding,
   onAdd,
+  compact = false,
 }: {
+  compact?: boolean;
   items: JustWatchTop10Item[];
   onSelect: (item: TmdbSuggestionCandidate) => void;
   isMovieInLibrary: (item: TmdbSuggestionCandidate) => boolean;
@@ -201,13 +138,15 @@ const Top10FeaturedSection = ({
       )}
       <div
         ref={containerRef}
-        className="flex gap-6 sm:gap-10 overflow-x-auto pb-6 pt-2 px-4 sm:px-6 hide-scrollbar scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        className={compact
+          ? 'flex gap-4 overflow-x-auto pb-4 pt-2 px-4 sm:px-6 lg:grid lg:grid-cols-10 lg:gap-2 lg:overflow-visible hide-scrollbar scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden'
+          : 'flex gap-6 sm:gap-10 overflow-x-auto pb-6 pt-2 px-4 sm:px-6 hide-scrollbar scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden'}
       >
         {items.map((item) => (
           <div
             key={`featured-${item.type}-${item.rank}-${item.tmdbId || item.jwId}`}
             onClick={() => onSelect(item)}
-            className="relative flex items-end shrink-0 select-none group/jw cursor-pointer focus:outline-none"
+            className={`relative flex items-end shrink-0 select-none group/jw cursor-pointer focus:outline-none ${compact ? 'lg:min-w-0 lg:shrink' : ''}`}
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {
@@ -220,12 +159,12 @@ const Top10FeaturedSection = ({
             aria-label={`Ver características de ${item.title}`}
           >
             {/* Número de ranking amplio y visible a la izquierda con sutil solapamiento */}
-            <span className="justwatch-rank-number font-sans font-black text-[130px] sm:text-[165px] leading-[0.8] tracking-tighter select-none -mr-2 sm:-mr-3 z-0 transition-all duration-200 group-hover/jw:scale-105 pointer-events-none">
+            <span className={`justwatch-rank-number font-sans font-black leading-[0.8] tracking-tighter select-none z-0 transition-all duration-200 group-hover/jw:scale-105 pointer-events-none ${compact ? 'w-[72px] shrink-0 text-right text-[60px] -mr-1 lg:w-[50px] lg:text-[44px] xl:w-[58px] xl:text-[52px]' : 'text-[130px] sm:text-[165px] -mr-2 sm:-mr-3'}`}>
               {item.rank}
             </span>
 
             {/* Tarjeta de póster */}
-            <div className="relative z-10 w-[135px] sm:w-[160px] aspect-[2/3] overflow-hidden rounded-lg bg-mist shadow-md transition-all duration-200 group-hover/jw:scale-105 group-hover/jw:shadow-xl ring-1 ring-black/5 dark:ring-white/10">
+            <div className={`relative z-10 aspect-[2/3] overflow-hidden rounded-lg bg-mist shadow-md transition-all duration-200 group-hover/jw:scale-105 group-hover/jw:shadow-xl ring-1 ring-black/5 dark:ring-white/10 ${compact ? 'w-[84px] lg:w-auto lg:min-w-0 lg:flex-1' : 'w-[135px] sm:w-[160px]'}`}>
               {item.posterUrl ? (
                 <img src={item.posterUrl} alt={item.title} className="h-full w-full object-cover" loading="lazy" />
               ) : (
@@ -260,6 +199,7 @@ const Top10FeaturedSection = ({
                   isAdded={isMovieInLibrary(item)}
                   isAdding={isItemAdding(item)}
                   onAdd={onAdd}
+                  size={compact ? 'sm' : 'md'}
                 />
               </div>
             </div>
@@ -1200,52 +1140,8 @@ export const NewsPage = () => {
         )}
       </section>
 
-      <section id="top-10-plataforma" className="scroll-mt-20 w-full px-4 py-6 sm:px-6 sm:py-8">
-        <h1 className="font-bebas text-3xl font-normal text-ink uppercase text-center mb-4">
-          Top 10 por plataforma
-        </h1>
-
-        <div className="grid grid-cols-1 gap-6 pt-6 pb-8 sm:grid-cols-2 xl:grid-cols-4">
-          {visiblePlatforms.map((platform, index) => {
-            const query = queries[index];
-            const top10 = getTop10(query.data);
-            const logoUrl = resolvePlatformLogoUrl({ name: platform.name, logoPath: null });
-            return (
-              <section key={`content-${platform.id}`} className="min-w-0">
-                <button
-                  type="button"
-                  onClick={() => navigate(`/novedades/${platform.id}`)}
-                  className="mb-4 flex w-full items-center justify-center gap-3 py-1 text-center transition-opacity hover:opacity-80 group/btn"
-                >
-                  {logoUrl && <img src={logoUrl} alt={platform.name} className="h-10 w-auto shrink-0 rounded object-contain transition-transform group-hover/btn:scale-105" />}
-                  <h3 className="truncate font-bebas text-2xl leading-none tracking-wide text-ink sm:text-[28px]">{platform.name}</h3>
-                </button>
-                {query.isLoading ? (
-                  <div className="grid h-64 place-items-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-aqua" />
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-3">
-                    {top10.map((item, itemIndex) => (
-                      <Top10Item
-                        key={`${item.type}-${item.tmdbId}`}
-                        item={item}
-                        rank={itemIndex + 1}
-                        onSelect={setSelectedCandidate}
-                        isAdded={isMovieInLibrary(item)}
-                        isAdding={isItemAdding(item)}
-                        onAdd={(cand) => importMutation.mutate(cand)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </section>
-            );
-          })}
-        </div>
-
-        {/* Sección: Top 10 en AR */}
-        {user?.preferredPlatforms.includes('justwatch') && <div id="top-10-ar" className="scroll-mt-20 mt-14 border-t border-slate-200/40 pt-8">
+      {/* Sección: Top 10 en AR */}
+        {user?.preferredPlatforms.includes('justwatch') && <section id="top-10-ar" className="scroll-mt-20 w-full px-4 pt-6 sm:px-6 sm:pt-8">
           <div className="relative flex items-center justify-center mb-4">
             <h2 className="font-bebas text-2xl sm:text-3xl font-normal text-ink uppercase tracking-wide text-center">
               Top 10 en AR
@@ -1267,7 +1163,48 @@ export const NewsPage = () => {
           ) : (
             <p className="text-sm text-slate-400 py-6">No se pudieron cargar los títulos destacados.</p>
           )}
-        </div>}
+      </section>}
+
+      <section id="top-10-plataforma" className="scroll-mt-20 w-full px-4 py-6 sm:px-6 sm:py-8">
+        <h1 className="font-bebas text-3xl font-normal text-ink uppercase text-center mb-4">
+          Top 10 por plataforma
+        </h1>
+
+        <div className="space-y-10 pt-6 pb-8">
+          {visiblePlatforms.map((platform, index) => {
+            const query = queries[index];
+            const top10 = getTop10(query.data).map((item, itemIndex): JustWatchTop10Item => ({ ...item, rank: itemIndex + 1, jwId: `${platform.id}-${item.tmdbId}` }));
+            const logoUrl = resolvePlatformLogoUrl({ name: platform.name, logoPath: null });
+            return (
+              <section key={`content-${platform.id}`} className="min-w-0">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/novedades/${platform.id}`)}
+                  className="mb-3 flex items-center gap-3 py-1 text-left transition-opacity hover:opacity-80 group/btn"
+                >
+                  {logoUrl && <img src={logoUrl} alt={platform.name} className="h-10 w-auto shrink-0 rounded object-contain transition-transform group-hover/btn:scale-105" />}
+                  <h3 className="truncate font-bebas text-2xl leading-none tracking-wide text-ink sm:text-[28px]">{platform.name}</h3>
+                </button>
+                {query.isLoading ? (
+                  <div className="grid h-48 place-items-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-aqua" />
+                  </div>
+                ) : top10.length ? (
+                  <Top10FeaturedSection
+                    compact
+                    items={top10}
+                    onSelect={setSelectedCandidate}
+                    isMovieInLibrary={isMovieInLibrary}
+                    isItemAdding={isItemAdding}
+                    onAdd={(cand) => importMutation.mutate(cand)}
+                  />
+                ) : (
+                  <p className="py-6 text-sm text-slate-400">No hay títulos para mostrar en esta plataforma.</p>
+                )}
+              </section>
+            );
+          })}
+        </div>
 
         {/* Sección: Sugerencias debajo del todo */}
         <div id="sugerencias-plataforma" className="scroll-mt-20 mt-14 border-t border-slate-200/40 pt-8 pb-10 space-y-3">
