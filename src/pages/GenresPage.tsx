@@ -172,7 +172,7 @@ export const GenresPage = () => {
   return (
     <main className="min-h-screen bg-canvas">
       <Header />
-      <CatalogToolbar title="Géneros" itemLabel="géneros" visibleCount={visibleGenres.length} totalCount={genres.data?.length || 0} search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode} sortDirection={sortDirection} onSortDirectionChange={setSortDirection} inlineControlsOnTablet action={<button type="button" onClick={() => { setEditing(null); setCreating(true); }} className="primary-button h-9 px-3"><Plus className="h-4 w-4" />Nueva</button>} />
+      <CatalogToolbar title="Géneros" itemLabel="géneros" visibleCount={visibleGenres.length} totalCount={genres.data?.length || 0} search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode} sortDirection={sortDirection} onSortDirectionChange={setSortDirection} inlineControlsOnTablet action={<button type="button" onClick={() => { setEditing(null); setCreating(true); }} className="primary-button h-9 px-3"><Plus className="h-4 w-4" />Nuevo</button>} />
 
       <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-6 sm:py-8">
         {creating && <CatalogCreateForm heading="Nuevo género" nameLabel="Nombre" duplicateMessage="Ya existe un género con ese nombre" existingNames={(genres.data || []).map((genre) => genre.name)} onCreate={createGenre} onClose={() => setCreating(false)} />}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckSquare, Edit3, FileText, Film, Loader2, Printer, Share2, Square, Trash2, X } from 'lucide-react';
 import { Header } from '@/components/Header';
@@ -54,11 +55,14 @@ const getInitialViewMode = (): MovieViewMode => {
 export const MovieLibraryPage = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [searchScope, setSearchScope] = useState<MovieSearchScope>('name');
   const [type, setType] = useState<MovieTypeFilter>('all');
   const [genreIds, setGenreIds] = useState<string[]>([]);
   const [platformIds, setPlatformIds] = useState<string[]>([]);
+  const [openedPlatformId, setOpenedPlatformId] = useState<string | null>(null);
+  const [openedGenreId, setOpenedGenreId] = useState<string | null>(null);
   const [collectionIds, setCollectionIds] = useState<string[]>([]);
   const [years, setYears] = useState<string[]>([]);
   const [watched, setWatched] = useState<WatchedFilter>('all');
@@ -132,6 +136,8 @@ export const MovieLibraryPage = () => {
     };
     const applyGenreFilter = (genreId: string) => {
       setGenreIds([genreId]);
+      setOpenedGenreId(genreId);
+      setOpenedPlatformId(null);
       setFiltersOpen(false);
       try {
         window.sessionStorage.removeItem('moviebox:genre-filter');
@@ -142,6 +148,8 @@ export const MovieLibraryPage = () => {
     const handleGenreFilter = (event: Event) => applyGenreFilter((event as CustomEvent<string>).detail);
     const applyPlatformFilter = (platformId: string) => {
       setPlatformIds([platformId]);
+      setOpenedPlatformId(platformId);
+      setOpenedGenreId(null);
       setFiltersOpen(false);
       try {
         window.sessionStorage.removeItem('moviebox:platform-filter');
@@ -223,6 +231,16 @@ export const MovieLibraryPage = () => {
 
   const moviesQuery = useQuery({ queryKey: ['movies'], queryFn: api.movies.getAll });
   const metadataQuery = useQuery({ queryKey: ['metadata'], queryFn: api.metadata.getAll });
+  // El título muestra la plataforma solo mientras ese sea el único filtro de plataforma aplicado.
+  const openedPlatformName = openedPlatformId && platformIds.length === 1 && platformIds[0] === openedPlatformId
+    ? metadataQuery.data?.platforms.find((platform) => platform.id === openedPlatformId)?.name || null
+    : null;
+  // La plataforma ya figura en el título: se ocultan sus etiquetas mientras sea el único filtro.
+  const onlyPlatformFilter = Boolean(openedPlatformName) && genreIds.length === 0 && collectionIds.length === 0 && years.length === 0 && type === 'all' && watched === 'all' && favorite === 'all' && watchlist === 'all' && emptyFields.length === 0;
+  const openedGenreName = openedGenreId && genreIds.length === 1 && genreIds[0] === openedGenreId
+    ? metadataQuery.data?.genres.find((genre) => genre.id === openedGenreId)?.name || null
+    : null;
+  const onlyGenreFilter = Boolean(openedGenreName) && platformIds.length === 0 && collectionIds.length === 0 && years.length === 0 && type === 'all' && watched === 'all' && favorite === 'all' && watchlist === 'all' && emptyFields.length === 0;
   const collectionsQuery = useQuery({ queryKey: ['collections'], queryFn: api.collections.getAll });
 
   const personalMutation = useMutation({
@@ -386,6 +404,9 @@ export const MovieLibraryPage = () => {
       <Header />
       <MovieLibraryToolbar
         ownerName={user?.alias || user?.name || 'Usuario'}
+        title={openedPlatformName ? `Plataforma ${openedPlatformName}` : openedGenreName ? `Género ${openedGenreName}` : undefined}
+        hideActiveFilters={onlyPlatformFilter || onlyGenreFilter}
+        backAction={openedPlatformName ? { label: 'Atrás', onClick: () => navigate('/plataformas') } : openedGenreName ? { label: 'Atrás', onClick: () => navigate('/generos') } : undefined}
         visibleCount={filteredMovies.length}
         totalCount={moviesQuery.data?.length || 0}
         search={search}

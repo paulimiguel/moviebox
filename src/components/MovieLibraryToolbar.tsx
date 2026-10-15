@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ArrowDown, ArrowUp, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronsUpDown, Edit3, Eye, EyeOff, FileText, Film, Filter, Grid3x3, Heart, LayoutGrid, List, ListChecks, Plus, Search, Square, Tags, Tv, X } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowUp, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronsUpDown, Edit3, Eye, EyeOff, FileText, Film, Filter, Grid3x3, Heart, LayoutGrid, List, ListChecks, Plus, Search, Square, Tags, Tv, X } from 'lucide-react';
 import type { MovieViewMode } from '@/components/MovieCard';
 import { resolvePlatformLogoUrl } from '@/components/PlatformLogos';
 import type { FavoriteFilter, MovieTypeFilter, SortDirection, WatchedFilter, WatchlistFilter } from '@/types/movie';
@@ -16,6 +16,7 @@ interface ToolbarProps {
   onSearchPlatformOpen?: () => void;
   title?: string;
   titleExtras?: React.ReactNode;
+  backAction?: { label: string; onClick: () => void };
   ownerName?: string;
   hideActiveFilters?: boolean;
   visibleCount: number;
@@ -216,6 +217,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
         <div className="min-w-0 md:w-[220px] lg:w-[260px] xl:w-[280px] md:shrink-0 md:self-center">
           <h1 className="font-bebas truncate text-xl font-normal text-ink sm:text-2xl">{props.title || `Títulos de ${props.ownerName}`}</h1>
           <p className="mt-0.5 truncate text-xs text-slate-500">Mostrando {props.visibleCount} de {props.totalCount} títulos</p>
+          {props.backAction && <button type="button" onClick={props.backAction.onClick} className="mt-2 inline-flex h-7 items-center gap-1 rounded-md bg-aqua px-2.5 text-xs font-semibold uppercase text-white shadow-sm transition hover:brightness-110"><ArrowLeft className="h-3.5 w-3.5" />{props.backAction.label}</button>}
           {!props.hideActiveFilters && (selectedGenreNames.length > 0 || selectedPlatformNames.length > 0 || selectedCollectionNames.length > 0 || props.years.length > 0 || props.type !== 'all' || props.watched !== 'all' || props.favorite !== 'all' || props.watchlist !== 'all' || props.emptyFieldsCount > 0) && (
             <div className="mt-2 flex flex-wrap gap-1">
               {selectedGenreNames.map((genre) => <button key={`active-genre-${genre.id}`} type="button" onClick={() => toggleGenre(genre.id)} className="inline-flex max-w-full items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar género ${genre.name}`}><span className="truncate">{genre.name}</span><X className="h-3 w-3 shrink-0" /></button>)}

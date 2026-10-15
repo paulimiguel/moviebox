@@ -23,6 +23,7 @@ export const CollectionsPage = () => {
   const [createPreview, setCreatePreview] = useState<string | null>(null);
   const [isDraggingCreateImage, setIsDraggingCreateImage] = useState(false);
   const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
   const [editFile, setEditFile] = useState<File | null>(null);
   const [editDroppedUrl, setEditDroppedUrl] = useState<string | null>(null);
   const [editPreview, setEditPreview] = useState<string | null>(null);
@@ -104,7 +105,7 @@ export const CollectionsPage = () => {
       }
       return api.collections.update(editing.id, {
         name: editedName,
-        description: editing.description,
+        description: editDescription.trim() || null,
         ...(coverImage !== undefined ? { coverImage } : {}),
       });
     },
@@ -127,6 +128,7 @@ export const CollectionsPage = () => {
     setEditing(collection);
     setCreating(false);
     setEditName(collection.name);
+    setEditDescription(collection.description || '');
     setEditFile(null);
     setEditDroppedUrl(null);
     setEditPreview(collection.coverImage ? resolveMovieImageUrl(collection.coverImage) : null);
@@ -288,6 +290,10 @@ export const CollectionsPage = () => {
                 <span className="field-label">Nombre</span>
                 <input autoFocus value={editName} onChange={(event) => setEditName(event.target.value)} className="control w-full" maxLength={80} />
               </label>
+              <label className="block">
+                <span className="field-label">Descripción</span>
+                <textarea value={editDescription} onChange={(event) => setEditDescription(event.target.value)} className="control min-h-[80px] w-full resize-y py-2" maxLength={500} rows={3} placeholder="Descripción opcional" />
+              </label>
               <div>
                 <span className="field-label">Imagen</span>
                 <label
@@ -310,8 +316,7 @@ export const CollectionsPage = () => {
                 {editPreview && <button type="button" onClick={() => { setEditFile(null); setEditDroppedUrl(null); setEditPreview(null); setEditImageRemoved(true); }} className="secondary-button mt-2 gap-2 text-red-600"><Trash2 className="h-4 w-4" />Eliminar imagen</button>}
               </div>
               <div>
-                <span className="field-label">Títulos</span>
-                <button type="button" onClick={() => setAddingTitles(true)} className="secondary-button gap-2"><Plus className="h-4 w-4" />Agregar títulos</button>
+                <button type="button" onClick={() => setAddingTitles(true)} className="primary-button gap-2"><Plus className="h-4 w-4" />Agregar títulos</button>
               </div>
               {editError && <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">{editError}</p>}
             </div>
