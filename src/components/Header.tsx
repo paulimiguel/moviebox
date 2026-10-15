@@ -138,6 +138,19 @@ export const Header = () => {
     navigate('/biblioteca');
     window.setTimeout(() => window.dispatchEvent(new CustomEvent('moviebox:filter-genre', { detail: genreId })), 0);
   };
+  const filterLibraryByCollection = (collectionId: string) => {
+    try {
+      window.sessionStorage.setItem('moviebox:collection-filter', collectionId);
+      window.sessionStorage.removeItem('moviebox:library-filter');
+    } catch {
+      // El evento siguiente aplica el filtro si ya estamos en la biblioteca.
+    }
+    setCollectionMenuOpen(false);
+    setMenuOpen(false);
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    navigate('/biblioteca');
+    window.setTimeout(() => window.dispatchEvent(new CustomEvent('moviebox:filter-collection', { detail: collectionId })), 0);
+  };
   const filterLibraryByPlatform = (platformId: string) => {
     try {
       window.sessionStorage.setItem('moviebox:platform-filter', platformId);
@@ -291,7 +304,7 @@ export const Header = () => {
               <button type="button" onClick={() => { setCollectionMenuOpen((current) => !current); setLibraryMenuOpen(false); setPlatformMenuOpen(false); setGenreMenuOpen(false); setNewsMenuOpen(false); setActionsMenuOpen(false); if (location.pathname !== '/colecciones') navigate('/colecciones'); }} className={`flex h-full items-center gap-1 xl:gap-1.5 border-b-2 px-2 xl:px-3 text-xs xl:text-sm font-semibold whitespace-nowrap ${collectionMenuOpen ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={collectionMenuOpen}>COLECCIONES<ChevronDown className="h-3.5 w-3.5 xl:h-4 xl:w-4" /></button>
               {collectionMenuOpen && <div className="header-dropdown absolute left-0 top-full w-64 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
                 <div className="max-h-72 overflow-y-auto">
-                  {(collectionsQuery.data || []).length ? (collectionsQuery.data || []).map((collection) => <Link key={collection.id} to={`/colecciones/${collection.id}`} onClick={() => setCollectionMenuOpen(false)} className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink">{collection.name}</Link>) : <p className="px-3 py-3 text-sm text-slate-400">No hay colecciones.</p>}
+                  {(collectionsQuery.data || []).length ? (collectionsQuery.data || []).map((collection) => <button key={collection.id} type="button" onClick={() => filterLibraryByCollection(collection.id)} className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink">{collection.name}</button>) : <p className="px-3 py-3 text-sm text-slate-400">No hay colecciones.</p>}
                 </div>
                 <Link to="/colecciones" onClick={() => setCollectionMenuOpen(false)} className="mt-1 flex w-full items-center gap-2 border-t border-slate-100 px-3 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink"><LayoutGrid className="h-4 w-4" />Mostrar colecciones</Link>
               </div>}
@@ -629,14 +642,14 @@ export const Header = () => {
                     <div className="max-h-48 overflow-y-auto">
                       {(collectionsQuery.data || []).length ? (
                         (collectionsQuery.data || []).map((collection) => (
-                          <Link
+                          <button
                             key={`mobile-collection-${collection.id}`}
-                            to={`/colecciones/${collection.id}`}
-                            onClick={() => setMenuOpen(false)}
+                            type="button"
+                            onClick={() => filterLibraryByCollection(collection.id)}
                             className="flex w-full rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
                           >
                             {collection.name}
-                          </Link>
+                          </button>
                         ))
                       ) : (
                         <p className="px-3 py-2 text-sm text-slate-400">No hay colecciones.</p>

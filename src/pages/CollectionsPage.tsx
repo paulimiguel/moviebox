@@ -248,7 +248,7 @@ export const CollectionsPage = () => {
           <section className={catalogGridClass[viewMode]}>
             {visibleCollections.map((collection) => (
               <article key={collection.id} className={`movie-card relative min-w-0 overflow-hidden rounded-md bg-white shadow-card transition-transform hover:-translate-y-0.5 ${openMenuId === collection.id ? 'z-20 overflow-visible' : ''}`}>
-                <Link to={`/colecciones/${collection.id}`} className="block">
+                <Link to="/biblioteca" onClick={() => { try { window.sessionStorage.setItem('moviebox:collection-filter', collection.id); window.sessionStorage.removeItem('moviebox:library-filter'); } catch { /* La biblioteca sigue accesible sin almacenamiento. */ } }} className="block">
                   <div className="relative aspect-square overflow-hidden rounded-t-md bg-slate-100">
                     {collection.coverImage
                       ? <img src={resolveMovieImageUrl(collection.coverImage)} alt={collection.name} className="h-full w-full object-cover" loading="lazy" />
@@ -313,7 +313,7 @@ export const CollectionsPage = () => {
                   </span>
                   <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { const file = event.target.files?.[0] || null; setEditDroppedUrl(null); setEditFile(file); if (file) setEditImageRemoved(false); }} className="hidden" />
                 </label>
-                {editPreview && <button type="button" onClick={() => { setEditFile(null); setEditDroppedUrl(null); setEditPreview(null); setEditImageRemoved(true); }} className="secondary-button mt-2 gap-2 text-red-600"><Trash2 className="h-4 w-4" />Eliminar imagen</button>}
+                {editPreview && <div className="mt-2 flex justify-end"><button type="button" onClick={() => { setEditFile(null); setEditDroppedUrl(null); setEditPreview(null); setEditImageRemoved(true); }} className="secondary-button gap-2 text-red-600"><Trash2 className="h-4 w-4" />Eliminar imagen</button></div>}
               </div>
               <div>
                 <button type="button" onClick={() => setAddingTitles(true)} className="primary-button gap-2"><Plus className="h-4 w-4" />Agregar títulos</button>

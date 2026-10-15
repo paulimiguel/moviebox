@@ -63,6 +63,7 @@ export const MovieLibraryPage = () => {
   const [platformIds, setPlatformIds] = useState<string[]>([]);
   const [openedPlatformId, setOpenedPlatformId] = useState<string | null>(null);
   const [openedGenreId, setOpenedGenreId] = useState<string | null>(null);
+  const [openedCollectionId, setOpenedCollectionId] = useState<string | null>(null);
   const [collectionIds, setCollectionIds] = useState<string[]>([]);
   const [years, setYears] = useState<string[]>([]);
   const [watched, setWatched] = useState<WatchedFilter>('all');
@@ -138,6 +139,7 @@ export const MovieLibraryPage = () => {
       setGenreIds([genreId]);
       setOpenedGenreId(genreId);
       setOpenedPlatformId(null);
+      setOpenedCollectionId(null);
       setFiltersOpen(false);
       try {
         window.sessionStorage.removeItem('moviebox:genre-filter');
@@ -150,6 +152,7 @@ export const MovieLibraryPage = () => {
       setPlatformIds([platformId]);
       setOpenedPlatformId(platformId);
       setOpenedGenreId(null);
+      setOpenedCollectionId(null);
       setFiltersOpen(false);
       try {
         window.sessionStorage.removeItem('moviebox:platform-filter');
@@ -160,6 +163,9 @@ export const MovieLibraryPage = () => {
     const handlePlatformFilter = (event: Event) => applyPlatformFilter((event as CustomEvent<string>).detail);
     const applyCollectionFilter = (collectionId: string) => {
       setCollectionIds([collectionId]);
+      setOpenedCollectionId(collectionId);
+      setOpenedPlatformId(null);
+      setOpenedGenreId(null);
       setFiltersOpen(false);
       try {
         window.sessionStorage.removeItem('moviebox:collection-filter');
@@ -231,17 +237,25 @@ export const MovieLibraryPage = () => {
 
   const moviesQuery = useQuery({ queryKey: ['movies'], queryFn: api.movies.getAll });
   const metadataQuery = useQuery({ queryKey: ['metadata'], queryFn: api.metadata.getAll });
-  // El título muestra la plataforma solo mientras ese sea el único filtro de plataforma aplicado.
+  const collectionsQuery = useQuery({ queryKey: ['collections'], queryFn: api.collections.getAll });
+  // Contexto de catálogo: el título muestra la plataforma, el género o la colección abierta mientras sea el único filtro de ese tipo.
   const openedPlatformName = openedPlatformId && platformIds.length === 1 && platformIds[0] === openedPlatformId
     ? metadataQuery.data?.platforms.find((platform) => platform.id === openedPlatformId)?.name || null
     : null;
-  // La plataforma ya figura en el título: se ocultan sus etiquetas mientras sea el único filtro.
-  const onlyPlatformFilter = Boolean(openedPlatformName) && genreIds.length === 0 && collectionIds.length === 0 && years.length === 0 && type === 'all' && watched === 'all' && favorite === 'all' && watchlist === 'all' && emptyFields.length === 0;
   const openedGenreName = openedGenreId && genreIds.length === 1 && genreIds[0] === openedGenreId
     ? metadataQuery.data?.genres.find((genre) => genre.id === openedGenreId)?.name || null
     : null;
-  const onlyGenreFilter = Boolean(openedGenreName) && platformIds.length === 0 && collectionIds.length === 0 && years.length === 0 && type === 'all' && watched === 'all' && favorite === 'all' && watchlist === 'all' && emptyFields.length === 0;
-  const collectionsQuery = useQuery({ queryKey: ['collections'], queryFn: api.collections.getAll });
+  const openedCollectionName = openedCollectionId && collectionIds.length === 1 && collectionIds[0] === openedCollectionId
+    ? collectionsQuery.data?.find((collection) => collection.id === openedCollectionId)?.name || null
+    : null;
+  const openedContexts = [
+    openedPlatformName ? { title: `Plataforma ${openedPlatformName}`, backTo: '/plataformas', otherCatalogFilters: genreIds.length + collectionIds.length } : null,
+    openedGenreName ? { title: `Género ${openedGenreName}`, backTo: '/generos', otherCatalogFilters: platformIds.length + collectionIds.length } : null,
+    openedCollectionName ? { title: `Colección ${openedCollectionName}`, backTo: '/colecciones', otherCatalogFilters: platformIds.length + genreIds.length } : null,
+  ].filter((context): context is { title: string; backTo: string; otherCatalogFilters: number } => context !== null);
+  const catalogContext = openedContexts.length === 1 ? openedContexts[0] : null;
+  // El nombre ya figura en el título: se ocultan sus etiquetas mientras sea el único filtro.
+  const onlyCatalogFilter = Boolean(catalogContext) && catalogContext?.otherCatalogFilters === 0 && years.length === 0 && type === 'all' && watched === 'all' && favorite === 'all' && watchlist === 'all' && emptyFields.length === 0;
 
   const personalMutation = useMutation({
     mutationFn: ({ movie, field }: { movie: MovieItem; field: 'favorite' | 'watched' | 'watchlist' }) => api.movies.updatePersonal(movie.id, { [field]: !movie[field] }),
@@ -404,9 +418,9 @@ export const MovieLibraryPage = () => {
       <Header />
       <MovieLibraryToolbar
         ownerName={user?.alias || user?.name || 'Usuario'}
-        title={openedPlatformName ? `Plataforma ${openedPlatformName}` : openedGenreName ? `Género ${openedGenreName}` : undefined}
-        hideActiveFilters={onlyPlatformFilter || onlyGenreFilter}
-        backAction={openedPlatformName ? { label: 'Atrás', onClick: () => navigate('/plataformas') } : openedGenreName ? { label: 'Atrás', onClick: () => navigate('/generos') } : undefined}
+        title={catalogContext?.title}
+        hideActiveFilters={onlyCatalogFilter}
+        backAction={catalogContext ? { label: 'Atrás', onClick: () => navigate(catalogContext.backTo) } : undefined}
         visibleCount={filteredMovies.length}
         totalCount={moviesQuery.data?.length || 0}
         search={search}
