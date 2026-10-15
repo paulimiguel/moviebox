@@ -756,7 +756,7 @@ export const Header = () => {
                   setMenuOpen(false);
                   navigate('/nuevo');
                 }}
-                className="moviebox-new-button mt-2 flex h-10 w-full items-center justify-center gap-2 rounded-md bg-coral px-3 text-sm font-semibold uppercase text-white shadow-sm transition-colors hover:bg-[#dc493a] lg:hidden"
+                className="moviebox-new-button mt-2 flex h-9 w-full items-center justify-start gap-2 rounded-md bg-coral px-3 text-left text-xs font-semibold uppercase text-white shadow-sm transition-colors hover:bg-[#dc493a] lg:hidden"
               >
                 <Plus className="h-4 w-4" />
                 <span>NUEVO</span>
