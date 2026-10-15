@@ -219,8 +219,10 @@ const HorizontalScrollSection = ({
   isItemAdding,
   onAdd,
   wrap = false,
+  hideTypeBadge = false,
 }: {
   wrap?: boolean;
+  hideTypeBadge?: boolean;
   items: (JustWatchTop10Item | (TmdbSuggestionCandidate & { subBadge?: string | null; jwId?: string }))[];
   onSelect: (item: TmdbSuggestionCandidate) => void;
   isMovieInLibrary: (item: TmdbSuggestionCandidate) => boolean;
@@ -320,7 +322,7 @@ const HorizontalScrollSection = ({
                     {item.subBadge}
                   </span>
                 )}
-                <span className={`rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase text-white shadow-sm ${item.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>
+                <span className={`rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase text-white shadow-sm ${hideTypeBadge ? 'hidden' : ''} ${item.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>
                   {item.type === 'series' ? 'Serie' : 'Película'}
                 </span>
               </div>
@@ -1110,6 +1112,7 @@ export const NewsPage = () => {
                     </div>
                   </div>
                   <HorizontalScrollSection
+                    hideTypeBadge
                     items={platformPopularQuery.data.popularMovies || []}
                     onSelect={setSelectedCandidate}
                     isMovieInLibrary={isMovieInLibrary}
@@ -1129,6 +1132,7 @@ export const NewsPage = () => {
                     </div>
                   </div>
                   <HorizontalScrollSection
+                    hideTypeBadge
                     items={platformPopularQuery.data.popularSeries || []}
                     onSelect={setSelectedCandidate}
                     isMovieInLibrary={isMovieInLibrary}
