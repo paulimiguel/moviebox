@@ -756,10 +756,10 @@ export const Header = () => {
                   setMenuOpen(false);
                   navigate('/nuevo');
                 }}
-                className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink lg:hidden"
+                className="moviebox-new-button mt-2 flex h-10 w-full items-center justify-center gap-2 rounded-md bg-coral px-3 text-sm font-semibold uppercase text-white shadow-sm transition-colors hover:bg-[#dc493a] lg:hidden"
               >
-                <Plus className="h-4 w-4 text-aqua" />
-                <span>Nuevo</span>
+                <Plus className="h-4 w-4" />
+                <span>NUEVO</span>
               </button>
 
               {/* Cerrar sesión */}
