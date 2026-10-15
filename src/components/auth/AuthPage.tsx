@@ -111,8 +111,8 @@ export const AuthPage = () => {
   };
 
   return (
-    <main className="auth-page min-h-screen bg-canvas lg:grid lg:grid-cols-[minmax(420px,0.8fr)_1.2fr]">
-      <section className="flex min-h-screen items-center justify-center bg-canvas px-5 py-10 sm:px-10">
+    <main className="auth-page min-h-screen bg-canvas md:grid md:grid-cols-[minmax(360px,0.9fr)_1fr] lg:grid-cols-[minmax(420px,0.8fr)_1.2fr]">
+      <section className="flex min-h-screen items-center justify-center bg-canvas px-5 py-10 sm:px-10 md:px-6 lg:px-10">
         <div className="w-full max-w-sm">
           <img
             src={theme === "dark" ? "/moviebox-logo-white.png" : "/moviebox-logo-red.png"}
@@ -243,7 +243,7 @@ export const AuthPage = () => {
       </section>
 
       <section
-        className="group relative hidden max-h-screen min-h-screen overflow-hidden bg-black lg:block"
+        className="group relative hidden max-h-screen min-h-screen overflow-hidden bg-black md:block"
         aria-hidden="true"
       >
         <div className="flex h-full gap-3 px-3">
@@ -260,7 +260,7 @@ export const AuthPage = () => {
               <React.Fragment key={colIndex}>
                 <div className="relative h-full flex-1 overflow-hidden">
                   <div
-                    className={`flex flex-col group-hover:[animation-play-state:paused] ${animationClass}`}
+                    className={`flex flex-col [@media(hover:hover)]:group-hover:[animation-play-state:paused] ${animationClass}`}
                     style={{ animationDuration: `${config.duration}s` }}
                   >
                     {/* First set of posters */}
