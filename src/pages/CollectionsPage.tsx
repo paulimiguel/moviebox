@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FileDown, FolderOpen, ImagePlus, Share2, Loader2, MoreVertical, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -14,6 +15,8 @@ import type { MovieCollection, SortDirection } from '@/types/movie';
 export const CollectionsPage = () => {
   const queryClient = useQueryClient();
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [menuAnchor, setMenuAnchor] = useState<DOMRect | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [editing, setEditing] = useState<MovieCollection | null>(null);
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState('');
@@ -43,6 +46,25 @@ export const CollectionsPage = () => {
   useEffect(() => persistCatalogView('moviebox:collections-view', viewMode), [viewMode]);
 
   const collections = useQuery({ queryKey: ['collections'], queryFn: api.collections.getAll });
+  const menuCollection = openMenuId ? collections.data?.find((item) => item.id === openMenuId) || null : null;
+  useEffect(() => {
+    if (!openMenuId) return undefined;
+    const close = () => setOpenMenuId(null);
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (menuRef.current?.contains(target) || target?.closest?.('[data-collection-menu-trigger]')) return;
+      close();
+    };
+    const onScroll = (event: Event) => { if (!menuRef.current?.contains(event.target as Node)) close(); };
+    document.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('scroll', onScroll, true);
+    window.addEventListener('resize', close);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', close);
+    };
+  }, [openMenuId]);
   const libraryMovies = useQuery({ queryKey: ['movies'], queryFn: api.movies.getAll });
   const exportMovies = useMemo(() => {
     if (!exportingCollection) return [];
@@ -315,17 +337,8 @@ export const CollectionsPage = () => {
                     <p className="mt-1 text-xs text-slate-500">{collection.movieCount} {collection.movieCount === 1 ? 'título' : 'títulos'}</p>
                   </div>
                 </Link>
-                <div className="absolute right-2 top-2" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpenMenuId(null); }}>
-                  <button type="button" onClick={() => setOpenMenuId((current) => current === collection.id ? null : collection.id)} className="moviebox-translucent-action grid h-8 w-8 place-items-center rounded-md border border-white/60 bg-white/80 text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white" title="Más acciones" aria-label={`Acciones de ${collection.name}`} aria-expanded={openMenuId === collection.id}><MoreVertical className="h-4 w-4" /></button>
-                  {openMenuId === collection.id && (
-                    <div className="movie-card-dropdown absolute right-0 top-9 z-30 w-64 rounded-md border border-slate-200 bg-white p-1.5 text-sm shadow-card">
-                      <button type="button" onClick={() => openEdit(collection)} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50"><Pencil className="h-4 w-4" />Editar colección</button>
-                      <button type="button" onClick={() => { setOpenMenuId(null); setAddTitlesTarget(collection); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50"><Plus className="h-4 w-4" />Agregar títulos a la colección</button>
-                      <button type="button" onClick={() => { setOpenMenuId(null); setExportingCollection(collection); }} disabled={collection.movieCount === 0} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300" title={collection.movieCount === 0 ? 'La colección no tiene títulos' : undefined}><FileDown className="h-4 w-4" />Exportar colección</button>
-                      <button type="button" onClick={() => void shareCollection(collection)} disabled={collection.movieCount === 0} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300" title={collection.movieCount === 0 ? 'La colección no tiene títulos' : undefined}><Share2 className="h-4 w-4" />Compartir colección</button>
-                      <button type="button" onClick={() => { setOpenMenuId(null); setCollectionToDelete(collection); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" />Eliminar</button>
-                    </div>
-                  )}
+                <div className="absolute right-2 top-2">
+                  <button type="button" data-collection-menu-trigger onClick={(event) => { setMenuAnchor(event.currentTarget.getBoundingClientRect()); setOpenMenuId((current) => current === collection.id ? null : collection.id); }} className="moviebox-translucent-action grid h-8 w-8 place-items-center rounded-md border border-white/60 bg-white/80 text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white" title="Más acciones" aria-label={`Acciones de ${collection.name}`} aria-expanded={openMenuId === collection.id}><MoreVertical className="h-4 w-4" /></button>
                 </div>
               </article>
             ))}
@@ -388,6 +401,24 @@ export const CollectionsPage = () => {
       )}
 
       {addTitlesTarget && <CollectionAddTitlesModal collection={collections.data?.find((item) => item.id === addTitlesTarget.id) || addTitlesTarget} onClose={() => setAddTitlesTarget(null)} />}
+
+      {menuCollection && menuAnchor && createPortal(
+        (() => {
+          const width = Math.min(256, window.innerWidth - 16);
+          const left = Math.max(8, Math.min(menuAnchor.right - width, window.innerWidth - width - 8));
+          const top = Math.min(menuAnchor.bottom + 4, window.innerHeight - 96);
+          return (
+            <div ref={menuRef} style={{ position: 'fixed', top, left, width, maxHeight: window.innerHeight - top - 8 }} className="movie-card-dropdown z-[75] overflow-y-auto rounded-md border border-slate-200 bg-white p-1.5 text-sm shadow-card">
+                      <button type="button" onClick={() => openEdit(menuCollection)} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50"><Pencil className="h-4 w-4" />Editar colección</button>
+                      <button type="button" onClick={() => { setOpenMenuId(null); setAddTitlesTarget(menuCollection); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50"><Plus className="h-4 w-4" />Agregar títulos a la colección</button>
+                      <button type="button" onClick={() => { setOpenMenuId(null); setExportingCollection(menuCollection); }} disabled={menuCollection.movieCount === 0} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300" title={menuCollection.movieCount === 0 ? 'La colección no tiene títulos' : undefined}><FileDown className="h-4 w-4" />Exportar colección</button>
+                      <button type="button" onClick={() => void shareCollection(menuCollection)} disabled={menuCollection.movieCount === 0} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300" title={menuCollection.movieCount === 0 ? 'La colección no tiene títulos' : undefined}><Share2 className="h-4 w-4" />Compartir colección</button>
+                      <button type="button" onClick={() => { setOpenMenuId(null); setCollectionToDelete(menuCollection); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" />Eliminar</button>
+            </div>
+          );
+        })(),
+        document.body,
+      )}
 
       {exportingCollection && !libraryMovies.isLoading && <MovieExportOptionsModal movies={exportMovies} onClose={() => setExportingCollection(null)} heading="Exportar colección" description={`${exportingCollection.name} · ${exportMovies.length} ${exportMovies.length === 1 ? 'título' : 'títulos'}`} labels={{ copy: 'Copiar al portapapeles', txt: 'Exportar a TXT', xls: 'Exportar a XLS' }} filenameBase={exportingCollection.name} />}
 

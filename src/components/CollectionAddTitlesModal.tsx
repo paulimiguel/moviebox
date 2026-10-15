@@ -134,12 +134,12 @@ export const CollectionAddTitlesModal = ({ collection, onClose }: { collection: 
 
   return (
     <div className="fixed inset-0 z-[80] grid place-items-center bg-ink/55 p-3 sm:p-4" role="dialog" aria-modal="true" aria-labelledby="collection-add-titles-title">
-      <div className="movie-detail-modal flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-md bg-canvas shadow-xl">
+      <div className="movie-detail-modal flex max-h-[92vh] w-full min-w-0 max-w-5xl flex-col overflow-hidden rounded-md bg-canvas shadow-xl">
         <header className="flex min-h-16 items-center gap-3 border-b border-slate-200 bg-white px-5">
           <h2 id="collection-add-titles-title" className="min-w-0 truncate font-bebas text-2xl uppercase text-ink">Agregar títulos a colección {collection.name}</h2>
           <button type="button" onClick={onClose} className="icon-button ml-auto shrink-0 border-0 shadow-none" title="Cerrar" aria-label="Cerrar"><X className="h-5 w-5" /></button>
         </header>
-        <div className="border-b border-slate-200 p-3 sm:px-5">
+        <div className="min-w-0 border-b border-slate-200 p-3 sm:px-5">
           <div className="flex items-center gap-2">
             <label className="relative block min-w-0 flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -222,17 +222,17 @@ export const CollectionAddTitlesModal = ({ collection, onClose }: { collection: 
             </div>
           </div>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-5">
+        <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto p-3 sm:p-5">
           {moviesQuery.isLoading ? (
             <div className="grid h-48 place-items-center"><Loader2 className="h-8 w-8 animate-spin text-aqua" /></div>
           ) : movies.length ? (
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
+            <div className="grid min-w-0 grid-cols-3 gap-2 sm:grid-cols-4 sm:gap-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7">
               {movies.map((movie) => {
                 const poster = posterFor(movie);
                 const inCollection = alreadyInCollection.has(movie.id);
                 const selected = selectedIds.has(movie.id);
                 return (
-                  <button key={movie.id} type="button" onClick={() => toggle(movie)} disabled={inCollection} aria-pressed={selected} className={`group text-left ${inCollection ? 'cursor-not-allowed opacity-60' : ''}`} title={inCollection ? 'Ya está en la colección' : movie.spanishTitle || movie.originalTitle}>
+                  <button key={movie.id} type="button" onClick={() => toggle(movie)} disabled={inCollection} aria-pressed={selected} className={`group min-w-0 text-left ${inCollection ? 'cursor-not-allowed opacity-60' : ''}`} title={inCollection ? 'Ya está en la colección' : movie.spanishTitle || movie.originalTitle}>
                     <span className={`relative block aspect-[2/3] overflow-hidden rounded-md bg-slate-100 ring-2 transition ${selected ? 'ring-coral' : 'ring-transparent group-hover:ring-aqua'}`}>
                       {poster ? <img src={poster} alt={movie.originalTitle} className="h-full w-full object-cover" loading="lazy" /> : <span className="grid h-full place-items-center">{movie.type === 'series' ? <Tv className="h-8 w-8 text-aqua/70" /> : <Film className="h-8 w-8 text-aqua/70" />}</span>}
                       <span className={`absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded border-2 ${selected || inCollection ? 'border-coral bg-coral text-white' : 'border-white bg-white/90 text-transparent'}`}><Check className="h-3.5 w-3.5" strokeWidth={3} /></span>
@@ -256,7 +256,7 @@ export const CollectionAddTitlesModal = ({ collection, onClose }: { collection: 
       </div>
       {addedTitles && (
         <div className="fixed inset-0 z-[90] grid place-items-center bg-ink/55 p-4" role="dialog" aria-modal="true" aria-labelledby="collection-added-titles-title">
-          <div className="movie-detail-modal flex max-h-[88vh] w-full max-w-md flex-col overflow-hidden rounded-md border border-slate-200 bg-canvas shadow-2xl">
+          <div className="movie-detail-modal flex max-h-[88vh] w-full min-w-0 max-w-md flex-col overflow-hidden rounded-md border border-slate-200 bg-canvas shadow-2xl">
             <header className="shrink-0 border-b border-slate-200 bg-white px-5 py-4">
               <h2 id="collection-added-titles-title" className="font-bebas text-2xl uppercase tracking-wide text-ink">
                 {addedTitles.length} {addedTitles.length === 1 ? 'título fue agregado' : 'títulos fueron agregados'} a la colección {collection.name}
