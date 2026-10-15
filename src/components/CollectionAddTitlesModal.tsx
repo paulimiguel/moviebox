@@ -1,10 +1,14 @@
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, Film, Loader2, Search, Tv, X } from 'lucide-react';
+import { Bookmark, Check, ChevronDown, Eye, EyeOff, Film, Filter, Heart, Loader2, Search, Tags, Tv, X } from 'lucide-react';
+import { FilterPlatformIcon, FilterSelect } from '@/components/FilterSelect';
 import { api, resolveMovieImageUrl } from '@/services/api';
+import { getGenreIconImage } from '@/utils/genreIcons';
 import type { MovieCollection, MovieItem } from '@/types/movie';
 
 const normalize = (value: string) => value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLocaleLowerCase('es');
+
+const filterButtonClass = (active: boolean) => `library-filter-button moviebox-translucent-action inline-flex h-8 w-full items-center justify-center gap-1 rounded-md border px-1 text-[11px] font-semibold whitespace-nowrap transition-colors ${active ? 'border-coral bg-coral text-white shadow-sm' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`;
 
 const posterFor = (movie: MovieItem) => {
   const image = movie.images.find((item) => item.isPrimary) || movie.images[0];
@@ -18,17 +22,69 @@ export const CollectionAddTitlesModal = ({ collection, onClose }: { collection: 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const collectionsQuery = useQuery({ queryKey: ['collections'], queryFn: api.collections.getAll });
+  const [genreFilter, setGenreFilter] = useState<string[]>([]);
+  const [platformFilter, setPlatformFilter] = useState<string[]>([]);
+  const [collectionFilter, setCollectionFilter] = useState<string[]>([]);
+  const [yearFilter, setYearFilter] = useState<number[]>([]);
+  const [yearDraft, setYearDraft] = useState('');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'movie' | 'series'>('all');
+  const [watchedFilter, setWatchedFilter] = useState<'all' | 'watched' | 'unwatched'>('all');
+  const [likeFilter, setLikeFilter] = useState(false);
+  const [watchlistFilter, setWatchlistFilter] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [addedTitles, setAddedTitles] = useState<MovieItem[] | null>(null);
   const [failedCount, setFailedCount] = useState(0);
 
   const alreadyInCollection = useMemo(() => new Set(collection.movieIds), [collection.movieIds]);
+  const genreOptions = useMemo(() => [...new Set((moviesQuery.data || []).flatMap((movie) => movie.genres.map((genre) => genre.name)))].sort((left, right) => left.localeCompare(right, 'es')), [moviesQuery.data]);
+  const platformOptions = useMemo(() => [...new Set((moviesQuery.data || []).flatMap((movie) => movie.platforms.map((platform) => platform.name)))].sort((left, right) => left.localeCompare(right, 'es')), [moviesQuery.data]);
+  const noFilters = genreFilter.length === 0 && platformFilter.length === 0 && collectionFilter.length === 0 && yearFilter.length === 0 && typeFilter === 'all' && watchedFilter === 'all' && !likeFilter && !watchlistFilter;
+  const clearFilters = () => {
+    setGenreFilter([]);
+    setPlatformFilter([]);
+    setCollectionFilter([]);
+    setYearFilter([]);
+    setYearDraft('');
+    setTypeFilter('all');
+    setWatchedFilter('all');
+    setLikeFilter(false);
+    setWatchlistFilter(false);
+  };
+  const filterChips = (items: { key: string; label: string; onRemove: () => void }[], kind: string) => items.length ? (
+    <div className="mt-1.5 flex flex-wrap gap-1">
+      {items.map((item) => (
+        <button key={`chip-${kind}-${item.key}`} type="button" onClick={item.onRemove} className="inline-flex max-w-full items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar ${kind} ${item.label}`}>
+          <span className="truncate">{item.label}</span>
+          <X className="h-3 w-3 shrink-0" />
+        </button>
+      ))}
+    </div>
+  ) : null;
+  const toggleIn = <T,>(setter: React.Dispatch<React.SetStateAction<T[]>>, value: T) => setter((current) => current.includes(value) ? current.filter((item) => item !== value) : [...current, value]);
   const movies = useMemo(() => {
     const query = normalize(search.trim());
     return [...(moviesQuery.data || [])]
       .filter((movie) => !query || normalize(`${movie.originalTitle} ${movie.spanishTitle || ''}`).includes(query))
+      .filter((movie) => !genreFilter.length || movie.genres.some((genre) => genreFilter.includes(genre.name)))
+      .filter((movie) => !platformFilter.length || movie.platforms.some((platform) => platformFilter.includes(platform.name)))
+      .filter((movie) => !collectionFilter.length || movie.collections.some((item) => collectionFilter.includes(item.id)))
+      .filter((movie) => !yearFilter.length || (movie.year != null && yearFilter.includes(movie.year)))
+      .filter((movie) => typeFilter === 'all' || movie.type === typeFilter)
+      .filter((movie) => watchedFilter === 'all' || (watchedFilter === 'watched' ? movie.watched : !movie.watched))
+      .filter((movie) => !likeFilter || movie.favorite)
+      .filter((movie) => !watchlistFilter || movie.watchlist)
       .sort((left, right) => (left.spanishTitle || left.originalTitle).localeCompare(right.spanishTitle || right.originalTitle, 'es', { sensitivity: 'base' }));
-  }, [moviesQuery.data, search]);
+  }, [moviesQuery.data, search, genreFilter, platformFilter, collectionFilter, yearFilter, typeFilter, watchedFilter, likeFilter, watchlistFilter]);
 
+  const selectableVisible = movies.filter((movie) => !alreadyInCollection.has(movie.id));
+  const allVisibleSelected = selectableVisible.length > 0 && selectableVisible.every((movie) => selectedIds.has(movie.id));
+  const selectAllVisible = () => setSelectedIds((current) => {
+    const next = new Set(current);
+    selectableVisible.forEach((movie) => next.add(movie.id));
+    return next;
+  });
+  const clearSelection = () => setSelectedIds(new Set());
   const toggle = (movie: MovieItem) => {
     if (alreadyInCollection.has(movie.id)) return;
     setSelectedIds((current) => {
@@ -79,15 +135,91 @@ export const CollectionAddTitlesModal = ({ collection, onClose }: { collection: 
     <div className="fixed inset-0 z-[80] grid place-items-center bg-ink/55 p-3 sm:p-4" role="dialog" aria-modal="true" aria-labelledby="collection-add-titles-title">
       <div className="movie-detail-modal flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-md bg-canvas shadow-xl">
         <header className="flex min-h-16 items-center gap-3 border-b border-slate-200 bg-white px-5">
-          <h2 id="collection-add-titles-title" className="min-w-0 truncate font-bebas text-2xl uppercase text-ink">Agregar títulos a {collection.name}</h2>
+          <h2 id="collection-add-titles-title" className="min-w-0 truncate font-bebas text-2xl uppercase text-ink">Agregar títulos a colección {collection.name}</h2>
           <button type="button" onClick={onClose} className="icon-button ml-auto shrink-0 border-0 shadow-none" title="Cerrar" aria-label="Cerrar"><X className="h-5 w-5" /></button>
         </header>
         <div className="border-b border-slate-200 p-3 sm:px-5">
-          <label className="relative block">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input autoFocus type="search" value={search} onChange={(event) => setSearch(event.target.value)} className="control w-full pl-9" placeholder="Buscar en mi biblioteca" />
-          </label>
-          <p className="mt-2 text-xs text-slate-500">Mostrando {movies.length} de {moviesQuery.data?.length || 0} títulos · {selectedIds.size} seleccionado{selectedIds.size === 1 ? '' : 's'}</p>
+          <div className="flex items-center gap-2">
+            <label className="relative block min-w-0 flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <input autoFocus type="search" value={search} onChange={(event) => setSearch(event.target.value)} className="control w-full pl-9" placeholder="Buscar en mi biblioteca" />
+            </label>
+            <button type="button" aria-expanded={filtersOpen} onClick={() => setFiltersOpen((current) => !current)} className={`library-toolbar-menu-button inline-flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-md border px-3 text-xs font-semibold uppercase transition-colors ${filtersOpen || !noFilters ? 'border-coral bg-coral text-white shadow-sm' : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50'}`}>
+              <Filter className="h-3.5 w-3.5 shrink-0" />
+              <span>Filtrar</span>
+              <ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${filtersOpen ? 'rotate-180' : ''}`} />
+            </button>
+          </div>
+          {filtersOpen && (
+            <div className="mt-3 space-y-1.5">
+              <div className="grid w-full grid-cols-1 gap-1.5 sm:flex sm:flex-row sm:items-start sm:gap-2">
+                <div className="min-w-0 flex-1">
+                <FilterSelect
+                  compact
+                  label="Género"
+                  placeholder="Filtrar por género"
+                  searchPlaceholder="Buscar género..."
+                  plural="seleccionado{s}"
+                  options={genreOptions.map((genre) => {
+                    const iconImage = getGenreIconImage(genre);
+                    return { id: genre, label: genre, icon: iconImage ? <img src={iconImage} alt="" className="h-6 w-6 shrink-0 object-contain" loading="lazy" /> : <span className="grid h-6 w-6 shrink-0 place-items-center" aria-hidden="true"><Tags className="h-4 w-4 text-aqua" /></span> };
+                  })}
+                  selected={genreFilter}
+                  onToggle={(id) => toggleIn(setGenreFilter, id)}
+                />
+                {filterChips(genreFilter.map((genre) => ({ key: genre, label: genre, onRemove: () => toggleIn(setGenreFilter, genre) })), 'género')}
+                </div>
+                <div className="min-w-0 flex-1">
+                <FilterSelect
+                  compact
+                  label="Plataforma"
+                  placeholder="Filtrar por plataforma"
+                  searchPlaceholder="Buscar plataforma..."
+                  plural="seleccionada{s}"
+                  options={platformOptions.map((name) => ({ id: name, label: name, icon: <FilterPlatformIcon name={name} /> }))}
+                  selected={platformFilter}
+                  onToggle={(id) => toggleIn(setPlatformFilter, id)}
+                />
+                {filterChips(platformFilter.map((name) => ({ key: name, label: name, onRemove: () => toggleIn(setPlatformFilter, name) })), 'plataforma')}
+                </div>
+                <div className="min-w-0 flex-1">
+                <FilterSelect
+                  compact
+                  label="Colección"
+                  placeholder="Filtrar por colección"
+                  searchPlaceholder="Buscar colección..."
+                  plural="seleccionada{s}"
+                  options={(collectionsQuery.data || []).filter((item) => item.id !== collection.id).map((item) => ({ id: item.id, label: item.name }))}
+                  selected={collectionFilter}
+                  onToggle={(id) => toggleIn(setCollectionFilter, id)}
+                />
+                {filterChips(collectionFilter.map((id) => ({ key: id, label: (collectionsQuery.data || []).find((item) => item.id === id)?.name || id, onRemove: () => toggleIn(setCollectionFilter, id) })), 'colección')}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <label htmlFor="collection-add-year-filter" className="field-label">Año</label>
+                  <input id="collection-add-year-filter" className="control h-8 w-full py-0 text-xs" type="text" inputMode="numeric" value={yearDraft} onChange={(event) => setYearDraft(event.target.value.replace(/\D/g, '').slice(0, 4))} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); const value = Number(yearDraft); if (yearDraft.length === 4 && !yearFilter.includes(value)) setYearFilter((current) => [...current, value]); setYearDraft(''); } }} placeholder="Escribir y Enter" aria-label="Agregar año" />
+                {filterChips(yearFilter.map((year) => ({ key: String(year), label: String(year), onRemove: () => toggleIn(setYearFilter, year) })), 'año')}
+                </div>
+              </div>
+              <div className="grid w-full grid-cols-3 gap-1.5 sm:grid-cols-4 sm:gap-2 md:grid-cols-7">
+                <button type="button" aria-pressed={typeFilter === 'movie'} onClick={() => setTypeFilter(typeFilter === 'movie' ? 'all' : 'movie')} className={filterButtonClass(typeFilter === 'movie')}><Film className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">Película</span></button>
+                <button type="button" aria-pressed={typeFilter === 'series'} onClick={() => setTypeFilter(typeFilter === 'series' ? 'all' : 'series')} className={filterButtonClass(typeFilter === 'series')}><Tv className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">Serie</span></button>
+                <button type="button" aria-pressed={watchedFilter === 'watched'} onClick={() => setWatchedFilter(watchedFilter === 'watched' ? 'all' : 'watched')} className={filterButtonClass(watchedFilter === 'watched')}><Eye className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">Watched</span></button>
+                <button type="button" aria-pressed={watchedFilter === 'unwatched'} onClick={() => setWatchedFilter(watchedFilter === 'unwatched' ? 'all' : 'unwatched')} className={filterButtonClass(watchedFilter === 'unwatched')}><EyeOff className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">Unwatched</span></button>
+                <button type="button" aria-pressed={likeFilter} onClick={() => setLikeFilter((current) => !current)} className={filterButtonClass(likeFilter)}><Heart className={`h-4 w-4 shrink-0 ${likeFilter ? 'fill-current' : ''}`} /><span className="whitespace-nowrap">Like</span></button>
+                <button type="button" aria-pressed={watchlistFilter} onClick={() => setWatchlistFilter((current) => !current)} className={filterButtonClass(watchlistFilter)}><Bookmark className={`h-4 w-4 shrink-0 ${watchlistFilter ? 'fill-current' : ''}`} /><span className="whitespace-nowrap">Watchlist</span></button>
+                <button type="button" aria-pressed={noFilters} onClick={clearFilters} className={`${filterButtonClass(noFilters)} col-start-2 sm:col-start-auto`}><span className="whitespace-nowrap">Todos</span></button>
+              </div>
+            </div>
+          )}
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs text-slate-500">Mostrando {movies.length} de {moviesQuery.data?.length || 0} títulos · {selectedIds.size} seleccionado{selectedIds.size === 1 ? '' : 's'}</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <button type="button" onClick={selectAllVisible} disabled={!selectableVisible.length || allVisibleSelected} className="secondary-button h-8 px-3 text-xs disabled:cursor-not-allowed disabled:opacity-40">Seleccionar todos</button>
+              <button type="button" onClick={clearSelection} disabled={!selectedIds.size} className="secondary-button h-8 px-3 text-xs disabled:cursor-not-allowed disabled:opacity-40">Quitar selección</button>
+              <button type="button" onClick={clearFilters} disabled={noFilters} className="secondary-button h-8 px-3 text-xs disabled:cursor-not-allowed disabled:opacity-40">Limpiar filtros</button>
+            </div>
+          </div>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:p-5">
           {moviesQuery.isLoading ? (
