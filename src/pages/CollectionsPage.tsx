@@ -49,7 +49,7 @@ export const CollectionsPage = () => {
     const ids = new Set(exportingCollection.movieIds);
     return (libraryMovies.data || [])
       .filter((movie) => ids.has(movie.id))
-      .sort((left, right) => (exportingCollection.movieOrders[left.id] ?? 0) - (exportingCollection.movieOrders[right.id] ?? 0));
+      .sort((left, right) => (left.spanishTitle || left.originalTitle).localeCompare(right.spanishTitle || right.originalTitle, 'es', { sensitivity: 'base' }));
   }, [exportingCollection, libraryMovies.data]);
   const visibleCollections = useMemo(() => {
     const query = search.trim().toLocaleLowerCase('es');
@@ -143,7 +143,7 @@ export const CollectionsPage = () => {
     const ids = new Set(collection.movieIds);
     const titles = (libraryMovies.data || [])
       .filter((movie) => ids.has(movie.id))
-      .sort((left, right) => (collection.movieOrders[left.id] ?? 0) - (collection.movieOrders[right.id] ?? 0));
+      .sort((left, right) => (left.spanishTitle || left.originalTitle).localeCompare(right.spanishTitle || right.originalTitle, 'es', { sensitivity: 'base' }));
     if (!titles.length) {
       showShareFeedback('La colección no tiene títulos');
       return;
@@ -319,7 +319,7 @@ export const CollectionsPage = () => {
                   <button type="button" onClick={() => setOpenMenuId((current) => current === collection.id ? null : collection.id)} className="moviebox-translucent-action grid h-8 w-8 place-items-center rounded-md border border-white/60 bg-white/80 text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white" title="Más acciones" aria-label={`Acciones de ${collection.name}`} aria-expanded={openMenuId === collection.id}><MoreVertical className="h-4 w-4" /></button>
                   {openMenuId === collection.id && (
                     <div className="movie-card-dropdown absolute right-0 top-9 z-30 w-48 rounded-md border border-slate-200 bg-white p-1.5 text-sm shadow-card">
-                      <button type="button" onClick={() => openEdit(collection)} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50"><Pencil className="h-4 w-4" />Editar</button>
+                      <button type="button" onClick={() => openEdit(collection)} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50"><Pencil className="h-4 w-4" />Editar colección</button>
                       <button type="button" onClick={() => { setOpenMenuId(null); setExportingCollection(collection); }} disabled={collection.movieCount === 0} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300" title={collection.movieCount === 0 ? 'La colección no tiene títulos' : undefined}><FileDown className="h-4 w-4" />Exportar colección</button>
                       <button type="button" onClick={() => void shareCollection(collection)} disabled={collection.movieCount === 0} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300" title={collection.movieCount === 0 ? 'La colección no tiene títulos' : undefined}><Share2 className="h-4 w-4" />Compartir colección</button>
                       <button type="button" onClick={() => { setOpenMenuId(null); setCollectionToDelete(collection); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" />Eliminar</button>

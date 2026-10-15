@@ -144,6 +144,7 @@ router.patch('/:id/personal', async (req: AuthRequest, res) => {
   const parsed = z.object({ favorite: z.boolean().optional(), watched: z.boolean().optional(), watchlist: z.boolean().optional(), personalRating: z.number().int().min(1).max(5).nullable().optional(), collectionIds: z.array(z.string()).max(100).optional() }).safeParse(req.body); if (!parsed.success) return res.status(400).json({ error: 'Valor personal no valido' });
   const current = await findOwnedMovie(prisma, String(req.params.id), req.user!.userId); if (!current) return res.status(404).json({ error: 'Titulo no encontrado' });
   const { collectionIds, ...personalData } = parsed.data;
+  try {
   const movie = await prisma.$transaction(async (tx) => {
     if (Object.keys(personalData).length) await tx.movieItem.update({ where: { id: current.id }, data: personalData });
     if (collectionIds) {
@@ -154,6 +155,10 @@ router.patch('/:id/personal', async (req: AuthRequest, res) => {
     return tx.movieItem.findUniqueOrThrow({ where: { id: current.id }, include: movieInclude });
   });
   return res.json(serializeMovie(movie));
+  } catch (error) {
+    console.error('No se pudo actualizar los datos personales', error);
+    return res.status(500).json({ error: 'No se pudo guardar el cambio. Volvé a intentarlo.' });
+  }
 });
 router.delete('/:id', async (req: AuthRequest, res) => { const current = await findOwnedMovie(prisma, String(req.params.id), req.user!.userId); if (!current) return res.status(404).json({ error: 'Titulo no encontrado' }); await prisma.movieItem.delete({ where: { id: current.id } }); await removeLocalImages(current.images.map((image) => image.localPath)); return res.status(204).send(); });
 

@@ -91,12 +91,14 @@ export const MovieLibraryPage = () => {
   const [emptyFields, setEmptyFields] = useState<EmptyMovieField[]>([]);
 
   useEffect(() => {
+    // Dentro de una colección el orden por nombre es propio de esa vista: no reemplaza el orden guardado de la biblioteca.
+    if (openedCollectionId) return;
     try {
       window.localStorage.setItem(LIBRARY_SORT_STORAGE_KEY, JSON.stringify({ key: sortKey, direction: sortDirection }));
     } catch {
       // The selected order remains active for the current session.
     }
-  }, [sortDirection, sortKey]);
+  }, [openedCollectionId, sortDirection, sortKey]);
 
   useEffect(() => {
     const updateShiftState = (event: KeyboardEvent) => { shiftPressed.current = event.shiftKey; };
@@ -164,6 +166,8 @@ export const MovieLibraryPage = () => {
     const handlePlatformFilter = (event: Event) => applyPlatformFilter((event as CustomEvent<string>).detail);
     const applyCollectionFilter = (collectionId: string) => {
       setCollectionIds([collectionId]);
+      setSortKey('title');
+      setSortDirection('asc');
       setOpenedCollectionId(collectionId);
       setOpenedPlatformId(null);
       setOpenedGenreId(null);

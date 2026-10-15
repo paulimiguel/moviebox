@@ -43,9 +43,15 @@ export const CollectionAddTitlesModal = ({ collection, onClose }: { collection: 
     setError('');
     const targets = (moviesQuery.data || []).filter((movie) => selectedIds.has(movie.id));
     // Se agregan a las colecciones que el título ya tenía: nunca se reemplazan.
-    const results = await Promise.allSettled(targets.map((movie) => api.movies.updatePersonal(movie.id, {
-      collectionIds: [...new Set([...movie.collections.map((item) => item.id), collection.id])],
-    })));
+    const results: PromiseSettledResult<unknown>[] = [];
+    for (const movie of targets) {
+      const request = api.movies.updatePersonal(movie.id, {
+        collectionIds: [...new Set([...movie.collections.map((item) => item.id), collection.id])],
+      });
+      const timeout = new Promise<never>((_, reject) => window.setTimeout(() => reject(new Error('Tiempo de espera agotado')), 20000));
+      // Se envían de a uno: en paralelo la base SQLite se bloqueaba y la solicitud quedaba colgada.
+      results.push(await Promise.race([request, timeout]).then((value): PromiseFulfilledResult<unknown> => ({ status: 'fulfilled', value }), (reason): PromiseRejectedResult => ({ status: 'rejected', reason })));
+    }
     queryClient.invalidateQueries({ queryKey: ['movies'] });
     queryClient.invalidateQueries({ queryKey: ['collections'] });
     const failed = results.filter((result) => result.status === 'rejected').length;

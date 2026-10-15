@@ -1,4 +1,5 @@
 import './config/env';
+import './lib/asyncErrors';
 
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -76,6 +77,14 @@ if (env.nodeEnv === 'production') {
 } else {
   app.use((_req, res) => res.status(404).json({ error: 'Ruta no encontrada' }));
 }
+
+// Middleware de errores: cualquier fallo no controlado responde en vez de dejar la solicitud colgada.
+app.use((error: unknown, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (res.headersSent) return next(error);
+  console.error('Error no controlado', error);
+  const status = typeof (error as { status?: unknown })?.status === 'number' ? (error as { status: number }).status : 500;
+  return res.status(status).json({ error: status >= 500 ? 'Ocurrió un error inesperado. Volvé a intentarlo.' : (error as Error).message });
+});
 
 app.listen(env.port, '0.0.0.0', () => {
   console.log(`MovieBox API listening on http://localhost:${env.port}`);
