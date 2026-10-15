@@ -39,6 +39,7 @@ const request = async <T>(path: string, options: RequestInit = {}): Promise<T> =
   const isFormData = options.body instanceof FormData;
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
+    credentials: 'include',
     headers: {
       ...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -50,7 +51,8 @@ const request = async <T>(path: string, options: RequestInit = {}): Promise<T> =
 
   if (!response.ok) {
     if (response.status === 401) localStorage.removeItem(TOKEN_KEY);
-    throw new Error(payload.error || 'No se pudo completar la solicitud');
+    // El estado HTTP permite distinguir una sesión vencida (401) de un corte de conexión o un error del servidor.
+    throw Object.assign(new Error(payload.error || 'No se pudo completar la solicitud'), { status: response.status });
   }
 
   return payload as T;
@@ -58,6 +60,8 @@ const request = async <T>(path: string, options: RequestInit = {}): Promise<T> =
 
 const saveAuth = (response: AuthResponse) => {
   localStorage.setItem(TOKEN_KEY, response.token);
+  // Pide al navegador que no borre el almacenamiento de MovieBox cuando falte espacio.
+  void navigator.storage?.persist?.().catch(() => undefined);
   return response.user;
 };
 
@@ -95,6 +99,8 @@ export const api = {
         body: JSON.stringify({ name, email, password }),
       })),
     me: async () => (await request<{ user: MovieBoxUser }>('/auth/me')).user,
+    restore: async () => saveAuth(await request<AuthResponse>('/auth/restore')),
+    logout: () => request<void>('/auth/logout', { method: 'POST' }).catch(() => undefined),
     updatePreferredPlatforms: async (preferredPlatforms: string[]) =>
       (await request<{ user: MovieBoxUser }>('/auth/me/platforms', {
         method: 'PATCH',

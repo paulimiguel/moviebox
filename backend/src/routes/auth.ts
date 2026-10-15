@@ -1,4 +1,4 @@
-import { Router, type Request } from "express";
+import { Router, type Request, type Response } from "express";
 import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
 import jwt from "jsonwebtoken";
@@ -81,8 +81,23 @@ const publicUser = (user: {
   preferredPlatforms: parsePreferredPlatforms(user.preferredPlatforms),
 });
 
+// Sesión larga y renovable: cada vez que se abre la app se emite un token nuevo por 90 días más.
+const SESSION_DAYS = 90;
+const SESSION_COOKIE = "movieboxSession";
+
 const createToken = (userId: string) =>
-  jwt.sign({ userId }, env.jwtSecret, { expiresIn: "7d" });
+  jwt.sign({ userId }, env.jwtSecret, { expiresIn: `${SESSION_DAYS}d` });
+
+// Cookie de respaldo: solo viaja a /api/auth, así que no sirve para el resto de la API.
+// Si el navegador borra el almacenamiento local, la sesión se recupera desde acá.
+const setSessionCookie = (res: Response, token: string) =>
+  res.cookie(SESSION_COOKIE, token, {
+    httpOnly: true,
+    secure: env.nodeEnv === "production",
+    sameSite: "lax",
+    path: "/api/auth",
+    maxAge: SESSION_DAYS * 24 * 60 * 60 * 1000,
+  });
 
 const getGoogleRedirectUri = (req: Request) =>
   env.googleRedirectUri || `${req.protocol}://${req.get("host")}/api/auth/google/callback`;
@@ -231,7 +246,9 @@ router.get("/google/session", authenticateToken, async (req: AuthRequest, res) =
   if (!user) return res.status(404).json({ error: "Usuario no encontrado" });
 
   res.clearCookie("authToken", { path: "/" });
-  return res.json({ token: createToken(user.id), user: publicUser(user) });
+  const token = createToken(user.id);
+  setSessionCookie(res, token);
+  return res.json({ token, user: publicUser(user) });
 });
 
 router.post("/register", async (req, res) => {
@@ -255,8 +272,10 @@ router.post("/register", async (req, res) => {
       },
     });
 
+    const token = createToken(user.id);
+    setSessionCookie(res, token);
     return res.status(201).json({
-      token: createToken(user.id),
+      token,
       user: publicUser(user),
     });
   } catch (error) {
@@ -281,8 +300,10 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ error: "Email o contrasena incorrectos" });
     }
 
+    const token = createToken(user.id);
+    setSessionCookie(res, token);
     return res.json({
-      token: createToken(user.id),
+      token,
       user: publicUser(user),
     });
   } catch (error) {
@@ -292,6 +313,36 @@ router.post("/login", async (req, res) => {
     console.error("Login error:", error);
     return res.status(500).json({ error: "No se pudo iniciar sesion" });
   }
+});
+
+// Restaura la sesión al abrir la app: acepta el token guardado o, si no sirve, la cookie de respaldo.
+router.get("/restore", async (req, res) => {
+  const authorization = req.header("authorization");
+  const candidates = [
+    authorization?.startsWith("Bearer ") ? authorization.slice("Bearer ".length) : null,
+    req.cookies?.[SESSION_COOKIE] as string | undefined,
+  ].filter((token): token is string => Boolean(token));
+
+  for (const candidate of candidates) {
+    try {
+      const { userId } = jwt.verify(candidate, env.jwtSecret) as { userId: string };
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user) continue;
+      const token = createToken(user.id);
+      setSessionCookie(res, token);
+      return res.json({ token, user: publicUser(user) });
+    } catch {
+      // Token vencido o inválido: se prueba con el siguiente.
+    }
+  }
+
+  res.clearCookie(SESSION_COOKIE, { path: "/api/auth" });
+  return res.status(401).json({ error: "Sesion requerida" });
+});
+
+router.post("/logout", (_req, res) => {
+  res.clearCookie(SESSION_COOKIE, { path: "/api/auth" });
+  return res.status(204).send();
 });
 
 router.get("/me", authenticateToken, async (req: AuthRequest, res) => {

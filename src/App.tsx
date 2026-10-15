@@ -29,7 +29,7 @@ const ScrollToTop = () => {
 const PENDING_PATH_KEY = 'moviebox:pending-path';
 
 const AppContent = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, connectionError, retryConnection } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -54,6 +54,18 @@ const AppContent = () => {
     return (
       <main className="grid min-h-screen place-items-center bg-canvas">
         <div className="h-9 w-9 animate-spin rounded-full border-2 border-aqua border-t-coral" />
+      </main>
+    );
+  }
+
+  if (connectionError) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-canvas px-6 text-center">
+        <div className="max-w-sm">
+          <h1 className="font-bebas text-3xl uppercase text-ink">No se pudo conectar</h1>
+          <p className="mt-2 text-sm text-slate-500">Tu sesión sigue guardada. Revisá tu conexión y volvé a intentarlo.</p>
+          <button type="button" onClick={retryConnection} className="primary-button mt-5">Reintentar</button>
+        </div>
       </main>
     );
   }
