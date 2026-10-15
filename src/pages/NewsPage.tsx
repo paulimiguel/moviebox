@@ -187,7 +187,7 @@ const Top10FeaturedSection = ({
                     {item.subBadge}
                   </span>
                 )}
-                <span className={`rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase text-white shadow-sm ${item.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>
+                <span className={`rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase text-white shadow-sm ${compact ? 'hidden lg:inline-block' : ''} ${item.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>
                   {item.type === 'series' ? 'Serie' : 'Película'}
                 </span>
               </div>
