@@ -985,3 +985,13 @@ html.cursor-thinking * {
 :root[data-theme="dark"] .movie-detail-modal strong {
   color: #fff;
 }
+
+/* iOS hace zoom automático al enfocar un campo con letra menor a 16 px y la pantalla queda agrandada.
+   En pantallas táctiles todos los campos de texto usan 16 px para evitarlo. */
+@media (hover: none) and (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
