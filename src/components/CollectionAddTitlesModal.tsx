@@ -18,6 +18,8 @@ export const CollectionAddTitlesModal = ({ collection, onClose }: { collection: 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [addedTitles, setAddedTitles] = useState<MovieItem[] | null>(null);
+  const [failedCount, setFailedCount] = useState(0);
 
   const alreadyInCollection = useMemo(() => new Set(collection.movieIds), [collection.movieIds]);
   const movies = useMemo(() => {
@@ -55,13 +57,22 @@ export const CollectionAddTitlesModal = ({ collection, onClose }: { collection: 
     queryClient.invalidateQueries({ queryKey: ['movies'] });
     queryClient.invalidateQueries({ queryKey: ['collections'] });
     const failed = results.filter((result) => result.status === 'rejected').length;
+    const added = targets.filter((_, index) => results[index].status === 'fulfilled');
     setSaving(false);
-    if (failed) {
-      setError(`No se pudieron agregar ${failed} de ${targets.length} títulos. Los demás se agregaron.`);
-      setSelectedIds(new Set(targets.filter((_, index) => results[index].status === 'rejected').map((movie) => movie.id)));
+    // Los que fallaron quedan seleccionados para reintentar.
+    setSelectedIds(new Set(targets.filter((_, index) => results[index].status === 'rejected').map((movie) => movie.id)));
+    if (added.length) {
+      setFailedCount(failed);
+      setAddedTitles(added);
       return;
     }
-    onClose();
+    setError(`No se pudieron agregar los títulos (${failed}). Volvé a intentarlo.`);
+  };
+
+  const keepAdding = () => {
+    setAddedTitles(null);
+    setFailedCount(0);
+    setError('');
   };
 
   return (
@@ -110,6 +121,27 @@ export const CollectionAddTitlesModal = ({ collection, onClose }: { collection: 
           <button type="button" onClick={() => void save()} disabled={!selectedIds.size || saving} className="primary-button">{saving && <Loader2 className="h-4 w-4 animate-spin" />}Agregar{selectedIds.size ? ` ${selectedIds.size}` : ''}</button>
         </footer>
       </div>
+      {addedTitles && (
+        <div className="fixed inset-0 z-[90] grid place-items-center bg-ink/55 p-4" role="dialog" aria-modal="true" aria-labelledby="collection-added-titles-title">
+          <div className="movie-detail-modal flex max-h-[88vh] w-full max-w-md flex-col overflow-hidden rounded-md border border-slate-200 bg-canvas shadow-2xl">
+            <header className="shrink-0 border-b border-slate-200 bg-white px-5 py-4">
+              <h2 id="collection-added-titles-title" className="font-bebas text-2xl uppercase tracking-wide text-ink">
+                {addedTitles.length} {addedTitles.length === 1 ? 'título fue agregado' : 'títulos fueron agregados'} a la colección {collection.name}
+              </h2>
+            </header>
+            <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto p-5 text-sm text-slate-600">
+              {addedTitles.map((movie) => (
+                <li key={movie.id} className="truncate">• {movie.spanishTitle || movie.originalTitle}{movie.year ? ` (${movie.year})` : ''}</li>
+              ))}
+            </ul>
+            {failedCount > 0 && <p className="mx-5 mb-3 rounded-md bg-red-50 p-3 text-sm text-red-700">No se pudieron agregar {failedCount} {failedCount === 1 ? 'título' : 'títulos'}. Quedaron seleccionados para reintentar.</p>}
+            <footer className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-slate-200 bg-white px-5 py-4">
+              <button type="button" onClick={keepAdding} className="secondary-button">Seguir agregando</button>
+              <button type="button" onClick={onClose} className="primary-button min-w-28">Finalizar</button>
+            </footer>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
