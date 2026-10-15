@@ -31,7 +31,7 @@ export const CollectionsPage = () => {
   const [editImageRemoved, setEditImageRemoved] = useState(false);
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const [editError, setEditError] = useState('');
-  const [addingTitles, setAddingTitles] = useState(false);
+  const [addTitlesTarget, setAddTitlesTarget] = useState<MovieCollection | null>(null);
   const [exportingCollection, setExportingCollection] = useState<MovieCollection | null>(null);
   const [shareFeedback, setShareFeedback] = useState('');
   const [collectionToDelete, setCollectionToDelete] = useState<MovieCollection | null>(null);
@@ -318,8 +318,9 @@ export const CollectionsPage = () => {
                 <div className="absolute right-2 top-2" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpenMenuId(null); }}>
                   <button type="button" onClick={() => setOpenMenuId((current) => current === collection.id ? null : collection.id)} className="moviebox-translucent-action grid h-8 w-8 place-items-center rounded-md border border-white/60 bg-white/80 text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white" title="Más acciones" aria-label={`Acciones de ${collection.name}`} aria-expanded={openMenuId === collection.id}><MoreVertical className="h-4 w-4" /></button>
                   {openMenuId === collection.id && (
-                    <div className="movie-card-dropdown absolute right-0 top-9 z-30 w-48 rounded-md border border-slate-200 bg-white p-1.5 text-sm shadow-card">
+                    <div className="movie-card-dropdown absolute right-0 top-9 z-30 w-64 rounded-md border border-slate-200 bg-white p-1.5 text-sm shadow-card">
                       <button type="button" onClick={() => openEdit(collection)} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50"><Pencil className="h-4 w-4" />Editar colección</button>
+                      <button type="button" onClick={() => { setOpenMenuId(null); setAddTitlesTarget(collection); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50"><Plus className="h-4 w-4" />Agregar títulos a la colección</button>
                       <button type="button" onClick={() => { setOpenMenuId(null); setExportingCollection(collection); }} disabled={collection.movieCount === 0} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300" title={collection.movieCount === 0 ? 'La colección no tiene títulos' : undefined}><FileDown className="h-4 w-4" />Exportar colección</button>
                       <button type="button" onClick={() => void shareCollection(collection)} disabled={collection.movieCount === 0} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300" title={collection.movieCount === 0 ? 'La colección no tiene títulos' : undefined}><Share2 className="h-4 w-4" />Compartir colección</button>
                       <button type="button" onClick={() => { setOpenMenuId(null); setCollectionToDelete(collection); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" />Eliminar</button>
@@ -374,7 +375,7 @@ export const CollectionsPage = () => {
                 {editPreview && <div className="mt-2 flex justify-end"><button type="button" onClick={() => { setEditFile(null); setEditDroppedUrl(null); setEditPreview(null); setEditImageRemoved(true); }} className="secondary-button gap-2 text-red-600"><Trash2 className="h-4 w-4" />Eliminar imagen</button></div>}
               </div>
               <div>
-                <button type="button" onClick={() => setAddingTitles(true)} className="primary-button gap-2"><Plus className="h-4 w-4" />Agregar títulos</button>
+                <button type="button" onClick={() => editing && setAddTitlesTarget(editing)} className="primary-button gap-2"><Plus className="h-4 w-4" />Agregar títulos</button>
               </div>
               {editError && <p className="rounded-md bg-red-50 p-3 text-sm text-red-700">{editError}</p>}
             </div>
@@ -386,7 +387,7 @@ export const CollectionsPage = () => {
         </div>
       )}
 
-      {editing && addingTitles && <CollectionAddTitlesModal collection={collections.data?.find((item) => item.id === editing.id) || editing} onClose={() => setAddingTitles(false)} />}
+      {addTitlesTarget && <CollectionAddTitlesModal collection={collections.data?.find((item) => item.id === addTitlesTarget.id) || addTitlesTarget} onClose={() => setAddTitlesTarget(null)} />}
 
       {exportingCollection && !libraryMovies.isLoading && <MovieExportOptionsModal movies={exportMovies} onClose={() => setExportingCollection(null)} heading="Exportar colección" description={`${exportingCollection.name} · ${exportMovies.length} ${exportMovies.length === 1 ? 'título' : 'títulos'}`} labels={{ copy: 'Copiar al portapapeles', txt: 'Exportar a TXT', xls: 'Exportar a XLS' }} filenameBase={exportingCollection.name} />}
 
