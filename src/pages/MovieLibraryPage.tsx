@@ -85,6 +85,7 @@ export const MovieLibraryPage = () => {
   const [exportOptionsOpen, setExportOptionsOpen] = useState(false);
   const [sharePending, setSharePending] = useState(false);
   const [shareFeedback, setShareFeedback] = useState('');
+  const [sharedMovies, setSharedMovies] = useState<MovieItem[] | null>(null);
   const [platformSearchOpen, setPlatformSearchOpen] = useState(false);
   const [emptyFieldsOpen, setEmptyFieldsOpen] = useState(false);
   const [emptyFields, setEmptyFields] = useState<EmptyMovieField[]>([]);
@@ -380,9 +381,11 @@ export const MovieLibraryPage = () => {
       if (navigator.share) {
         await navigator.share({ title: 'Títulos de MovieBox', text });
         setShareFeedback('Títulos compartidos');
+        setSharedMovies(selectedMovies);
       } else {
         await navigator.clipboard.writeText(text);
         setShareFeedback('Enlaces copiados');
+        setSharedMovies(selectedMovies);
       }
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
@@ -396,12 +399,23 @@ export const MovieLibraryPage = () => {
         document.execCommand('copy');
         textarea.remove();
         setShareFeedback('Enlaces copiados');
+        setSharedMovies(selectedMovies);
       } catch {
         setShareFeedback('No se pudieron compartir');
       }
     } finally {
       setSharePending(false);
     }
+  };
+  const shareMoreMovies = () => {
+    setSharedMovies(null);
+    setSelectedIds(new Set());
+    setShareFeedback('');
+    selectionAnchorId.current = null;
+  };
+  const finishSharing = () => {
+    setSharedMovies(null);
+    handleBulkModeChange(null);
   };
   const adjacentMovie = (movie: MovieItem, offset: -1 | 1) => {
     const index = filteredMovies.findIndex((item) => item.id === movie.id);
@@ -501,6 +515,26 @@ export const MovieLibraryPage = () => {
       {detailMovie && <MovieDetailModal movie={detailMovie} onClose={() => setDetailMovie(null)} onEdit={(movie) => { setDetailMovie(null); setEditingMovie(movie); }} onDelete={(movie) => { setSelectedIds(new Set([movie.id])); setDetailMovie(null); setDeleteConfirmOpen(true); }} onPersonal={(movie, field) => personalMutation.mutate({ movie, field })} onRating={(movie, rating) => ratingMutation.mutate({ movie, rating })} onPrevious={adjacentMovie(detailMovie, -1) ? () => setDetailMovie(adjacentMovie(detailMovie, -1)) : undefined} onNext={adjacentMovie(detailMovie, 1) ? () => setDetailMovie(adjacentMovie(detailMovie, 1)) : undefined} />}
       {editingMovie && <MovieEditModal key={editingMovie.id} movie={editingMovie} onClose={() => setEditingMovie(null)} onSaved={() => { refreshLibrary(); setEditingMovie(null); }} onPrevious={adjacentMovie(editingMovie, -1) ? () => setEditingMovie(adjacentMovie(editingMovie, -1)) : undefined} onNext={adjacentMovie(editingMovie, 1) ? () => setEditingMovie(adjacentMovie(editingMovie, 1)) : undefined} />}
       {emptyFieldsOpen && <EmptyFieldsModal selected={emptyFields} onClose={() => setEmptyFieldsOpen(false)} onApply={(fields) => { setEmptyFields(fields); setEmptyFieldsOpen(false); }} />}
+      {sharedMovies && (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-ink/55 p-4" role="dialog" aria-modal="true" aria-labelledby="shared-titles-title">
+          <div className="movie-detail-modal flex max-h-[88vh] w-full max-w-md flex-col overflow-hidden rounded-md border border-slate-200 bg-canvas shadow-2xl">
+            <header className="shrink-0 border-b border-slate-200 bg-white px-5 py-4">
+              <h2 id="shared-titles-title" className="font-bebas text-2xl uppercase tracking-wide text-ink">
+                {sharedMovies.length} {sharedMovies.length === 1 ? 'título compartido' : 'títulos compartidos'}
+              </h2>
+            </header>
+            <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto p-5 text-sm text-slate-600">
+              {sharedMovies.map((movie) => (
+                <li key={movie.id} className="truncate">• {movie.spanishTitle || movie.originalTitle}{movie.year ? ` (${movie.year})` : ''}</li>
+              ))}
+            </ul>
+            <footer className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-slate-200 bg-white px-5 py-4">
+              <button type="button" onClick={shareMoreMovies} className="secondary-button">Compartir más títulos</button>
+              <button type="button" onClick={finishSharing} className="primary-button min-w-28">Finalizar</button>
+            </footer>
+          </div>
+        </div>
+      )}
       {bulkEditOpen && <MovieBulkEditModal movies={selectedMovies} genres={metadataQuery.data?.genres || []} platforms={metadataQuery.data?.platforms || []} countries={metadataQuery.data?.countries || []} collections={collectionsQuery.data || []} onClose={() => setBulkEditOpen(false)} onSaved={() => { refreshLibrary(); setBulkEditOpen(false); setSelectedIds(new Set()); }} />}
       {exportOptionsOpen && <MovieExportOptionsModal movies={selectedMovies} onClose={() => setExportOptionsOpen(false)} />}
       {platformSearchOpen && <MoviePlatformSearchModal isOpen={platformSearchOpen} onClose={() => setPlatformSearchOpen(false)} />}

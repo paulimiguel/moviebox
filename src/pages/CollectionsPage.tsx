@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { FolderOpen, ImagePlus, Loader2, MoreVertical, Pencil, Plus, Trash2, X } from 'lucide-react';
+import { FileDown, FolderOpen, ImagePlus, Share2, Loader2, MoreVertical, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { CollectionAddTitlesModal } from '@/components/CollectionAddTitlesModal';
+import { MovieExportOptionsModal } from '@/components/MovieExportOptionsModal';
 import { CatalogToolbar, catalogGridClass, type CatalogViewMode } from '@/components/CatalogToolbar';
 import { api, resolveMovieImageUrl } from '@/services/api';
 import { getPersistedCatalogView, persistCatalogView } from '@/utils/persistedCatalogView';
@@ -31,6 +32,8 @@ export const CollectionsPage = () => {
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const [editError, setEditError] = useState('');
   const [addingTitles, setAddingTitles] = useState(false);
+  const [exportingCollection, setExportingCollection] = useState<MovieCollection | null>(null);
+  const [shareFeedback, setShareFeedback] = useState('');
   const [collectionToDelete, setCollectionToDelete] = useState<MovieCollection | null>(null);
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<CatalogViewMode>(() => getPersistedCatalogView('moviebox:collections-view', 'large'));
@@ -40,6 +43,14 @@ export const CollectionsPage = () => {
   useEffect(() => persistCatalogView('moviebox:collections-view', viewMode), [viewMode]);
 
   const collections = useQuery({ queryKey: ['collections'], queryFn: api.collections.getAll });
+  const libraryMovies = useQuery({ queryKey: ['movies'], queryFn: api.movies.getAll });
+  const exportMovies = useMemo(() => {
+    if (!exportingCollection) return [];
+    const ids = new Set(exportingCollection.movieIds);
+    return (libraryMovies.data || [])
+      .filter((movie) => ids.has(movie.id))
+      .sort((left, right) => (exportingCollection.movieOrders[left.id] ?? 0) - (exportingCollection.movieOrders[right.id] ?? 0));
+  }, [exportingCollection, libraryMovies.data]);
   const visibleCollections = useMemo(() => {
     const query = search.trim().toLocaleLowerCase('es');
     const direction = sortDirection === 'asc' ? 1 : -1;
@@ -123,6 +134,51 @@ export const CollectionsPage = () => {
     },
   });
 
+  const showShareFeedback = (message: string) => {
+    setShareFeedback(message);
+    window.setTimeout(() => setShareFeedback(''), 3000);
+  };
+  const shareCollection = async (collection: MovieCollection) => {
+    setOpenMenuId(null);
+    const ids = new Set(collection.movieIds);
+    const titles = (libraryMovies.data || [])
+      .filter((movie) => ids.has(movie.id))
+      .sort((left, right) => (collection.movieOrders[left.id] ?? 0) - (collection.movieOrders[right.id] ?? 0));
+    if (!titles.length) {
+      showShareFeedback('La colección no tiene títulos');
+      return;
+    }
+    const lines = titles.map((movie) => {
+      const title = movie.spanishTitle || movie.originalTitle;
+      const details = [title, movie.year, movie.type === 'movie' ? 'Película' : 'Serie'].filter(Boolean).join(' · ');
+      return `${details}\n${window.location.origin}/titulo/${movie.id}`;
+    });
+    const text = `${collection.name}\n\n${lines.join('\n\n')}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: collection.name, text });
+        showShareFeedback('Colección compartida');
+      } else {
+        await navigator.clipboard.writeText(text);
+        showShareFeedback('Colección copiada para compartir');
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        textarea.remove();
+        showShareFeedback('Colección copiada para compartir');
+      } catch {
+        showShareFeedback('No se pudo compartir la colección');
+      }
+    }
+  };
   const openEdit = (collection: MovieCollection) => {
     setOpenMenuId(null);
     setEditing(collection);
@@ -262,8 +318,10 @@ export const CollectionsPage = () => {
                 <div className="absolute right-2 top-2" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpenMenuId(null); }}>
                   <button type="button" onClick={() => setOpenMenuId((current) => current === collection.id ? null : collection.id)} className="moviebox-translucent-action grid h-8 w-8 place-items-center rounded-md border border-white/60 bg-white/80 text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white" title="Más acciones" aria-label={`Acciones de ${collection.name}`} aria-expanded={openMenuId === collection.id}><MoreVertical className="h-4 w-4" /></button>
                   {openMenuId === collection.id && (
-                    <div className="movie-card-dropdown absolute right-0 top-9 z-30 w-40 rounded-md border border-slate-200 bg-white p-1.5 text-sm shadow-card">
+                    <div className="movie-card-dropdown absolute right-0 top-9 z-30 w-48 rounded-md border border-slate-200 bg-white p-1.5 text-sm shadow-card">
                       <button type="button" onClick={() => openEdit(collection)} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50"><Pencil className="h-4 w-4" />Editar</button>
+                      <button type="button" onClick={() => { setOpenMenuId(null); setExportingCollection(collection); }} disabled={collection.movieCount === 0} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300" title={collection.movieCount === 0 ? 'La colección no tiene títulos' : undefined}><FileDown className="h-4 w-4" />Exportar colección</button>
+                      <button type="button" onClick={() => void shareCollection(collection)} disabled={collection.movieCount === 0} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300" title={collection.movieCount === 0 ? 'La colección no tiene títulos' : undefined}><Share2 className="h-4 w-4" />Compartir colección</button>
                       <button type="button" onClick={() => { setOpenMenuId(null); setCollectionToDelete(collection); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" />Eliminar</button>
                     </div>
                   )}
@@ -329,6 +387,10 @@ export const CollectionsPage = () => {
       )}
 
       {editing && addingTitles && <CollectionAddTitlesModal collection={collections.data?.find((item) => item.id === editing.id) || editing} onClose={() => setAddingTitles(false)} />}
+
+      {exportingCollection && !libraryMovies.isLoading && <MovieExportOptionsModal movies={exportMovies} onClose={() => setExportingCollection(null)} heading="Exportar colección" description={`${exportingCollection.name} · ${exportMovies.length} ${exportMovies.length === 1 ? 'título' : 'títulos'}`} labels={{ copy: 'Copiar al portapapeles', txt: 'Exportar a TXT', xls: 'Exportar a XLS' }} filenameBase={exportingCollection.name} />}
+
+      {shareFeedback && <p role="status" className="fixed bottom-6 left-1/2 z-[90] -translate-x-1/2 rounded-md border border-white/10 bg-[#121417] px-4 py-2.5 text-sm font-medium text-white shadow-card">{shareFeedback}</p>}
 
       {collectionToDelete && (
         <div className="fixed inset-0 z-[70] grid place-items-center bg-ink/55 p-4" role="dialog" aria-modal="true" aria-labelledby="delete-collection-title">

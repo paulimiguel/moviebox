@@ -5,6 +5,10 @@ import type { MovieItem } from '@/types/movie';
 interface MovieExportOptionsModalProps {
   movies: MovieItem[];
   onClose: () => void;
+  heading?: string;
+  description?: string;
+  labels?: { copy: string; txt: string; xls: string };
+  filenameBase?: string;
 }
 
 interface SaveFileHandle {
@@ -63,7 +67,12 @@ const saveBlob = async (blob: Blob, filename: string, handle: SaveFileHandle | n
   URL.revokeObjectURL(url);
 };
 
-export const MovieExportOptionsModal = ({ movies, onClose }: MovieExportOptionsModalProps) => {
+const defaultLabels = { copy: 'Exportar títulos al portapapeles', txt: 'Exportar títulos a TXT', xls: 'Exportar títulos a XLS' };
+
+const safeFilename = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLocaleLowerCase() || 'titulos';
+
+export const MovieExportOptionsModal = ({ movies, onClose, heading = 'Exportar títulos', description = 'Elegí cómo querés exportar los títulos seleccionados.', labels = defaultLabels, filenameBase = 'titulos' }: MovieExportOptionsModalProps) => {
+  const filePrefix = safeFilename(filenameBase);
   const [feedback, setFeedback] = useState('');
   const [exportingXls, setExportingXls] = useState(false);
 
@@ -83,7 +92,7 @@ export const MovieExportOptionsModal = ({ movies, onClose }: MovieExportOptionsM
   };
 
   const exportTxt = async () => {
-    const filename = `titulos-${new Date().toISOString().slice(0, 10)}.txt`;
+    const filename = `${filePrefix}-${new Date().toISOString().slice(0, 10)}.txt`;
     try {
       const target = await chooseSaveTarget(filename, 'Archivo de texto', 'text/plain', '.txt');
       if (target.cancelled) return;
@@ -99,7 +108,7 @@ export const MovieExportOptionsModal = ({ movies, onClose }: MovieExportOptionsM
     setExportingXls(true);
     setFeedback('');
     try {
-      const filename = `titulos-${new Date().toISOString().slice(0, 10)}.xls`;
+      const filename = `${filePrefix}-${new Date().toISOString().slice(0, 10)}.xls`;
       const target = await chooseSaveTarget(filename, 'Libro de Excel 97-2003', 'application/vnd.ms-excel', '.xls');
       if (target.cancelled) return;
       const XLSX = await import('xlsx');
@@ -137,9 +146,9 @@ export const MovieExportOptionsModal = ({ movies, onClose }: MovieExportOptionsM
         <header className="flex min-h-16 items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 sm:px-5">
           <div className="min-w-0 flex-1">
             <h2 id="export-options-title" className="font-bebas text-2xl uppercase tracking-wide text-ink">
-              Exportar títulos
+              {heading}
             </h2>
-            <p className="text-xs text-slate-500">Elegí cómo querés exportar los títulos seleccionados.</p>
+            <p className="text-xs text-slate-500">{description}</p>
           </div>
           <button type="button" onClick={onClose} className="icon-button border-0 shadow-none" title="Cerrar" aria-label="Cerrar">
             <X className="h-5 w-5" />
@@ -149,15 +158,15 @@ export const MovieExportOptionsModal = ({ movies, onClose }: MovieExportOptionsM
         <div className="grid gap-3 p-4 sm:p-5">
           <button type="button" onClick={() => void copyToClipboard()} className="secondary-button h-auto min-h-[72px] justify-start gap-4 px-5 text-left text-base">
             <Copy className="h-5 w-5 shrink-0 text-aqua" />
-            Exportar títulos al portapapeles
+            {labels.copy}
           </button>
           <button type="button" onClick={() => void exportTxt()} className="secondary-button h-auto min-h-[72px] justify-start gap-4 px-5 text-left text-base">
             <FileText className="h-5 w-5 shrink-0 text-slate-400" />
-            Exportar títulos a TXT
+            {labels.txt}
           </button>
           <button type="button" onClick={() => void exportXls()} disabled={exportingXls} className="secondary-button h-auto min-h-[72px] justify-start gap-4 px-5 text-left text-base">
             {exportingXls ? <Loader2 className="h-5 w-5 shrink-0 animate-spin text-emerald-500" /> : <FileSpreadsheet className="h-5 w-5 shrink-0 text-emerald-500" />}
-            Exportar títulos a XLS
+            {labels.xls}
           </button>
 
           {feedback && (
