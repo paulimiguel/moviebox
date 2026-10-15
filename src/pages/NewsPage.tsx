@@ -34,8 +34,8 @@ const CoverAddButton = ({
   size?: 'sm' | 'md';
 }) => {
   const isSm = size === 'sm';
-  const sizeClasses = isSm ? 'h-4 w-4' : 'h-5 w-5';
-  const iconSize = isSm ? 'h-2.5 w-2.5' : 'h-3 w-3';
+  const sizeClasses = isSm ? 'h-7 w-7 sm:h-4 sm:w-4' : 'h-8 w-8 sm:h-5 sm:w-5';
+  const iconSize = isSm ? 'h-3.5 w-3.5 sm:h-2.5 sm:w-2.5' : 'h-4 w-4 sm:h-3 sm:w-3';
 
   if (isAdded) {
     return (

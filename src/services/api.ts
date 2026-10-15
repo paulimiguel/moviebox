@@ -3,6 +3,23 @@ import type { CreateMovieCollectionInput, CreateMovieInput, GenreCatalogItem, Im
 const API_BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:3003/api');
 const TOKEN_KEY = 'moviebox_auth_token';
 
+export interface SharedCollectionPreview {
+  name: string;
+  description: string | null;
+  coverImage: string | null;
+  ownerName: string;
+  isOwner: boolean;
+  titleCount: number;
+  titles: { id: string; type: 'movie' | 'series'; title: string; year: number | null; posterUrl: string | null; inLibrary: boolean }[];
+}
+
+export interface SharedCollectionImportResult {
+  collection: { id: string; name: string };
+  added: number;
+  alreadyHad: number;
+  failed: string[];
+}
+
 export interface MovieBoxUser {
   id: string;
   email: string;
@@ -97,6 +114,12 @@ export const api = {
     create: (input: CreateMovieCollectionInput) => request<MovieCollection>('/collections', { method: 'POST', body: JSON.stringify(input) }),
     update: (id: string, input: CreateMovieCollectionInput) => request<MovieCollection>(`/collections/${id}`, { method: 'PUT', body: JSON.stringify(input) }),
     remove: (id: string) => request<void>(`/collections/${id}`, { method: 'DELETE' }),
+    share: (id: string) => request<{ token: string }>(`/collections/${id}/share`, { method: 'POST' }),
+    unshare: (id: string) => request<void>(`/collections/${id}/share`, { method: 'DELETE' }),
+  },
+  sharedCollections: {
+    get: (token: string) => request<SharedCollectionPreview>(`/shared-collections/${encodeURIComponent(token)}`),
+    import: (token: string) => request<SharedCollectionImportResult>(`/shared-collections/${encodeURIComponent(token)}/import`, { method: 'POST' }),
   },
   platforms: {
     getAll: () => request<PlatformCatalogItem[]>('/platforms'),

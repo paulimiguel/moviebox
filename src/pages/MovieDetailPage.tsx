@@ -222,7 +222,7 @@ export const MovieDetailPage = () => {
                 {movie.trailerUrl && <button type="button" onClick={() => setTrailerOpen(true)} className="movie-trailer-link inline-flex items-center gap-2 text-sm font-semibold text-slate-600 transition-opacity hover:opacity-70"><img src="/youtube-play.png" alt="" className="h-4 w-[23px] object-contain" aria-hidden="true" />Ver trailer</button>}
               </div>
             </div>
-            <div className="mt-6 grid gap-3 sm:max-w-xl sm:grid-cols-[minmax(280px,1.5fr)_minmax(160px,1fr)]">
+            <div className="mt-6 grid gap-3 sm:max-w-xl sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
               <div className="movie-detail-rating-box rounded-md border border-slate-200 bg-white p-4">
                 <p className="text-xs font-semibold uppercase text-slate-400">
                   Rate

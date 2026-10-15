@@ -980,3 +980,8 @@ html.cursor-thinking * {
 :root[data-theme="dark"] .movie-detail-modal .bulk-import-result-summary strong {
   color: #fff;
 }
+
+/* Textos en negrita dentro de diálogos y paneles oscuros (por ejemplo el nombre de una colección). */
+:root[data-theme="dark"] .movie-detail-modal strong {
+  color: #fff;
+}

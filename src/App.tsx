@@ -2,7 +2,7 @@ import { AuthPage } from '@/components/auth/AuthPage';
 import { useEffect } from 'react';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { MovieLibraryPage } from '@/pages/MovieLibraryPage';
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { MovieDetailPage } from '@/pages/MovieDetailPage';
 import { CollectionsPage } from '@/pages/CollectionsPage';
 import { CollectionDetailPage } from '@/pages/CollectionDetailPage';
@@ -14,6 +14,7 @@ import { PlatformNewsPage } from '@/pages/PlatformNewsPage';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { PopcornCursor } from '@/components/PopcornCursor';
 import { HomePage } from '@/pages/HomePage';
+import { SharedCollectionPage } from '@/pages/SharedCollectionPage';
 
 const ScrollToTop = () => {
   const { pathname, hash } = useLocation();
@@ -25,8 +26,29 @@ const ScrollToTop = () => {
   return null;
 };
 
+const PENDING_PATH_KEY = 'moviebox:pending-path';
+
 const AppContent = () => {
   const { user, isLoading } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isLoading) return;
+    try {
+      if (!user && location.pathname.startsWith('/colecciones/compartida/')) {
+        window.sessionStorage.setItem(PENDING_PATH_KEY, location.pathname);
+      } else if (user) {
+        const pending = window.sessionStorage.getItem(PENDING_PATH_KEY);
+        if (pending) {
+          window.sessionStorage.removeItem(PENDING_PATH_KEY);
+          if (pending !== location.pathname) navigate(pending, { replace: true });
+        }
+      }
+    } catch {
+      // Sin almacenamiento, el enlace sigue funcionando si ya se inició sesión.
+    }
+  }, [isLoading, location.pathname, navigate, user]);
 
   if (isLoading) {
     return (
@@ -42,6 +64,7 @@ const AppContent = () => {
       <Route path="/biblioteca" element={<MovieLibraryPage />} />
       <Route path="/titulo/:id" element={<MovieDetailPage />} />
       <Route path="/colecciones" element={<CollectionsPage />} />
+      <Route path="/colecciones/compartida/:token" element={<SharedCollectionPage />} />
       <Route path="/colecciones/:id" element={<CollectionDetailPage />} />
       <Route path="/agregar" element={<AddMoviesPage />} />
       <Route path="/nuevo" element={<AddMoviesPage />} />

@@ -1,5 +1,6 @@
 import { unlink } from 'node:fs/promises';
 import path from 'node:path';
+import { randomBytes } from 'node:crypto';
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
@@ -62,6 +63,22 @@ router.put('/:id', async (req: AuthRequest, res) => {
     await removeUploadedCover(current.coverImage);
   }
   return res.json(collection);
+});
+
+// Enlace para compartir: token aleatorio e imposible de adivinar. Quien lo tenga puede importar una copia.
+router.post('/:id/share', async (req: AuthRequest, res) => {
+  const current = await prisma.movieCollection.findFirst({ where: { id: String(req.params.id), userId: req.user!.userId } });
+  if (!current) return res.status(404).json({ error: 'Coleccion no encontrada' });
+  const shareToken = current.shareToken || randomBytes(24).toString('base64url');
+  if (!current.shareToken) await prisma.movieCollection.update({ where: { id: current.id }, data: { shareToken } });
+  return res.json({ token: shareToken });
+});
+
+router.delete('/:id/share', async (req: AuthRequest, res) => {
+  const current = await prisma.movieCollection.findFirst({ where: { id: String(req.params.id), userId: req.user!.userId } });
+  if (!current) return res.status(404).json({ error: 'Coleccion no encontrada' });
+  await prisma.movieCollection.update({ where: { id: current.id }, data: { shareToken: null } });
+  return res.status(204).send();
 });
 
 router.delete('/:id', async (req: AuthRequest, res) => {

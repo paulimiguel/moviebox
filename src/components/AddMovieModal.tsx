@@ -81,8 +81,8 @@ const CoverAddButton = ({
   size?: 'sm' | 'md';
 }) => {
   const isSm = size === 'sm';
-  const sizeClasses = isSm ? 'h-4 w-4' : 'h-6 w-6';
-  const iconSize = isSm ? 'h-2.5 w-2.5' : 'h-3.5 w-3.5';
+  const sizeClasses = isSm ? 'h-7 w-7 sm:h-4 sm:w-4' : 'h-8 w-8 sm:h-6 sm:w-6';
+  const iconSize = isSm ? 'h-3.5 w-3.5 sm:h-2.5 sm:w-2.5' : 'h-4 w-4 sm:h-3.5 sm:w-3.5';
 
   if (isAdded) {
     return (
@@ -1159,21 +1159,21 @@ export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQ
           <button
             type="button"
             onClick={handleClose}
-            className="secondary-button min-w-28"
+            className="secondary-button min-w-0 flex-1 px-2 sm:min-w-28 sm:flex-none"
           >
             Cancelar
           </button>
           <button
             type="button"
             onClick={handleNewSearch}
-            className="secondary-button min-w-32"
+            className="secondary-button min-w-0 flex-1 px-2 sm:min-w-32 sm:flex-none"
           >
             Nueva búsqueda
           </button>
           <button
             type="button"
             onClick={handleClose}
-            className="primary-button min-w-28"
+            className="primary-button min-w-0 flex-1 px-2 sm:min-w-28 sm:flex-none"
           >
             Finalizar
           </button>

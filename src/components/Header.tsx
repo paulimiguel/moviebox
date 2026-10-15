@@ -215,7 +215,7 @@ export const Header = () => {
       <div className="mx-auto flex h-[72px] max-w-[1500px] items-center gap-5 px-4 sm:px-6">
         <Link to="/" className="shrink-0"><img src={theme === 'dark' ? '/moviebox-logo-white.png' : '/moviebox-logo-red.png'} alt="MovieBox" className="h-10 w-auto max-w-[190px] object-contain sm:h-11" /></Link>
         <div className="ml-auto flex h-full min-w-0 items-center gap-1 sm:gap-2 lg:gap-4">
-          <nav className="main-navigation hidden h-full items-end md:flex">
+          <nav className="main-navigation hidden h-full items-end lg:flex">
             <Link to="/" className={`flex h-full items-center border-b-2 px-2 text-xs font-semibold whitespace-nowrap xl:px-3 xl:text-sm ${location.pathname === '/' ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`}>INICIO</Link>
             <div ref={libraryMenuRef} className="relative h-full" onMouseEnter={() => setLibraryMenuOpen(true)} onMouseLeave={() => setLibraryMenuOpen(false)}>
               <button type="button" onClick={() => { filterLibrary('all'); setPlatformMenuOpen(false); setGenreMenuOpen(false); setCollectionMenuOpen(false); setNewsMenuOpen(false); setActionsMenuOpen(false); }} className={`flex h-full items-center gap-1 xl:gap-1.5 border-b-2 px-2 xl:px-3 text-xs xl:text-sm font-semibold whitespace-nowrap ${libraryMenuOpen || location.pathname === '/biblioteca' ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`} aria-expanded={libraryMenuOpen}>MI BIBLIOTECA<ChevronDown className="h-3.5 w-3.5 xl:h-4 xl:w-4" /></button>
@@ -402,7 +402,7 @@ export const Header = () => {
               </button>
             </div>
           </nav>
-          <div ref={profileMenuRef} className="relative md:hidden">
+          <div ref={profileMenuRef} className="relative lg:hidden">
             <button type="button" onClick={() => { setMenuOpen(false); setProfileMenuOpen((current) => !current); }} className="profile-menu-trigger flex h-10 items-center rounded-md px-1" aria-expanded={profileMenuOpen} aria-label="Perfil">
               {user?.profilePhoto && !profilePhotoFailed
                 ? <img src={user.profilePhoto} alt={user.name} referrerPolicy="no-referrer" onError={() => setProfilePhotoFailed(true)} className="h-8 w-8 rounded-full bg-mist object-cover" />
@@ -439,15 +439,15 @@ export const Header = () => {
             className="profile-menu-trigger flex h-10 items-center gap-2 rounded-md px-1.5 text-sm text-slate-600 hover:bg-slate-100"
             aria-expanded={menuOpen}
           >
-            <Menu className="h-6 w-6 md:hidden" aria-hidden="true" />
+            <Menu className="h-6 w-6 lg:hidden" aria-hidden="true" />
             {user?.profilePhoto && !profilePhotoFailed
-              ? <img src={user.profilePhoto} alt={user.name} referrerPolicy="no-referrer" onError={() => setProfilePhotoFailed(true)} className="hidden h-8 w-8 rounded-full bg-mist object-cover md:block" />
-              : <span className="hidden h-8 w-8 place-items-center rounded-full bg-mist font-semibold text-ink md:grid">{initials}</span>}
-            <ChevronDown className="hidden h-4 w-4 md:block" />
+              ? <img src={user.profilePhoto} alt={user.name} referrerPolicy="no-referrer" onError={() => setProfilePhotoFailed(true)} className="hidden h-8 w-8 rounded-full bg-mist object-cover lg:block" />
+              : <span className="hidden h-8 w-8 place-items-center rounded-full bg-mist font-semibold text-ink lg:grid">{initials}</span>}
+            <ChevronDown className="hidden h-4 w-4 lg:block" />
           </button>
           {menuOpen && (
             <div className="header-dropdown absolute right-0 top-12 w-64 sm:w-72 max-h-[calc(100vh-80px)] overflow-y-auto rounded-md border border-slate-200 bg-white p-1.5 shadow-card">
-              <div className="hidden border-b border-slate-100 px-3 py-2.5 md:block">
+              <div className="hidden border-b border-slate-100 px-3 py-2.5 lg:block">
                 <p className="truncate text-sm font-semibold text-ink">{user?.name}</p>
                 <p className="truncate text-xs text-slate-500">{user?.email}</p>
               </div>
@@ -455,14 +455,14 @@ export const Header = () => {
               <button
                 type="button"
                 onClick={() => { setMenuOpen(false); setPlatformPreferencesOpen(true); }}
-                className="mt-1 hidden w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink md:flex"
+                className="mt-1 hidden w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink lg:flex"
               >
                 <Tv className="h-4 w-4 text-aqua" />
                 <span>Plataformas que utilizo</span>
               </button>
 
               {/* Biblioteca (colapsable) */}
-              <div className="mt-1 border-b border-slate-100 py-1 md:hidden">
+              <div className="mt-1 border-b border-slate-100 py-1 lg:hidden">
                 <Link to="/" onClick={() => setMenuOpen(false)} className="flex w-full items-center rounded-md px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500 hover:bg-slate-50 hover:text-ink">
                   Inicio
                 </Link>
@@ -493,7 +493,7 @@ export const Header = () => {
               </div>
 
               {/* Novedades (colapsable) */}
-              <div className="mt-1 border-b border-slate-100 py-1 md:hidden">
+              <div className="mt-1 border-b border-slate-100 py-1 lg:hidden">
                 <button
                   type="button"
                   onClick={() => setMobileSubmenu((c) => c === 'news' ? null : 'news')}
@@ -545,7 +545,7 @@ export const Header = () => {
               </div>
 
               {/* Plataformas (colapsable) */}
-              <div className="mt-1 border-b border-slate-100 py-1 md:hidden">
+              <div className="mt-1 border-b border-slate-100 py-1 lg:hidden">
                 <button
                   type="button"
                   onClick={() => setMobileSubmenu((c) => c === 'platforms' ? null : 'platforms')}
@@ -586,7 +586,7 @@ export const Header = () => {
               </div>
 
               {/* Géneros (colapsable) */}
-              <div className="mt-1 border-b border-slate-100 py-1 md:hidden">
+              <div className="mt-1 border-b border-slate-100 py-1 lg:hidden">
                 <button
                   type="button"
                   onClick={() => setMobileSubmenu((c) => c === 'genres' ? null : 'genres')}
@@ -627,7 +627,7 @@ export const Header = () => {
               </div>
 
               {/* Colecciones (colapsable) */}
-              <div className="mt-1 border-b border-slate-100 py-1 md:hidden">
+              <div className="mt-1 border-b border-slate-100 py-1 lg:hidden">
                 <button
                   type="button"
                   onClick={() => setMobileSubmenu((c) => c === 'collections' ? null : 'collections')}
@@ -668,7 +668,7 @@ export const Header = () => {
               </div>
 
               {/* Acciones (colapsable) */}
-              <div className="mt-1 border-b border-slate-100 py-1 md:hidden">
+              <div className="mt-1 border-b border-slate-100 py-1 lg:hidden">
                 <button
                   type="button"
                   onClick={() => setMobileSubmenu((c) => c === 'actions' ? null : 'actions')}
@@ -741,7 +741,7 @@ export const Header = () => {
               </div>
 
               {/* Temas */}
-              <div className="hidden border-b border-slate-100 px-3 py-2 md:block">
+              <div className="hidden border-b border-slate-100 px-3 py-2 lg:block">
                 <p className="mb-2 text-xs font-semibold uppercase text-slate-400">Temas</p>
                 <div className="grid grid-cols-2 gap-2">
                   <button type="button" onClick={() => { setTheme('light'); setMenuOpen(false); }} className={`flex items-center justify-center gap-2 rounded-md border px-2 py-2 text-sm ${theme === 'light' ? 'border-coral text-ink' : 'border-slate-200 text-slate-600'}`}><Sun className="h-4 w-4" />Claro</button>
@@ -756,14 +756,14 @@ export const Header = () => {
                   setMenuOpen(false);
                   navigate('/nuevo');
                 }}
-                className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink md:hidden"
+                className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink lg:hidden"
               >
                 <Plus className="h-4 w-4 text-aqua" />
                 <span>Nuevo</span>
               </button>
 
               {/* Cerrar sesión */}
-              <button type="button" onClick={logout} className="mt-1 hidden w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 md:flex">
+              <button type="button" onClick={logout} className="mt-1 hidden w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 lg:flex">
                 <LogOut className="h-4 w-4" />
                 Cerrar sesion
               </button>

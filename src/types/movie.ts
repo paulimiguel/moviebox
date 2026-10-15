@@ -292,6 +292,7 @@ export interface MovieCollection {
   movieIds: string[];
   movieOrders: Record<string, number>;
   movieCount: number;
+  shareToken?: string | null;
   createdAt: string;
   updatedAt: string;
 }

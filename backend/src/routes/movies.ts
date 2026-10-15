@@ -8,7 +8,7 @@ import { authenticateToken, type AuthRequest } from '../middleware/auth';
 
 const router = Router();
 const named = z.object({ name: z.string().trim().min(1).max(100), order: z.number().int().min(0).optional() });
-const inputSchema = z.object({
+export const inputSchema = z.object({
   type: z.enum(['movie', 'series']), originalTitle: z.string().trim().min(1).max(250),
   spanishTitle: z.string().trim().max(250).nullable().optional(), year: z.number().int().min(1888).max(2200).nullable().optional(),
   synopsis: z.string().trim().max(5000).nullable().optional(), durationMinutes: z.number().int().positive().max(2000).nullable().optional(),
@@ -24,7 +24,7 @@ const inputSchema = z.object({
   genres: z.array(named.extend({ tmdbGenreId: z.number().int().positive().nullable().optional(), tmdbMediaType: z.enum(['movie', 'series']).nullable().optional() })).max(30).optional(), keywords: z.array(named).max(50).optional(),
   platforms: z.array(named.extend({ isPrimary: z.boolean().optional(), tmdbProviderId: z.number().int().positive().nullable().optional(), logoPath: z.string().max(500).nullable().optional() })).max(30).optional(), collectionIds: z.array(z.string()).max(100).optional(),
 });
-type MovieInput = z.infer<typeof inputSchema>;
+export type MovieInput = z.infer<typeof inputSchema>;
 const uploadDir = path.resolve(process.cwd(), 'uploads');
 const localPathFor = (image: { url: string; localPath?: string | null }) => image.localPath || (image.url.startsWith('/uploads/') ? path.basename(image.url) : null);
 const removeLocalImages = async (paths: (string | null | undefined)[]) => Promise.all(paths.filter((value): value is string => Boolean(value)).map(async (filename) => {
@@ -32,7 +32,7 @@ const removeLocalImages = async (paths: (string | null | undefined)[]) => Promis
   await unlink(path.join(uploadDir, filename)).catch(() => undefined);
 }));
 
-const duplicateFor = async (userId: string, input: Pick<MovieInput, 'type' | 'tmdbId' | 'imdbId' | 'originalTitle' | 'spanishTitle' | 'year'>, excludeId?: string) => {
+export const duplicateFor = async (userId: string, input: Pick<MovieInput, 'type' | 'tmdbId' | 'imdbId' | 'originalTitle' | 'spanishTitle' | 'year'>, excludeId?: string) => {
   const base = { userId, ...(excludeId ? { id: { not: excludeId } } : {}) };
   if (input.tmdbId) {
     const movie = await prisma.movieItem.findFirst({ where: { ...base, type: input.type, tmdbId: input.tmdbId }, include: movieInclude });
@@ -51,7 +51,7 @@ const duplicateFor = async (userId: string, input: Pick<MovieInput, 'type' | 'tm
   return null;
 };
 
-const saveRelations = async (tx: any, movieId: string, userId: string, input: MovieInput) => {
+export const saveRelations = async (tx: any, movieId: string, userId: string, input: MovieInput) => {
   await Promise.all([tx.movieImage.deleteMany({ where: { movieId } }), tx.movieCountry.deleteMany({ where: { movieId } }), tx.movieCredit.deleteMany({ where: { movieId } }), tx.movieGenre.deleteMany({ where: { movieId } }), tx.movieKeyword.deleteMany({ where: { movieId } }), tx.moviePlatform.deleteMany({ where: { movieId } }), tx.movieCollectionItem.deleteMany({ where: { movieId } })]);
   if (input.images?.length) await tx.movieImage.createMany({ data: input.images.map((image, index) => ({ ...image, localPath: localPathFor(image), movieId, order: index, isPrimary: index === 0 })) });
   if (input.countries?.length) await tx.movieCountry.createMany({ data: input.countries.map((country, index) => ({ movieId, name: country.name, normalizedName: normalizeName(country.name), isoCode: country.isoCode, order: index })) });
@@ -103,7 +103,7 @@ const saveRelations = async (tx: any, movieId: string, userId: string, input: Mo
   }
 };
 
-const scalarData = (input: MovieInput) => ({
+export const scalarData = (input: MovieInput) => ({
   type: input.type, originalTitle: input.originalTitle, spanishTitle: input.spanishTitle || null, year: input.year ?? null,
   synopsis: input.synopsis || null, durationMinutes: input.durationMinutes ?? null, seasons: input.type === 'series' ? input.seasons ?? null : null,
   totalEpisodes: input.type === 'series' ? input.totalEpisodes ?? null : null, watched: input.watched ?? false, favorite: input.favorite ?? false, watchlist: input.watchlist ?? false,

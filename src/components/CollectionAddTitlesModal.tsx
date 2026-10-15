@@ -152,7 +152,7 @@ export const CollectionAddTitlesModal = ({ collection, onClose }: { collection: 
             </button>
           </div>
           {filtersOpen && (
-            <div className="mt-3 space-y-1.5">
+            <div className="mt-3 max-h-[42vh] space-y-1.5 overflow-y-auto sm:max-h-none sm:overflow-visible">
               <div className="grid w-full grid-cols-1 gap-1.5 sm:flex sm:flex-row sm:items-start sm:gap-2">
                 <div className="min-w-0 flex-1">
                 <FilterSelect

@@ -313,7 +313,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
               })}
             </div>
 
-            <div className="order-4 grid grid-cols-3 gap-2 w-full md:order-none md:grid-cols-4 md:w-[500px] lg:w-[540px] shrink-0 md:ml-auto">
+            <div className="order-4 grid grid-cols-3 gap-2 w-full md:order-none md:grid-cols-4 md:w-[450px] lg:w-[540px] shrink-0 md:ml-auto">
               <div className="relative w-full">
                 <button type="button" onClick={() => setOpenMenu(openMenu === 'view' ? null : 'view')} className={menuButton} aria-expanded={openMenu === 'view'}>{activeViewIcon}<span className="whitespace-nowrap">Ver</span><ChevronDown className="h-3.5 w-3.5 shrink-0" /></button>
                 {openMenu === 'view' && <div className="library-toolbar-dropdown absolute left-0 top-full z-40 mt-1.5 w-52 rounded-md border border-slate-200 bg-white p-1.5 shadow-card">{viewOptions.map((option) => <button key={option.value} type="button" onClick={() => { props.onViewModeChange(option.value); setOpenMenu(null); }} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${props.viewMode === option.value ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`}>{option.icon}<span className="flex-1">{option.label}</span>{props.viewMode === option.value && <Check className="h-4 w-4 text-coral" />}</button>)}</div>}
@@ -366,7 +366,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
                       <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                       <input autoFocus type="search" value={genreSearch} onChange={(event) => setGenreSearch(event.target.value)} className="h-11 w-full pl-9 pr-3 text-sm outline-none" placeholder="Buscar género..." />
                     </label>
-                    <div className="max-h-64 overflow-y-auto p-1.5" role="listbox" aria-multiselectable="true">
+                    <div className="max-h-[min(16rem,38vh)] overflow-y-auto p-1.5" role="listbox" aria-multiselectable="true">
                       {filteredGenres.length ? filteredGenres.map((genre) => {
                         const selected = props.genreIds.includes(genre.id);
                         const iconImage = getGenreIconImage(genre.name);
@@ -389,7 +389,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
                       <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                       <input autoFocus type="search" value={platformSearch} onChange={(event) => setPlatformSearch(event.target.value)} className="h-11 w-full pl-9 pr-3 text-sm outline-none" placeholder="Buscar plataforma..." />
                     </label>
-                    <div className="max-h-64 overflow-y-auto p-1.5" role="listbox" aria-multiselectable="true">
+                    <div className="max-h-[min(16rem,38vh)] overflow-y-auto p-1.5" role="listbox" aria-multiselectable="true">
                       {filteredPlatforms.length ? filteredPlatforms.map((platform) => {
                         const selected = props.platformIds.includes(platform.id);
                         return <button key={platform.id} type="button" onClick={() => togglePlatform(platform.id)} className={`flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-sm ${selected ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`} role="option" aria-selected={selected}><Check className={`h-4 w-4 shrink-0 ${selected ? 'text-coral' : 'text-transparent'}`} /><PlatformFilterIcon platform={platform} /><span className="min-w-0 flex-1 truncate">{platform.name}</span></button>;
@@ -412,7 +412,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
                         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                         <input autoFocus type="search" value={collectionSearch} onChange={(event) => setCollectionSearch(event.target.value)} className="h-11 w-full pl-9 pr-3 text-sm outline-none" placeholder="Buscar colección..." />
                       </label>
-                      <div className="max-h-64 overflow-y-auto p-1.5" role="listbox" aria-multiselectable="true">
+                      <div className="max-h-[min(16rem,38vh)] overflow-y-auto p-1.5" role="listbox" aria-multiselectable="true">
                         {filteredCollections.length ? filteredCollections.map((collection) => {
                           const selected = collectionIds.includes(collection.id);
                           return <button key={collection.id} type="button" onClick={() => toggleCollection(collection.id)} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${selected ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`} role="option" aria-selected={selected}><Check className={`h-4 w-4 shrink-0 ${selected ? 'text-coral' : 'text-transparent'}`} /><span className="min-w-0 flex-1 truncate">{collection.name}</span></button>;

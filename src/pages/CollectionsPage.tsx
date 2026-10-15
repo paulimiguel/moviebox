@@ -37,6 +37,9 @@ export const CollectionsPage = () => {
   const [addTitlesTarget, setAddTitlesTarget] = useState<MovieCollection | null>(null);
   const [exportingCollection, setExportingCollection] = useState<MovieCollection | null>(null);
   const [shareFeedback, setShareFeedback] = useState('');
+  const [shareDialog, setShareDialog] = useState<{ collection: MovieCollection; url: string } | null>(null);
+  const [shareBusy, setShareBusy] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const [collectionToDelete, setCollectionToDelete] = useState<MovieCollection | null>(null);
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<CatalogViewMode>(() => getPersistedCatalogView('moviebox:collections-view', 'large'));
@@ -160,45 +163,58 @@ export const CollectionsPage = () => {
     setShareFeedback(message);
     window.setTimeout(() => setShareFeedback(''), 3000);
   };
+  // Genera (o reutiliza) el enlace de la colección: quien lo recibe puede importarla a su cuenta.
   const shareCollection = async (collection: MovieCollection) => {
     setOpenMenuId(null);
-    const ids = new Set(collection.movieIds);
-    const titles = (libraryMovies.data || [])
-      .filter((movie) => ids.has(movie.id))
-      .sort((left, right) => (left.spanishTitle || left.originalTitle).localeCompare(right.spanishTitle || right.originalTitle, 'es', { sensitivity: 'base' }));
-    if (!titles.length) {
+    if (collection.movieCount === 0) {
       showShareFeedback('La colección no tiene títulos');
       return;
     }
-    const lines = titles.map((movie) => {
-      const title = movie.spanishTitle || movie.originalTitle;
-      const details = [title, movie.year, movie.type === 'movie' ? 'Película' : 'Serie'].filter(Boolean).join(' · ');
-      return `${details}\n${window.location.origin}/titulo/${movie.id}`;
-    });
-    const text = `${collection.name}\n\n${lines.join('\n\n')}`;
+    setShareBusy(true);
     try {
-      if (navigator.share) {
-        await navigator.share({ title: collection.name, text });
-        showShareFeedback('Colección compartida');
-      } else {
-        await navigator.clipboard.writeText(text);
-        showShareFeedback('Colección copiada para compartir');
-      }
+      const { token } = await api.collections.share(collection.id);
+      setLinkCopied(false);
+      setShareDialog({ collection, url: `${window.location.origin}/colecciones/compartida/${token}` });
+      queryClient.invalidateQueries({ queryKey: ['collections'] });
     } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') return;
-      try {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        textarea.remove();
-        showShareFeedback('Colección copiada para compartir');
-      } catch {
-        showShareFeedback('No se pudo compartir la colección');
-      }
+      showShareFeedback(error instanceof Error ? error.message : 'No se pudo generar el enlace');
+    } finally {
+      setShareBusy(false);
+    }
+  };
+  const copyShareLink = async () => {
+    if (!shareDialog) return;
+    try {
+      await navigator.clipboard.writeText(shareDialog.url);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = shareDialog.url;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      textarea.remove();
+    }
+    setLinkCopied(true);
+  };
+  const nativeShareLink = async () => {
+    if (!shareDialog) return;
+    try {
+      await navigator.share({ title: shareDialog.collection.name, text: `Mirá la colección "${shareDialog.collection.name}" en MovieBox`, url: shareDialog.url });
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === 'AbortError')) showShareFeedback('No se pudo abrir el menú de compartir');
+    }
+  };
+  const stopSharing = async () => {
+    if (!shareDialog) return;
+    try {
+      await api.collections.unshare(shareDialog.collection.id);
+      queryClient.invalidateQueries({ queryKey: ['collections'] });
+      setShareDialog(null);
+      showShareFeedback('Se dejó de compartir: el enlace ya no funciona');
+    } catch (error) {
+      showShareFeedback(error instanceof Error ? error.message : 'No se pudo desactivar el enlace');
     }
   };
   const openEdit = (collection: MovieCollection) => {
@@ -413,7 +429,7 @@ export const CollectionsPage = () => {
                       <button type="button" onClick={() => { setOpenMenuId(null); setAddTitlesTarget(menuCollection); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50"><Plus className="h-4 w-4" />Agregar títulos a la colección</button>
                       <button type="button" onClick={() => { setOpenMenuId(null); setExportingCollection(menuCollection); }} disabled={menuCollection.movieCount === 0} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300" title={menuCollection.movieCount === 0 ? 'La colección no tiene títulos' : undefined}><FileDown className="h-4 w-4" />Exportar colección</button>
                       <button type="button" onClick={() => void shareCollection(menuCollection)} disabled={menuCollection.movieCount === 0} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300" title={menuCollection.movieCount === 0 ? 'La colección no tiene títulos' : undefined}><Share2 className="h-4 w-4" />Compartir colección</button>
-                      <button type="button" onClick={() => { setOpenMenuId(null); setCollectionToDelete(menuCollection); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" />Eliminar</button>
+                      <button type="button" onClick={() => { setOpenMenuId(null); setCollectionToDelete(menuCollection); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" />Eliminar colección</button>
             </div>
           );
         })(),
@@ -421,6 +437,29 @@ export const CollectionsPage = () => {
       )}
 
       {exportingCollection && !libraryMovies.isLoading && <MovieExportOptionsModal movies={exportMovies} onClose={() => setExportingCollection(null)} heading="Exportar colección" description={`${exportingCollection.name} · ${exportMovies.length} ${exportMovies.length === 1 ? 'título' : 'títulos'}`} labels={{ copy: 'Copiar al portapapeles', txt: 'Exportar a TXT', xls: 'Exportar a XLS' }} filenameBase={exportingCollection.name} />}
+
+      {shareDialog && (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-ink/55 p-4" role="dialog" aria-modal="true" aria-labelledby="share-collection-title">
+          <div className="movie-detail-modal w-full min-w-0 max-w-md overflow-hidden rounded-md border border-slate-200 bg-canvas shadow-2xl">
+            <header className="flex min-h-16 items-center gap-3 border-b border-slate-200 bg-white px-5">
+              <h2 id="share-collection-title" className="min-w-0 truncate font-bebas text-2xl uppercase tracking-wide text-ink">Compartir colección</h2>
+              <button type="button" onClick={() => setShareDialog(null)} className="icon-button ml-auto shrink-0 border-0 shadow-none" title="Cerrar" aria-label="Cerrar"><X className="h-5 w-5" /></button>
+            </header>
+            <div className="space-y-3 p-5">
+              <p className="text-sm text-slate-600">Quien reciba este enlace va a poder importar <strong className="text-ink">{shareDialog.collection.name}</strong> a sus propias colecciones. Solo se comparten los datos de los títulos, no lo que marcaste como visto, tus favoritos ni tus puntuaciones.</p>
+              <input readOnly value={shareDialog.url} onFocus={(event) => event.currentTarget.select()} className="control w-full text-xs" aria-label="Enlace de la colección" />
+              {linkCopied && <p className="text-sm font-medium text-[#2cbc63]" role="status">Enlace copiado</p>}
+            </div>
+            <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 bg-white px-5 py-4">
+              <button type="button" onClick={() => void stopSharing()} className="secondary-button text-red-600">Dejar de compartir</button>
+              <div className="flex flex-wrap gap-2">
+                {typeof navigator.share === 'function' && <button type="button" onClick={() => void nativeShareLink()} className="secondary-button gap-2"><Share2 className="h-4 w-4" />Compartir</button>}
+                <button type="button" onClick={() => void copyShareLink()} className="primary-button">Copiar enlace</button>
+              </div>
+            </footer>
+          </div>
+        </div>
+      )}
 
       {shareFeedback && <p role="status" className="fixed bottom-6 left-1/2 z-[90] -translate-x-1/2 rounded-md border border-white/10 bg-[#121417] px-4 py-2.5 text-sm font-medium text-white shadow-card">{shareFeedback}</p>}
 
@@ -434,7 +473,7 @@ export const CollectionsPage = () => {
             </div>
             <footer className="flex justify-end gap-2 border-t border-slate-200 bg-white px-5 py-4">
               <button type="button" onClick={() => setCollectionToDelete(null)} className="secondary-button" disabled={remove.isPending}>Cancelar</button>
-              <button type="button" onClick={() => remove.mutate(collectionToDelete.id)} className="primary-button bg-red-600 hover:bg-red-700" disabled={remove.isPending}>{remove.isPending && <Loader2 className="h-4 w-4 animate-spin" />}Eliminar</button>
+              <button type="button" onClick={() => remove.mutate(collectionToDelete.id)} className="primary-button bg-red-600 hover:bg-red-700" disabled={remove.isPending}>{remove.isPending && <Loader2 className="h-4 w-4 animate-spin" />}Eliminar colección</button>
             </footer>
           </div>
         </div>
