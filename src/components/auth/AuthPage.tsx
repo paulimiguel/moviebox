@@ -57,29 +57,6 @@ const COLUMN_CONFIGS = [
   { direction: "up" as const, duration: 110 },
 ];
 
-/** Vertical film strip separator between poster columns. */
-const FilmStrip = ({ id }: { id: number }) => {
-  const pid = `fs${id}`;
-  return (
-    <div className="flex h-full w-8 shrink-0 items-stretch">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 48" preserveAspectRatio="none" className="h-full w-full">
-        <defs>
-          <pattern id={pid} x="0" y="0" width="32" height="48" patternUnits="userSpaceOnUse">
-            <rect x="0" y="0" width="32" height="48" fill="#111" />
-            <rect x="1.5" y="4" width="4" height="6" rx="1" fill="#e5e5e5" />
-            <rect x="1.5" y="18" width="4" height="6" rx="1" fill="#e5e5e5" />
-            <rect x="1.5" y="32" width="4" height="6" rx="1" fill="#e5e5e5" />
-            <rect x="26.5" y="4" width="4" height="6" rx="1" fill="#e5e5e5" />
-            <rect x="26.5" y="18" width="4" height="6" rx="1" fill="#e5e5e5" />
-            <rect x="26.5" y="32" width="4" height="6" rx="1" fill="#e5e5e5" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill={`url(#${pid})`} />
-      </svg>
-    </div>
-  );
-};
-
 export const AuthPage = () => {
   const { login, register } = useAuth();
   const { theme } = useTheme();
@@ -269,7 +246,7 @@ export const AuthPage = () => {
         className="group relative hidden max-h-screen min-h-screen overflow-hidden bg-black lg:block"
         aria-hidden="true"
       >
-        <div className="flex h-full px-3">
+        <div className="flex h-full gap-3 px-3">
           {COLUMN_CONFIGS.map((config, colIndex) => {
             const columnPosters = posters.filter(
               (_, posterIndex) => posterIndex % 5 === colIndex,
@@ -281,7 +258,6 @@ export const AuthPage = () => {
 
             return (
               <React.Fragment key={colIndex}>
-                {colIndex > 0 && <FilmStrip id={colIndex} />}
                 <div className="relative h-full flex-1 overflow-hidden">
                   <div
                     className={`flex flex-col group-hover:[animation-play-state:paused] ${animationClass}`}
