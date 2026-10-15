@@ -216,7 +216,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                     <dt className="field-label">Dirección</dt>
                     <dd className="text-sm text-ink">{movie.credits.filter((item) => item.creditType === 'director').map((item) => item.name).join(', ') || 'Sin datos'}</dd>
                   </div>
-                  <a href={watchNowDestination.url} target="_blank" rel="noreferrer" className="primary-button h-8 w-full shrink-0 gap-1.5 px-3 text-xs lg:absolute lg:right-0 lg:top-0 lg:w-52" title={`Ver ahora en ${watchNowDestination.label}`}>
+                  <a href={watchNowDestination.url} target="_blank" rel="noreferrer" className="primary-button hidden h-8 w-full shrink-0 gap-1.5 px-3 text-xs lg:absolute lg:right-0 lg:top-0 lg:inline-flex lg:w-52" title={`Ver ahora en ${watchNowDestination.label}`}>
                     <Play className="h-3.5 w-3.5 fill-current" />
                     VER AHORA
                   </a>
@@ -230,7 +230,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                     <dt className="field-label">Plataformas</dt>
                     <dd className="mt-1"><PlatformLogos platforms={movie.platforms} large /></dd>
                   </div>
-                  {movie.collections.length > 0 && <div className="min-w-0 lg:absolute lg:right-0 lg:top-0 lg:w-52">
+                  {movie.collections.length > 0 && <div className="hidden min-w-0 lg:absolute lg:right-0 lg:top-0 lg:block lg:w-52">
                     <dt className="field-label">Colección</dt>
                     <dd className="text-sm text-ink">{movie.collections.map((collection) => collection.name).join(', ')}</dd>
                   </div>}
@@ -243,6 +243,18 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                   <dt className="field-label">Episodios</dt>
                   <dd className="text-sm text-ink">{movie.totalEpisodes ?? 'Sin datos'}</dd>
                 </div>}
+                {/* Mobile: Colección debajo de Reparto (película) o de Temporadas (serie), con VER AHORA a su lado.
+                    Sin colección, VER AHORA queda debajo de Plataformas (película) o de Episodios (serie). */}
+                {movie.collections.length > 0 && <div className="min-w-0 lg:hidden">
+                  <dt className="field-label">Colección</dt>
+                  <dd className="text-sm text-ink">{movie.collections.map((collection) => collection.name).join(', ')}</dd>
+                </div>}
+                <div className={`flex items-end lg:hidden ${movie.collections.length > 0 ? '' : 'col-start-2'}`}>
+                  <a href={watchNowDestination.url} target="_blank" rel="noreferrer" className="primary-button h-8 w-full gap-1.5 px-3 text-xs" title={`Ver ahora en ${watchNowDestination.label}`}>
+                    <Play className="h-3.5 w-3.5 fill-current" />
+                    VER AHORA
+                  </a>
+                </div>
               </dl>
             </section>
           </div>
