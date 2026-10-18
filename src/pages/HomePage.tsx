@@ -386,7 +386,7 @@ export const HomePage = () => {
             <div className="mt-4 hidden w-full flex-wrap justify-start gap-2 sm:mt-6 sm:flex sm:gap-3">
               <HomeSectionButton to="/biblioteca" color="aqua" />
               <HomeSectionButton to="/novedades" color="coral" />
-              <HomeSectionButton to="/cine" color="aqua" label="Ver estrenos" icon={Film} />
+              <HomeSectionButton to="/cine" color="aqua" label="Estrenos en cine" icon={Film} />
             </div>
           </div>
         </div>
