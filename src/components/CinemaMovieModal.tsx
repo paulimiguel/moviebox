@@ -136,6 +136,7 @@ export const CinemaMovieModal = ({ cinemaMovie, onClose }: { cinemaMovie: Cinema
     <MovieDetailModal
       movie={previewMovie}
       showNavigation={false}
+      hideWatchNow
       onClose={onClose}
       onAdd={!libraryMovie ? () => addMutation.mutate() : undefined}
       onPersonal={(movie, field) => updatePersonal.mutate({ movie, field })}

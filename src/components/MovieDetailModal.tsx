@@ -53,7 +53,7 @@ const getWatchNowDestination = (movie: MovieItem) => {
   };
 };
 
-export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal, onRating, onPrevious, onNext, onAdd, showNavigation = true, overlayClassName = 'z-50' }: {
+export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal, onRating, onPrevious, onNext, onAdd, showNavigation = true, hideWatchNow = false, overlayClassName = 'z-50' }: {
   movie: MovieItem;
   onClose: () => void;
   onEdit?: (movie: MovieItem) => void;
@@ -64,6 +64,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
   onNext?: () => void;
   onAdd?: (movie: MovieItem) => void;
   showNavigation?: boolean;
+  hideWatchNow?: boolean;
   overlayClassName?: string;
 }) => {
   const [trailerOpen, setTrailerOpen] = useState(false);
@@ -216,10 +217,10 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                     <dt className="field-label">Dirección</dt>
                     <dd className="text-sm text-ink">{movie.credits.filter((item) => item.creditType === 'director').map((item) => item.name).join(', ') || 'Sin datos'}</dd>
                   </div>
-                  <a href={watchNowDestination.url} target="_blank" rel="noreferrer" className="primary-button hidden h-8 w-full shrink-0 gap-1.5 px-3 text-xs lg:absolute lg:right-0 lg:top-0 lg:inline-flex lg:w-52" title={`Ver ahora en ${watchNowDestination.label}`}>
+                  {!hideWatchNow && <a href={watchNowDestination.url} target="_blank" rel="noreferrer" className="primary-button hidden h-8 w-full shrink-0 gap-1.5 px-3 text-xs lg:absolute lg:right-0 lg:top-0 lg:inline-flex lg:w-52" title={`Ver ahora en ${watchNowDestination.label}`}>
                     <Play className="h-3.5 w-3.5 fill-current" />
                     VER AHORA
-                  </a>
+                  </a>}
                 </div>
                 <div>
                   <dt className="field-label flex items-center gap-1.5">Reparto{movie.tmdbId && cast.length > 0 && <button type="button" onClick={() => setCastPhotosOpen(true)} className="grid h-5 w-5 place-items-center rounded text-slate-400 transition-colors hover:bg-mist hover:text-ink" title="Ver imágenes del reparto" aria-label="Ver imágenes del reparto"><ExternalLink className="h-3.5 w-3.5" /></button>}</dt>
@@ -250,10 +251,10 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                   <dd className="text-sm text-ink">{movie.collections.map((collection) => collection.name).join(', ')}</dd>
                 </div>}
                 <div className={`flex items-end lg:hidden ${movie.collections.length > 0 ? '' : 'col-start-2'}`}>
-                  <a href={watchNowDestination.url} target="_blank" rel="noreferrer" className="primary-button h-8 w-full gap-1.5 px-3 text-xs" title={`Ver ahora en ${watchNowDestination.label}`}>
+                  {!hideWatchNow && <a href={watchNowDestination.url} target="_blank" rel="noreferrer" className="primary-button h-8 w-full gap-1.5 px-3 text-xs" title={`Ver ahora en ${watchNowDestination.label}`}>
                     <Play className="h-3.5 w-3.5 fill-current" />
                     VER AHORA
-                  </a>
+                  </a>}
                 </div>
               </dl>
             </section>
