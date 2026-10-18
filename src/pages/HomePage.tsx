@@ -73,7 +73,7 @@ const CinemaHomeRow = () => {
   const query = useQuery({ queryKey: ['cinema', 'en-cartel'], queryFn: () => api.cinema.list('en-cartel'), staleTime: 30 * 60 * 1000, retry: 1 });
   const items: CinemaMovie[] = query.data?.items || [];
   if (query.isLoading) return <div className="h-56 animate-pulse rounded-lg bg-mist" />;
-  if (!items.length) return <Link to="/cine" className="grid h-36 place-items-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500">Ver películas en el cine</Link>;
+  if (!items.length) return <Link to="/cine" className="grid h-36 place-items-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500">Ver estrenos en cine</Link>;
   return (
     <HorizontalRow>
       {items.slice(0, 20).map((movie) => (
@@ -82,25 +82,26 @@ const CinemaHomeRow = () => {
             {movie.posterUrl ? <img src={movie.posterUrl} alt={`Póster de ${movie.title}`} referrerPolicy="no-referrer" loading="lazy" className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-aqua/50"><Film className="h-8 w-8" /></div>}
           </div>
           <h3 className="mt-2 line-clamp-2 font-bebas text-lg uppercase leading-tight text-ink">{movie.title}</h3>
+          {movie.genres[0] && <p className="mt-0.5 truncate text-xs text-slate-500">{movie.genres[0]}</p>}
         </Link>
       ))}
     </HorizontalRow>
   );
 };
 
-const HomeSectionButton = ({ to, color }: { to: string; color: 'coral' | 'aqua' }) => color === 'coral' ? (
+const HomeSectionButton = ({ to, color, label = 'Mi biblioteca', icon: Icon = Library, wide = false }: { to: string; color: 'coral' | 'aqua'; label?: string; icon?: typeof Library; wide?: boolean }) => color === 'coral' ? (
   <Link to={to} className="home-hero-primary-button inline-flex h-9 w-40 items-center justify-center gap-2 overflow-hidden rounded-md bg-coral px-3 text-xs font-semibold uppercase text-white transition hover:brightness-110 sm:h-10 sm:w-48 sm:px-4 sm:text-sm">
     <Star className="relative z-10 h-4 w-4 fill-current" />
     <span className="relative z-10">Ver novedades</span>
   </Link>
 ) : (
-  <Link to={to} className="inline-flex h-9 w-40 items-center justify-center gap-2 rounded-md border border-aqua bg-aqua px-3 text-xs font-semibold uppercase text-white transition hover:brightness-110 sm:h-10 sm:w-48 sm:px-4 sm:text-sm">
-    <Library className="h-4 w-4" />
-    Mi biblioteca
+  <Link to={to} className={`inline-flex h-9 items-center justify-center gap-2 rounded-md border border-aqua bg-aqua px-3 text-xs font-semibold uppercase text-white transition hover:brightness-110 sm:h-10 sm:px-4 sm:text-sm ${wide ? 'w-auto' : 'w-40 sm:w-48'}`}>
+    <Icon className="h-4 w-4" />
+    {label}
   </Link>
 );
 
-const SectionTitle = ({ title, subtitle, to, color }: { title: string; subtitle: string; to: string; color: 'coral' | 'aqua' }) => (
+const SectionTitle = ({ title, subtitle, to, color, buttonLabel, buttonIcon }: { title: string; subtitle: string; to: string; color: 'coral' | 'aqua'; buttonLabel?: string; buttonIcon?: typeof Library }) => (
   <div className="mb-3 flex items-end justify-between gap-4">
     <div className={`border-l-4 pl-3 ${color === 'coral' ? 'border-coral' : 'border-aqua'}`}>
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
@@ -110,7 +111,7 @@ const SectionTitle = ({ title, subtitle, to, color }: { title: string; subtitle:
         <p className="hidden text-sm text-slate-500 sm:block">{subtitle}</p>
       </div>
     </div>
-    <div className="shrink-0"><HomeSectionButton to={to} color={color} /></div>
+    <div className="shrink-0"><HomeSectionButton to={to} color={color} label={buttonLabel} icon={buttonIcon} /></div>
   </div>
 );
 
@@ -122,7 +123,7 @@ const NewsCard = ({ item, onSelect }: { item: HomeNewsItem; onSelect: (item: Hom
       {item.posterUrl ? <img src={item.posterUrl} alt={item.title} className="h-full w-full object-cover" loading="lazy" /> : <div className="grid h-full place-items-center text-slate-400"><Film className="h-8 w-8" /></div>}
     </div>
     <h3 className="mt-2 line-clamp-1 font-bebas text-lg uppercase leading-tight text-ink transition-colors group-hover/card:text-coral">{item.title}</h3>
-    <p className="mt-0.5 truncate text-xs text-slate-500">{item.type === 'series' ? 'Serie' : 'Película'}{item.year ? ` · ${item.year}` : ''}</p>
+    <p className="mt-0.5 truncate text-xs text-slate-500">{item.type === 'series' ? 'Serie' : 'Película'}{item.year ? ` · ${item.year}` : ''}{item.genres?.[0] ? ` · ${item.genres[0]}` : ''}</p>
     <p className="mt-0.5 truncate text-[11px] font-medium text-aqua">{item.platformNames.join(' · ')}</p>
   </button>
 );
@@ -140,7 +141,7 @@ const LibraryCard = ({ movie, onSelect }: { movie: MovieItem; onSelect: (movie: 
         </div>
       </div>
       <h3 className="mt-2 line-clamp-1 font-bebas text-lg uppercase leading-tight text-ink transition-colors group-hover/card:text-aqua">{titleFor(movie)}</h3>
-      <p className="mt-0.5 truncate text-xs text-slate-500">{movie.type === 'series' ? 'Serie' : 'Película'}{movie.year ? ` · ${movie.year}` : ''}</p>
+      <p className="mt-0.5 truncate text-xs text-slate-500">{movie.type === 'series' ? 'Serie' : 'Película'}{movie.year ? ` · ${movie.year}` : ''}{movie.genres[0] ? ` · ${movie.genres[0].name}` : ''}</p>
       <p className="mt-0.5 truncate text-[11px] font-medium text-aqua">{movie.platforms.length ? movie.platforms.map((platform) => platform.name).join(' · ') : 'Sin plataforma asociada'}</p>
     </button>
   );
@@ -385,6 +386,7 @@ export const HomePage = () => {
             <div className="mt-4 hidden w-full flex-wrap justify-start gap-2 sm:mt-6 sm:flex sm:gap-3">
               <HomeSectionButton to="/novedades" color="coral" />
               <HomeSectionButton to="/biblioteca" color="aqua" />
+              <HomeSectionButton to="/cine" color="aqua" label="Ver películas en cartel" icon={Film} wide />
             </div>
           </div>
         </div>
@@ -407,7 +409,7 @@ export const HomePage = () => {
           {platformQueries.some((query) => query.isLoading) && !news.length ? <div className="h-56 animate-pulse rounded-lg bg-mist" /> : news.length ? <HorizontalRow>{news.map((item) => <NewsCard key={`${item.type}-${item.tmdbId}`} item={item} onSelect={(selected) => setModalTarget({ candidate: selected, platformNames: selected.platformNames })} />)}</HorizontalRow> : <Link to="/novedades" className="grid h-36 place-items-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500">Explorar novedades</Link>}
         </section>
         <section>
-          <SectionTitle title="Películas en el cine" subtitle="La cartelera actual de los cines." to="/cine" color="coral" />
+          <SectionTitle title="Estrenos en cine" subtitle="La cartelera actual de los cines." to="/cine" color="aqua" buttonLabel="Ver estrenos" buttonIcon={Film} />
           <CinemaHomeRow />
         </section>
       </div>

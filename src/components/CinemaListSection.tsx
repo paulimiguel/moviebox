@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Film, Loader2 } from 'lucide-react';
+import { CinemaMovieModal } from '@/components/CinemaMovieModal';
 import { api, type CinemaListKey, type CinemaMovie } from '@/services/api';
 
 const INITIAL_VISIBLE = 24;
@@ -19,27 +20,27 @@ const formatReleaseDate = (value: string | null) => {
   return date.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' });
 };
 
-const CinemaCard = ({ movie, showReleaseDate }: { movie: CinemaMovie; showReleaseDate: boolean }) => {
+const CinemaCard = ({ movie, showReleaseDate, onSelect }: { movie: CinemaMovie; showReleaseDate: boolean; onSelect: (movie: CinemaMovie) => void }) => {
   const meta = [movie.genres[0], formatDuration(movie.durationMinutes)].filter(Boolean).join(' · ');
   const release = showReleaseDate ? formatReleaseDate(movie.releaseDate) : null;
   const [posterFailed, setPosterFailed] = useState(false);
   return (
-    <a href={movie.url} target="_blank" rel="noopener noreferrer" className="group/cinema block min-w-0" title={`Ver horarios de ${movie.title} en agendadecine.com`}>
+    <button type="button" onClick={() => onSelect(movie)} className="group/cinema block min-w-0 text-left" title={movie.title}>
       <div className="relative aspect-[2/3] overflow-hidden rounded-lg bg-mist shadow-md ring-1 ring-black/5 transition-transform duration-200 group-hover/cinema:scale-[1.03]">
         {movie.posterUrl && !posterFailed
           ? <img src={movie.posterUrl} alt={`Póster de ${movie.title}`} referrerPolicy="no-referrer" loading="lazy" onError={() => setPosterFailed(true)} className="h-full w-full object-cover" />
           : <div className="grid h-full place-items-center text-aqua/50"><Film className="h-8 w-8" /></div>}
-        {movie.rating && <span className="absolute left-1.5 top-1.5 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-semibold text-white">{movie.rating}</span>}
       </div>
       <h3 className="mt-2 line-clamp-2 font-bebas text-lg uppercase leading-tight text-ink transition-colors group-hover/cinema:text-coral">{movie.title}</h3>
       {meta && <p className="mt-0.5 truncate text-xs text-slate-500">{meta}</p>}
       {release && <p className="mt-0.5 truncate text-xs font-semibold capitalize text-aqua">Estreno: {release}</p>}
-    </a>
+    </button>
   );
 };
 
 export const CinemaListSection = ({ id, listKey, title, showReleaseDate = false }: { id: string; listKey: CinemaListKey; title: string; showReleaseDate?: boolean }) => {
   const [visible, setVisible] = useState(INITIAL_VISIBLE);
+  const [selected, setSelected] = useState<CinemaMovie | null>(null);
   const query = useQuery({ queryKey: ['cinema', listKey], queryFn: () => api.cinema.list(listKey), staleTime: 30 * 60 * 1000, retry: 1 });
   const items = query.data?.items || [];
 
@@ -64,7 +65,7 @@ export const CinemaListSection = ({ id, listKey, title, showReleaseDate = false 
       ) : (
         <>
           <div className="mx-auto mt-6 grid max-w-[1800px] grid-cols-3 gap-3 sm:grid-cols-4 sm:gap-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
-            {items.slice(0, visible).map((movie) => <CinemaCard key={movie.slug} movie={movie} showReleaseDate={showReleaseDate} />)}
+            {items.slice(0, visible).map((movie) => <CinemaCard key={movie.slug} movie={movie} showReleaseDate={showReleaseDate} onSelect={setSelected} />)}
           </div>
           {items.length > visible && (
             <div className="mt-6 flex justify-center">
@@ -73,6 +74,7 @@ export const CinemaListSection = ({ id, listKey, title, showReleaseDate = false 
           )}
         </>
       )}
+      {selected && <CinemaMovieModal cinemaMovie={selected} onClose={() => setSelected(null)} />}
     </section>
   );
 };
