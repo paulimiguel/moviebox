@@ -384,9 +384,9 @@ export const HomePage = () => {
             </div>}
             <p className="home-hero-muted mt-3 hidden max-w-xl text-xs leading-relaxed sm:line-clamp-3 sm:block sm:text-base">{banner?.overview || 'Descubrí los últimos estrenos disponibles en tus plataformas.'}</p>
             <div className="mt-4 hidden w-full flex-wrap justify-start gap-2 sm:mt-6 sm:flex sm:gap-3">
-              <HomeSectionButton to="/novedades" color="coral" />
               <HomeSectionButton to="/biblioteca" color="aqua" />
-              <HomeSectionButton to="/cine" color="aqua" label="Ver películas en cartel" icon={Film} wide />
+              <HomeSectionButton to="/novedades" color="coral" />
+              <HomeSectionButton to="/cine" color="aqua" label="Ver estrenos" icon={Film} />
             </div>
           </div>
         </div>
