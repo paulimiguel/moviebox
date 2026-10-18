@@ -35,12 +35,13 @@ export const Header = () => {
   const [platformMenuOpen, setPlatformMenuOpen] = useState(false);
   const [genreMenuOpen, setGenreMenuOpen] = useState(false);
   const [newsMenuOpen, setNewsMenuOpen] = useState(false);
+  const [cinemaMenuOpen, setCinemaMenuOpen] = useState(false);
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
   const [platformSearchOpen, setPlatformSearchOpen] = useState(false);
   const [platformPreferencesOpen, setPlatformPreferencesOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [mobileSubmenu, setMobileSubmenu] = useState<'library' | 'news' | 'platforms' | 'genres' | 'collections' | 'actions' | null>(null);
+  const [mobileSubmenu, setMobileSubmenu] = useState<'library' | 'news' | 'cinema' | 'platforms' | 'genres' | 'collections' | 'actions' | null>(null);
   const [profilePhotoFailed, setProfilePhotoFailed] = useState(false);
 
   useEffect(() => {
@@ -80,6 +81,7 @@ export const Header = () => {
   const platformMenuRef = useRef<HTMLDivElement>(null);
   const genreMenuRef = useRef<HTMLDivElement>(null);
   const newsMenuRef = useRef<HTMLDivElement>(null);
+  const cinemaMenuRef = useRef<HTMLDivElement>(null);
   const actionsMenuRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -93,6 +95,7 @@ export const Header = () => {
       if (!platformMenuRef.current?.contains(event.target as Node)) setPlatformMenuOpen(false);
       if (!genreMenuRef.current?.contains(event.target as Node)) setGenreMenuOpen(false);
       if (!newsMenuRef.current?.contains(event.target as Node)) setNewsMenuOpen(false);
+      if (!cinemaMenuRef.current?.contains(event.target as Node)) setCinemaMenuOpen(false);
       if (!actionsMenuRef.current?.contains(event.target as Node)) setActionsMenuOpen(false);
       if (!menuRef.current?.contains(event.target as Node)) setMenuOpen(false);
       if (!profileMenuRef.current?.contains(event.target as Node)) setProfileMenuOpen(false);
@@ -176,6 +179,17 @@ export const Header = () => {
       window.history.replaceState(null, '', `/novedades#${sectionId}`);
     } else {
       navigate(`/novedades#${sectionId}`);
+    }
+  };
+
+  const navigateToCinemaSection = (sectionId: string) => {
+    setCinemaMenuOpen(false);
+    setMenuOpen(false);
+    if (location.pathname === '/cine') {
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' });
+      window.history.replaceState(null, '', `/cine#${sectionId}`);
+    } else {
+      navigate(`/cine#${sectionId}`);
     }
   };
 
@@ -278,6 +292,43 @@ export const Header = () => {
                     className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
                   >
                     Sugerencias por plataforma
+                  </button>
+                </div>
+              )}
+            </div>
+            <div ref={cinemaMenuRef} className="relative h-full" onMouseEnter={() => setCinemaMenuOpen(true)} onMouseLeave={() => setCinemaMenuOpen(false)}>
+              <button
+                type="button"
+                onClick={() => {
+                  setCinemaMenuOpen((current) => !current);
+                  setLibraryMenuOpen(false);
+                  setPlatformMenuOpen(false);
+                  setGenreMenuOpen(false);
+                  setCollectionMenuOpen(false);
+                  setActionsMenuOpen(false);
+                  setNewsMenuOpen(false);
+                  if (location.pathname !== '/cine') navigate('/cine');
+                }}
+                className={`flex h-full items-center gap-1 xl:gap-1.5 border-b-2 px-2 xl:px-3 text-xs xl:text-sm font-semibold whitespace-nowrap ${cinemaMenuOpen || location.pathname === '/cine' ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`}
+                aria-expanded={cinemaMenuOpen}
+              >
+                CINE<ChevronDown className="h-3.5 w-3.5 xl:h-4 xl:w-4" />
+              </button>
+              {cinemaMenuOpen && (
+                <div className="header-dropdown absolute left-0 top-full w-64 rounded-b-md border border-t-0 border-slate-200 bg-white p-1.5 shadow-card">
+                  <button
+                    type="button"
+                    onClick={() => navigateToCinemaSection('en-cartel-cine')}
+                    className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                  >
+                    Películas en cartel en cine
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigateToCinemaSection('proximos-estrenos-cine')}
+                    className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                  >
+                    Próximos estrenos en cine
                   </button>
                 </div>
               )}
@@ -539,6 +590,37 @@ export const Header = () => {
                       className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
                     >
                       Sugerencias por plataforma
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Cine (colapsable) */}
+              <div className="mt-1 border-b border-slate-100 py-1 lg:hidden">
+                <button
+                  type="button"
+                  onClick={() => setMobileSubmenu((c) => c === 'cinema' ? null : 'cinema')}
+                  className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-xs font-semibold uppercase text-slate-500 hover:bg-slate-50 hover:text-ink transition-colors"
+                  aria-expanded={mobileSubmenu === 'cinema'}
+                >
+                  <span>Cine</span>
+                  <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform duration-200 ${mobileSubmenu === 'cinema' ? 'rotate-180' : ''}`} />
+                </button>
+                {mobileSubmenu === 'cinema' && (
+                  <div className="space-y-0.5 pb-1 pl-2">
+                    <button
+                      type="button"
+                      onClick={() => navigateToCinemaSection('en-cartel-cine')}
+                      className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                    >
+                      Películas en cartel en cine
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigateToCinemaSection('proximos-estrenos-cine')}
+                      className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-ink"
+                    >
+                      Próximos estrenos en cine
                     </button>
                   </div>
                 )}

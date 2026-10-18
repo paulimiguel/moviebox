@@ -20,6 +20,32 @@ export interface SharedCollectionImportResult {
   failed: string[];
 }
 
+export type CinemaListKey = 'en-cartel' | 'proximos-estrenos';
+
+export interface CinemaMovie {
+  slug: string;
+  url: string;
+  title: string;
+  originalTitle: string | null;
+  year: number | null;
+  durationMinutes: number | null;
+  genres: string[];
+  rating: string | null;
+  releaseDate: string | null;
+  status: string | null;
+  posterUrl: string | null;
+  trailerUrl: string | null;
+  synopsis: string | null;
+}
+
+export interface CinemaList {
+  source: string;
+  title: string;
+  updatedAt: string;
+  stale: boolean;
+  items: CinemaMovie[];
+}
+
 export interface MovieBoxUser {
   id: string;
   email: string;
@@ -122,6 +148,9 @@ export const api = {
     remove: (id: string) => request<void>(`/collections/${id}`, { method: 'DELETE' }),
     share: (id: string) => request<{ token: string }>(`/collections/${id}/share`, { method: 'POST' }),
     unshare: (id: string) => request<void>(`/collections/${id}/share`, { method: 'DELETE' }),
+  },
+  cinema: {
+    list: (key: CinemaListKey) => request<CinemaList>(`/cinema/${key}`),
   },
   sharedCollections: {
     get: (token: string) => request<SharedCollectionPreview>(`/shared-collections/${encodeURIComponent(token)}`),

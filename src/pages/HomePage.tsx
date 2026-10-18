@@ -7,7 +7,7 @@ import { MovieDetailModal } from '@/components/MovieDetailModal';
 import { MovieEditModal } from '@/components/MovieEditModal';
 import { PLATFORM_PREFERENCES } from '@/constants/platformPreferences';
 import { useAuth } from '@/contexts/AuthContext';
-import { api, resolveMovieImageUrl } from '@/services/api';
+import { api, resolveMovieImageUrl, type CinemaMovie } from '@/services/api';
 import type { MovieItem, TmdbSuggestionCandidate } from '@/types/movie';
 import './HomePage.css';
 
@@ -66,6 +66,25 @@ const HorizontalRow = ({ children }: { children: React.ReactNode }) => {
         <ChevronRight className="h-5 w-5" />
       </button>
     </div>
+  );
+};
+
+const CinemaHomeRow = () => {
+  const query = useQuery({ queryKey: ['cinema', 'en-cartel'], queryFn: () => api.cinema.list('en-cartel'), staleTime: 30 * 60 * 1000, retry: 1 });
+  const items: CinemaMovie[] = query.data?.items || [];
+  if (query.isLoading) return <div className="h-56 animate-pulse rounded-lg bg-mist" />;
+  if (!items.length) return <Link to="/cine" className="grid h-36 place-items-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500">Ver películas en el cine</Link>;
+  return (
+    <HorizontalRow>
+      {items.slice(0, 20).map((movie) => (
+        <Link key={movie.slug} to="/cine" className="block w-32 shrink-0 snap-start sm:w-36" title={movie.title}>
+          <div className="aspect-[2/3] overflow-hidden rounded-lg bg-mist shadow-md ring-1 ring-black/5">
+            {movie.posterUrl ? <img src={movie.posterUrl} alt={`Póster de ${movie.title}`} referrerPolicy="no-referrer" loading="lazy" className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-aqua/50"><Film className="h-8 w-8" /></div>}
+          </div>
+          <h3 className="mt-2 line-clamp-2 font-bebas text-lg uppercase leading-tight text-ink">{movie.title}</h3>
+        </Link>
+      ))}
+    </HorizontalRow>
   );
 };
 
@@ -380,12 +399,16 @@ export const HomePage = () => {
 
       <div className="mx-auto max-w-[1500px] space-y-9 px-4 pt-7 sm:px-6 sm:pt-9">
         <section>
+          <SectionTitle title="Mi biblioteca" subtitle="Tus películas y series, en un solo lugar." to="/biblioteca" color="aqua" />
+          {libraryQuery.isLoading ? <div className="h-56 animate-pulse rounded-lg bg-mist" /> : library.length ? <HorizontalRow>{dailyLibrary.map((movie) => <LibraryCard key={movie.id} movie={movie} onSelect={(selected) => setModalTarget({ libraryId: selected.id })} />)}</HorizontalRow> : <Link to="/biblioteca" className="grid h-36 place-items-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500">Tu biblioteca todavía está vacía</Link>}
+        </section>
+        <section>
           <SectionTitle title="Novedades" subtitle="Los últimos estrenos, series y películas que no te podés perder." to="/novedades" color="coral" />
           {platformQueries.some((query) => query.isLoading) && !news.length ? <div className="h-56 animate-pulse rounded-lg bg-mist" /> : news.length ? <HorizontalRow>{news.map((item) => <NewsCard key={`${item.type}-${item.tmdbId}`} item={item} onSelect={(selected) => setModalTarget({ candidate: selected, platformNames: selected.platformNames })} />)}</HorizontalRow> : <Link to="/novedades" className="grid h-36 place-items-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500">Explorar novedades</Link>}
         </section>
         <section>
-          <SectionTitle title="Mi biblioteca" subtitle="Tus películas y series, en un solo lugar." to="/biblioteca" color="aqua" />
-          {libraryQuery.isLoading ? <div className="h-56 animate-pulse rounded-lg bg-mist" /> : library.length ? <HorizontalRow>{dailyLibrary.map((movie) => <LibraryCard key={movie.id} movie={movie} onSelect={(selected) => setModalTarget({ libraryId: selected.id })} />)}</HorizontalRow> : <Link to="/biblioteca" className="grid h-36 place-items-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500">Tu biblioteca todavía está vacía</Link>}
+          <SectionTitle title="Películas en el cine" subtitle="La cartelera actual de los cines." to="/cine" color="coral" />
+          <CinemaHomeRow />
         </section>
       </div>
       {modalTarget && modalMovie && (
