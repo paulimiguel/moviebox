@@ -243,17 +243,16 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                     VER AHORA
                   </a>}
                 </div>
-                <div>
+                <div className="col-span-2 lg:col-span-1">
                   <dt className="field-label flex items-center gap-1.5">Reparto{movie.tmdbId && cast.length > 0 && <button type="button" onClick={() => setCastPhotosOpen(true)} className="grid h-5 w-5 place-items-center rounded text-slate-400 transition-colors hover:bg-mist hover:text-ink" title="Ver imágenes del reparto" aria-label="Ver imágenes del reparto"><ExternalLink className="h-3.5 w-3.5" /></button>}</dt>
                   <dd className="text-sm text-ink">{visibleCast.map((item) => item.name).join(', ') || 'Sin datos'}</dd>
                 </div>
-                <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_13rem] lg:items-start lg:gap-x-4">
+                <div className={`col-span-2 flex-col gap-3 lg:col-span-1 lg:grid lg:grid-cols-[minmax(0,1fr)_13rem] lg:items-start lg:gap-x-4 ${hidePlatforms ? 'hidden lg:grid' : 'flex'}`}>
                   <div className="min-w-0">
                     {!hidePlatforms && <>
                       <dt className="field-label">Plataformas</dt>
                       <dd className="mt-1"><PlatformLogos platforms={movie.platforms} large /></dd>
                     </>}
-                    {!onAdd && <button type="button" onClick={() => setCommentsOpen(true)} className={`secondary-button h-8 w-full gap-1.5 px-3 text-xs uppercase sm:w-auto lg:hidden ${hidePlatforms ? '' : 'mt-3'}`}><MessageSquare className="h-3.5 w-3.5" />Ver comentarios</button>}
                   </div>
                   <div className="hidden lg:block">
                     {ratingField}
@@ -287,16 +286,19 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                   ) : <div />}
                   {!onAdd && <MovieCollectionSelect key={movie.id} movie={movie} />}
                 </div>}
-                {/* Mobile: Colección debajo de Reparto (película) o de Temporadas (serie), con VER AHORA a su lado.
-                    Sin colección, VER AHORA queda debajo de Plataformas (película) o de Episodios (serie). */}
-                <div className="col-start-2 flex flex-col justify-end lg:hidden">
-                  {!hideWatchNow && <a href={watchNowDestination.url} target="_blank" rel="noreferrer" className="primary-button h-8 w-full gap-1.5 px-3 text-xs" title={`Ver ahora en ${watchNowDestination.label}`}>
+                {/* Mobile, debajo de Plataformas (y de Temporadas / Episodios en series):
+                    fila 5: Mi puntuación | Colección; fila 6: Ver comentarios | Ver ahora. */}
+                {ratingField && <div className="min-w-0 lg:hidden [&>div]:!mt-0">{ratingField}</div>}
+                {!onAdd && <div className="min-w-0 lg:hidden"><MovieCollectionSelect key={movie.id} movie={movie} /></div>}
+                {!onAdd && <div className="flex items-end lg:hidden">
+                  <button type="button" onClick={() => setCommentsOpen(true)} className="secondary-button h-10 w-full justify-center gap-1.5 px-2 text-xs uppercase"><MessageSquare className="h-3.5 w-3.5" />Ver comentarios</button>
+                </div>}
+                {!hideWatchNow && <div className={`flex items-end lg:hidden ${onAdd ? 'col-span-2' : ''}`}>
+                  <a href={watchNowDestination.url} target="_blank" rel="noreferrer" className="primary-button h-10 w-full gap-1.5 px-2 text-xs" title={`Ver ahora en ${watchNowDestination.label}`}>
                     <Play className="h-3.5 w-3.5 fill-current" />
                     VER AHORA
-                  </a>}
-                  {ratingField}
-                  {!onAdd && <div className="mt-2"><MovieCollectionSelect key={movie.id} movie={movie} /></div>}
-                </div>
+                  </a>
+                </div>}
               </dl>
             </section>
           </div>
