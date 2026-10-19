@@ -919,7 +919,7 @@ export const Header = () => {
       {([
         { label: 'Mi biblioteca', icon: Library, active: location.pathname.startsWith('/biblioteca'), onClick: () => { setProfileMenuOpen(false); setMenuOpen(false); navigate('/biblioteca'); } },
         { label: 'Novedades', icon: Sparkles, active: location.pathname.startsWith('/novedades'), onClick: () => { setProfileMenuOpen(false); setMenuOpen(false); navigate('/novedades'); } },
-        { label: 'Estrenos de cine', icon: Clapperboard, active: location.pathname.startsWith('/cine'), onClick: () => { setProfileMenuOpen(false); setMenuOpen(false); navigate('/cine'); } },
+        { label: 'Estrenos de cine', mobileLabel: 'Cine', icon: Clapperboard, active: location.pathname.startsWith('/cine'), onClick: () => { setProfileMenuOpen(false); setMenuOpen(false); navigate('/cine'); } },
         { label: 'Mi perfil', icon: User, active: location.pathname.startsWith('/perfil'), onClick: () => { setProfileMenuOpen(false); setMenuOpen(false); navigate('/perfil'); } },
       ] as const).map((item) => (
         <button
@@ -930,7 +930,7 @@ export const Header = () => {
           className={`flex h-12 min-w-0 items-center justify-center gap-1 border-t-2 px-0.5 text-center text-[10px] font-semibold uppercase leading-tight transition-colors md:gap-1.5 md:px-1 md:text-[11px] md:whitespace-nowrap ${item.active ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`}
         >
           <item.icon className="h-4 w-4 shrink-0" />
-          <span>{item.label}</span>
+          {'mobileLabel' in item ? (<><span className="md:hidden">{item.mobileLabel}</span><span className="hidden md:inline">{item.label}</span></>) : <span>{item.label}</span>}
         </button>
       ))}
     </nav>
