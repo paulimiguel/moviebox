@@ -87,19 +87,13 @@ body {
   border-top: 1px solid rgb(24 26 30);
 }
 
-/* Pie de página: tablet y escritorio (768 px o más). En mobile no se muestra. */
+/* Pie de página: se muestra en mobile, tablet y escritorio. */
 .moviebox-tabbar {
-  display: none;
+  display: grid;
 }
 
-@media (min-width: 768px) {
-  .moviebox-tabbar {
-    display: grid;
-  }
-
-  body:has(.moviebox-tabbar) {
-    padding-bottom: calc(48px + env(safe-area-inset-bottom));
-  }
+body:has(.moviebox-tabbar) {
+  padding-bottom: calc(48px + env(safe-area-inset-bottom));
 }
 
 :root[data-theme="dark"] .moviebox-header {

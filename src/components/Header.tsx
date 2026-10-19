@@ -927,7 +927,7 @@ export const Header = () => {
           type="button"
           onClick={item.onClick}
           aria-current={item.active ? 'page' : undefined}
-          className={`flex h-12 items-center justify-center gap-1.5 border-t-2 px-1 text-[11px] font-semibold uppercase whitespace-nowrap transition-colors ${item.active ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`}
+          className={`flex h-12 min-w-0 items-center justify-center gap-1 border-t-2 px-0.5 text-center text-[10px] font-semibold uppercase leading-tight transition-colors md:gap-1.5 md:px-1 md:text-[11px] md:whitespace-nowrap ${item.active ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`}
         >
           <item.icon className="h-4 w-4 shrink-0" />
           <span>{item.label}</span>
