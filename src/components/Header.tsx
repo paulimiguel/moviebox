@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Bookmark, ChevronDown, Edit3, Eye, EyeOff, FileText, Film, Heart, LayoutGrid, LogOut, Menu, Moon, Plus, Search, Share2, Sun, Trash2, Tv } from 'lucide-react';
+import { Bookmark, Clapperboard, ChevronDown, Edit3, Eye, EyeOff, FileText, Film, Heart, LayoutGrid, Library, LogOut, Menu, Moon, Plus, Search, Share2, Sparkles, Sun, Trash2, Tv, User } from 'lucide-react';
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/services/api';
@@ -914,6 +914,26 @@ export const Header = () => {
       </div>
     </header>
     <div aria-hidden="true" className="h-[73px]" />
+    {/* Pie de página en tablet: acceso rápido a las secciones principales */}
+    <nav aria-label="Navegación principal" className="moviebox-tabbar fixed inset-x-0 bottom-0 z-40 hidden grid-cols-4 border-t border-slate-200 bg-canvas/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:grid lg:hidden">
+      {([
+        { label: 'Mi biblioteca', icon: Library, active: location.pathname.startsWith('/biblioteca') && !profileMenuOpen, onClick: () => { setProfileMenuOpen(false); setMenuOpen(false); navigate('/biblioteca'); } },
+        { label: 'Novedades', icon: Sparkles, active: location.pathname.startsWith('/novedades') && !profileMenuOpen, onClick: () => { setProfileMenuOpen(false); setMenuOpen(false); navigate('/novedades'); } },
+        { label: 'Estrenos de cine', icon: Clapperboard, active: location.pathname.startsWith('/cine') && !profileMenuOpen, onClick: () => { setProfileMenuOpen(false); setMenuOpen(false); navigate('/cine'); } },
+        { label: 'Mi perfil', icon: User, active: profileMenuOpen, onClick: () => { setMenuOpen(false); setProfileMenuOpen(true); window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); } },
+      ] as const).map((item) => (
+        <button
+          key={item.label}
+          type="button"
+          onClick={item.onClick}
+          aria-current={item.active ? 'page' : undefined}
+          className={`flex h-12 items-center justify-center gap-1.5 border-t-2 px-1 text-[11px] font-semibold uppercase whitespace-nowrap transition-colors ${item.active ? 'border-coral text-ink' : 'border-transparent text-slate-500 hover:text-ink'}`}
+        >
+          <item.icon className="h-4 w-4 shrink-0" />
+          <span>{item.label}</span>
+        </button>
+      ))}
+    </nav>
     <AddMovieModal
       isOpen={addModalOpen}
       onClose={handleCloseAddModal}

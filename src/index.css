@@ -82,6 +82,17 @@ body {
   background-color: rgb(52 55 62 / 0.95);
 }
 
+:root[data-theme="dark"] .moviebox-tabbar {
+  background-color: rgb(38 41 46 / 0.97);
+  border-top: 1px solid rgb(24 26 30);
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  body:has(.moviebox-tabbar) {
+    padding-bottom: calc(48px + env(safe-area-inset-bottom));
+  }
+}
+
 :root[data-theme="dark"] .moviebox-header {
   background-color: rgb(38 41 46 / 0.97);
   border-bottom: 1px solid rgb(24 26 30);
