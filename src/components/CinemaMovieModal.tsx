@@ -117,7 +117,7 @@ export const CinemaMovieModal = ({ cinemaMovie, onClose }: { cinemaMovie: Cinema
   if (!previewMovie) {
     return (
       <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 px-4" onClick={onClose}>
-        <div className="max-w-sm rounded-lg bg-white p-6 text-center shadow-xl" onClick={(event) => event.stopPropagation()}>
+        <div className={`max-w-sm rounded-lg bg-white p-6 text-center shadow-xl ${failed ? '' : 'hidden lg:block'}`} onClick={(event) => event.stopPropagation()}>
           {failed ? (
             <>
               <p className="text-sm text-slate-600">No se pudo encontrar la ficha de “{cinemaMovie.title}” para agregarla a tu biblioteca.</p>
