@@ -248,19 +248,32 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                   </div> : <div />}
                   <div className="hidden lg:block">
                     {ratingField}
-                    {movie.collections.length > 0 && <div className="mt-2 min-w-0">
-                      <dt className="field-label">Colección</dt>
-                      <dd className="text-sm text-ink">{movie.collections.map((collection) => collection.name).join(', ')}</dd>
-                    </div>}
                   </div>
                 </div>
-                {movie.type === 'series' && <div>
+                {movie.type === 'series' && <div className="lg:hidden">
                   <dt className="field-label">Temporadas</dt>
                   <dd className="text-sm text-ink">{movie.seasons ?? 'Sin datos'}</dd>
                 </div>}
-                {movie.type === 'series' && <div>
+                {movie.type === 'series' && <div className="lg:hidden">
                   <dt className="field-label">Episodios</dt>
                   <dd className="text-sm text-ink">{movie.totalEpisodes ?? 'Sin datos'}</dd>
+                </div>}
+                {/* Escritorio: Temporadas / Episodios y Colección comparten fila, a la misma altura. */}
+                {(movie.type === 'series' || movie.collections.length > 0) && <div className="hidden grid-cols-2 gap-x-6 lg:grid">
+                  {movie.type === 'series' && <div>
+                    <dt className="field-label">Temporadas</dt>
+                    <dd className="text-sm text-ink">{movie.seasons ?? 'Sin datos'}</dd>
+                  </div>}
+                  {movie.type === 'series' && <div>
+                    <dt className="field-label">Episodios</dt>
+                    <dd className="text-sm text-ink">{movie.totalEpisodes ?? 'Sin datos'}</dd>
+                  </div>}
+                </div>}
+                {(movie.type === 'series' || movie.collections.length > 0) && <div className="hidden min-w-0 lg:block">
+                  {movie.collections.length > 0 && <>
+                    <dt className="field-label">Colección</dt>
+                    <dd className="text-sm text-ink">{movie.collections.map((collection) => collection.name).join(', ')}</dd>
+                  </>}
                 </div>}
                 {/* Mobile: Colección debajo de Reparto (película) o de Temporadas (serie), con VER AHORA a su lado.
                     Sin colección, VER AHORA queda debajo de Plataformas (película) o de Episodios (serie). */}
