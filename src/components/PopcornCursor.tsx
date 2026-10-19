@@ -7,6 +7,7 @@ export const PopcornCursor = () => {
   const rawThinking = isFetching > 0 || isMutating > 0;
 
   const [forcedThinking, setForcedThinking] = useState(false);
+  const [movieModalOpen, setMovieModalOpen] = useState(false);
   const [active, setActive] = useState(false);
   const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
   const [visible, setVisible] = useState(false);
@@ -19,13 +20,16 @@ export const PopcornCursor = () => {
       setForcedThinking(Boolean(custom.detail));
     };
 
+    const handleMovieModal = (e: Event) => setMovieModalOpen(Boolean((e as CustomEvent<boolean>).detail));
     window.addEventListener('moviebox:thinking', handleThinking as EventListener);
+    window.addEventListener('moviebox:movie-modal', handleMovieModal);
     (window as unknown as { movieboxThinking: (val: boolean) => void }).movieboxThinking = (val: boolean) => {
       setForcedThinking(Boolean(val));
     };
 
     return () => {
       window.removeEventListener('moviebox:thinking', handleThinking as EventListener);
+      window.removeEventListener('moviebox:movie-modal', handleMovieModal);
       delete (window as unknown as { movieboxThinking?: (val: boolean) => void }).movieboxThinking;
     };
   }, []);
@@ -88,6 +92,8 @@ export const PopcornCursor = () => {
   if (!active || (!isTouch && (!visible || !pos))) {
     return null;
   }
+  // En pantallas táctiles el pochoclo desaparece una vez abierta la ficha de la película.
+  if (isTouch && movieModalOpen) return null;
   const position = isTouch
     ? { x: window.innerWidth / 2 - 24, y: window.innerHeight / 2 - 40 }
     : pos!;

@@ -1,4 +1,4 @@
-import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { ArrowLeft, ArrowRight, Bookmark, ExternalLink, Eye, Film, Heart, Pencil, Play, Star, ThumbsDown, ThumbsUp, Trash2, X, Plus } from 'lucide-react';
 import { PlatformLogos } from '@/components/PlatformLogos';
 import { CastPhotosModal } from '@/components/CastPhotosModal';
@@ -68,6 +68,11 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
   hidePlatforms?: boolean;
   overlayClassName?: string;
 }) => {
+  // Avisa que la ficha ya está abierta: en mobile y tablet el pochoclo de carga se oculta desde ese momento.
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('moviebox:movie-modal', { detail: true }));
+    return () => { window.dispatchEvent(new CustomEvent('moviebox:movie-modal', { detail: false })); };
+  }, []);
   const [trailerOpen, setTrailerOpen] = useState(false);
   const [castPhotosOpen, setCastPhotosOpen] = useState(false);
   const [modalOffset, setModalOffset] = useState({ x: 0, y: 0 });
