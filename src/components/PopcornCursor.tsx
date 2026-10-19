@@ -83,11 +83,14 @@ export const PopcornCursor = () => {
     }
   }, [active]);
 
-  // Do not render on touch-only devices
+  // En pantallas táctiles (mobile y tablet) no hay puntero: el pochoclo se muestra fijo en el centro de la pantalla.
   const isTouch = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-  if (isTouch || !active || !visible || !pos) {
+  if (!active || (!isTouch && (!visible || !pos))) {
     return null;
   }
+  const position = isTouch
+    ? { x: window.innerWidth / 2 - 24, y: window.innerHeight / 2 - 40 }
+    : pos!;
 
   return (
     <div
@@ -95,12 +98,12 @@ export const PopcornCursor = () => {
       style={{
         left: 0,
         top: 0,
-        transform: `translate3d(${pos.x - 4}px, ${pos.y - 6}px, 0)`,
+        transform: `translate3d(${position.x - 4}px, ${position.y - 6}px, 0)`,
         willChange: 'transform',
       }}
       aria-hidden="true"
     >
-      <div className="relative h-12 w-10 origin-top-left scale-[1.28]">
+      <div className={`relative h-12 w-10 origin-top-left ${isTouch ? 'scale-[1.6]' : 'scale-[1.28]'}`}>
         {/* Animated Popcorn Kernels jumping out */}
         <div className="absolute inset-0 overflow-visible">
           {/* Palomita 1 (Izquierda) */}
