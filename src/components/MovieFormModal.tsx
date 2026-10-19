@@ -620,7 +620,7 @@ export const MovieFormModal = ({
               onChange={setKeywords}
             />
             <label>
-              <span className="field-label">Rate (1-5)</span>
+              <span className="field-label">Mi puntuación (1-5)</span>
               <input
                 className="control w-full"
                 type="number"

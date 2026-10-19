@@ -31,7 +31,7 @@ const CinemaCard = ({ movie, showReleaseDate, onSelect }: { movie: CinemaMovie; 
           ? <img src={movie.posterUrl} alt={`Póster de ${movie.title}`} referrerPolicy="no-referrer" loading="lazy" onError={() => setPosterFailed(true)} className="h-full w-full object-cover" />
           : <div className="grid h-full place-items-center text-aqua/50"><Film className="h-8 w-8" /></div>}
       </div>
-      <h3 className="mt-2 line-clamp-2 font-bebas text-lg uppercase leading-tight text-ink transition-colors group-hover/cinema:text-coral">{movie.title}</h3>
+      <h3 className="mt-2 line-clamp-2 min-h-[2.5em] font-bebas text-lg uppercase leading-tight text-ink transition-colors group-hover/cinema:text-coral">{movie.title}</h3>
       {meta && <p className="mt-0.5 truncate text-xs text-slate-500">{meta}</p>}
       {release && <p className="mt-0.5 truncate text-xs font-semibold capitalize text-aqua">Estreno: {release}</p>}
     </button>

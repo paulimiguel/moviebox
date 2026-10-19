@@ -4,7 +4,7 @@ import { Bookmark, Check, ChevronLeft, ChevronRight, Eye, Film, Heart, Library, 
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { MovieDetailModal } from '@/components/MovieDetailModal';
-import { resolveImdbCandidate } from '@/components/CinemaMovieModal';
+import { CinemaMovieModal, resolveImdbCandidate } from '@/components/CinemaMovieModal';
 import { MovieEditModal } from '@/components/MovieEditModal';
 import { PLATFORM_PREFERENCES } from '@/constants/platformPreferences';
 import { useAuth } from '@/contexts/AuthContext';
@@ -117,6 +117,7 @@ const useQuickAdd = () => {
 const CinemaHomeRow = () => {
   const library = useQuery({ queryKey: ['movies'], queryFn: api.movies.getAll }).data || [];
   const quickAdd = useQuickAdd();
+  const [selected, setSelected] = useState<CinemaMovie | null>(null);
   const isInLibrary = (movie: CinemaMovie) => {
     const names = [movie.originalTitle, movie.title].map(normalizeTitle).filter(Boolean);
     return library.some((item) => [item.originalTitle, item.spanishTitle].map(normalizeTitle).some((name) => names.includes(name)) && (!movie.year || !item.year || Math.abs(item.year - movie.year) <= 1));
@@ -129,16 +130,17 @@ const CinemaHomeRow = () => {
     <HorizontalRow>
       {items.slice(0, 20).map((movie) => (
         <div key={movie.slug} className="group/card relative w-[132px] shrink-0 snap-start sm:w-[156px]">
-        <Link to="/cine" className="block" title={movie.title}>
+        <button type="button" onClick={() => setSelected(movie)} className="block w-full text-left" title={movie.title}>
           <div className="relative aspect-[2/3] overflow-hidden rounded-lg border border-slate-200 bg-mist shadow-card transition group-hover/card:-translate-y-1 group-hover/card:border-aqua">
             {movie.posterUrl ? <img src={movie.posterUrl} alt={`Póster de ${movie.title}`} referrerPolicy="no-referrer" loading="lazy" className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-aqua/50"><Film className="h-8 w-8" /></div>}
           </div>
           <h3 className="mt-2 line-clamp-1 font-bebas text-lg uppercase leading-tight text-ink transition-colors group-hover/card:text-aqua">{movie.title}</h3>
           {movie.genres[0] && <p className="mt-0.5 truncate text-xs text-slate-500">{movie.genres[0]}</p>}
-        </Link>
+        </button>
         <LibraryBadge added={isInLibrary(movie)} adding={quickAdd.isAdding(movie.slug)} onAdd={() => quickAdd.add({ key: movie.slug, cinema: movie })} />
         </div>
       ))}
+      {selected && <CinemaMovieModal cinemaMovie={selected} onClose={() => setSelected(null)} />}
     </HorizontalRow>
   );
 };

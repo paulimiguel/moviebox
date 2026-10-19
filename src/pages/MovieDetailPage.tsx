@@ -225,7 +225,7 @@ export const MovieDetailPage = () => {
             <div className="mt-6 grid gap-3 sm:max-w-xl sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
               <div className="movie-detail-rating-box rounded-md border border-slate-200 bg-white p-4">
                 <p className="text-xs font-semibold uppercase text-slate-400">
-                  Rate
+                  Mi puntuación
                 </p>
                 <div className="mt-2">
                   <StarRating value={movie.personalRating} onChange={(personalRating) => personal.mutate({ personalRating })} disabled={personal.isPending} />

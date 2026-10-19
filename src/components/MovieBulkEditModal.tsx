@@ -306,7 +306,7 @@ export const MovieBulkEditModal = ({
             onChange={setSelectedGenres}
           />
 
-          {/* Fila 3: Plataforma y Rate */}
+          {/* Fila 3: Plataforma y Mi puntuación */}
           <BulkMultiSelect
             label="Plataforma"
             options={platforms}
@@ -314,7 +314,7 @@ export const MovieBulkEditModal = ({
             onChange={setSelectedPlatforms}
           />
           <div>
-            <span className="field-label">Rate</span>
+            <span className="field-label">Mi puntuación</span>
             <div className="control flex h-10 items-center justify-between">
               <StarRating
                 compact

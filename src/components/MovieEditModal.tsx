@@ -314,7 +314,7 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
             </fieldset>
 
             <div>
-              <span className="field-label">Rate</span>
+              <span className="field-label">Mi puntuación</span>
               <StarRating value={personalRating} onChange={setPersonalRating} disabled={save.isPending} />
               <p className="mt-1 text-xs text-slate-400">{personalRating ? `${personalRating} de 5` : 'Sin puntuación'}</p>
             </div>

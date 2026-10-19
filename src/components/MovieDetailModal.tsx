@@ -183,7 +183,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                 <button type="button" aria-pressed={movie.favorite} onClick={() => onPersonal(movie, 'favorite')} className={`movie-detail-favorite moviebox-translucent-action secondary-button h-9 min-w-0 gap-2 px-2 text-xs uppercase ${movie.favorite ? 'border-coral bg-red-50 text-coral' : ''}`}><Heart className={`h-4 w-4 ${movie.favorite ? 'fill-current' : ''}`} />Like</button>
                 <button type="button" aria-pressed={movie.watchlist} onClick={() => onPersonal(movie, 'watchlist')} className={`movie-detail-watchlist moviebox-translucent-action secondary-button h-10 min-w-0 gap-1.5 px-1.5 py-1 text-[11px] uppercase ${movie.watchlist ? 'border-aqua bg-mist text-aqua' : ''}`}><Bookmark className={`h-3.5 w-3.5 ${movie.watchlist ? 'fill-current' : ''}`} />Watchlist</button>
                 <div className="moviebox-translucent-action flex h-10 min-w-0 flex-col justify-center rounded-md border border-slate-200 bg-white px-1.5 py-1 text-left">
-                  <span className="field-label mb-0 leading-none">Rate</span>
+                  <span className="field-label mb-0 leading-none">Mi puntuación</span>
                   <StarRating compact value={movie.personalRating} onChange={(rating) => onRating(movie, rating)} />
                 </div>
               </div>

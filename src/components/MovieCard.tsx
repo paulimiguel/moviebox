@@ -184,7 +184,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
             <PlatformLogos platforms={movie.platforms} limit={5} large />
             <div className="mt-2 text-xs">{catalogLinks(true, true)}</div>
             <div className="mt-2">
-              <span className="field-label">Rate</span>
+              <span className="field-label">Mi puntuación</span>
               <StarRating compact value={movie.personalRating} onChange={(rating) => onRating?.(movie, rating)} disabled={!onRating} />
             </div>
             <MovieCollectionPicker movie={movie} />
