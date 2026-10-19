@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } f
 import { ArrowLeft, ArrowRight, Bookmark, ExternalLink, Eye, Film, Heart, Pencil, Play, Star, ThumbsDown, ThumbsUp, Trash2, X, Plus } from 'lucide-react';
 import { PlatformLogos } from '@/components/PlatformLogos';
 import { CastPhotosModal } from '@/components/CastPhotosModal';
+import { MovieCollectionSelect } from '@/components/MovieCollectionSelect';
 import { StarRating } from '@/components/StarRating';
 import { TrailerModal } from '@/components/TrailerModal';
 import { resolveMovieImageUrl } from '@/services/api';
@@ -259,7 +260,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                   <dd className="text-sm text-ink">{movie.totalEpisodes ?? 'Sin datos'}</dd>
                 </div>}
                 {/* Escritorio: Temporadas / Episodios y Colección comparten fila, a la misma altura. */}
-                {(movie.type === 'series' || movie.collections.length > 0) && <div className="hidden grid-cols-2 gap-x-6 lg:grid">
+                {(movie.type === 'series' || !onAdd) && <div className="hidden grid-cols-2 gap-x-6 lg:grid">
                   {movie.type === 'series' && <div>
                     <dt className="field-label">Temporadas</dt>
                     <dd className="text-sm text-ink">{movie.seasons ?? 'Sin datos'}</dd>
@@ -269,11 +270,8 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                     <dd className="text-sm text-ink">{movie.totalEpisodes ?? 'Sin datos'}</dd>
                   </div>}
                 </div>}
-                {(movie.type === 'series' || movie.collections.length > 0) && <div className="hidden min-w-0 lg:block">
-                  {movie.collections.length > 0 && <>
-                    <dt className="field-label">Colección</dt>
-                    <dd className="text-sm text-ink">{movie.collections.map((collection) => collection.name).join(', ')}</dd>
-                  </>}
+                {(movie.type === 'series' || !onAdd) && <div className="hidden min-w-0 lg:block">
+                  {!onAdd && <MovieCollectionSelect key={movie.id} movie={movie} />}
                 </div>}
                 {/* Mobile: Colección debajo de Reparto (película) o de Temporadas (serie), con VER AHORA a su lado.
                     Sin colección, VER AHORA queda debajo de Plataformas (película) o de Episodios (serie). */}
@@ -283,10 +281,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                     VER AHORA
                   </a>}
                   {ratingField}
-                  {movie.collections.length > 0 && <div className="mt-2 min-w-0">
-                    <dt className="field-label">Colección</dt>
-                    <dd className="text-sm text-ink">{movie.collections.map((collection) => collection.name).join(', ')}</dd>
-                  </div>}
+                  {!onAdd && <div className="mt-2"><MovieCollectionSelect key={movie.id} movie={movie} /></div>}
                 </div>
               </dl>
             </section>
