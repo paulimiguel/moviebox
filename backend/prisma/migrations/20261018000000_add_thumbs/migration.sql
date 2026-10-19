@@ -1,0 +1,2 @@
+ALTER TABLE "movie_items" ADD COLUMN "thumbsUp" BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE "movie_items" ADD COLUMN "thumbsDown" BOOLEAN NOT NULL DEFAULT false;

@@ -1,5 +1,5 @@
 import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
-import { ArrowLeft, ArrowRight, Bookmark, ExternalLink, Eye, Film, Heart, Pencil, Play, Star, Trash2, X, Plus } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bookmark, ExternalLink, Eye, Film, Heart, Pencil, Play, Star, ThumbsDown, ThumbsUp, Trash2, X, Plus } from 'lucide-react';
 import { PlatformLogos } from '@/components/PlatformLogos';
 import { CastPhotosModal } from '@/components/CastPhotosModal';
 import { StarRating } from '@/components/StarRating';
@@ -53,18 +53,19 @@ const getWatchNowDestination = (movie: MovieItem) => {
   };
 };
 
-export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal, onRating, onPrevious, onNext, onAdd, showNavigation = true, hideWatchNow = false, overlayClassName = 'z-50' }: {
+export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal, onRating, onPrevious, onNext, onAdd, showNavigation = true, hideWatchNow = false, hidePlatforms = false, overlayClassName = 'z-50' }: {
   movie: MovieItem;
   onClose: () => void;
   onEdit?: (movie: MovieItem) => void;
   onDelete?: (movie: MovieItem) => void;
-  onPersonal: (movie: MovieItem, field: 'favorite' | 'watched' | 'watchlist') => void;
+  onPersonal: (movie: MovieItem, field: 'favorite' | 'watched' | 'watchlist' | 'thumbsUp' | 'thumbsDown') => void;
   onRating: (movie: MovieItem, rating: number | null) => void;
   onPrevious?: () => void;
   onNext?: () => void;
   onAdd?: (movie: MovieItem) => void;
   showNavigation?: boolean;
   hideWatchNow?: boolean;
+  hidePlatforms?: boolean;
   overlayClassName?: string;
 }) => {
   const [trailerOpen, setTrailerOpen] = useState(false);
@@ -132,6 +133,15 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
 
+  const ratingField = !onAdd ? (
+    <div className="mt-2 min-w-0 lg:mt-0">
+      <span className="field-label">Mi puntuación</span>
+      <div className="moviebox-translucent-action flex h-10 items-center rounded-md border border-slate-200 bg-white px-2">
+        <StarRating compact value={movie.personalRating} onChange={(rating) => onRating(movie, rating)} />
+      </div>
+    </div>
+  ) : null;
+
   return (<>
     <div className={`fixed inset-0 ${overlayClassName} flex items-end justify-center bg-ink/55 sm:items-center sm:p-5`} role="dialog" aria-modal="true" aria-labelledby="movie-detail-title">
       <div ref={modalRef} className="movie-detail-modal flex flex-col max-h-[85vh] sm:max-h-[92vh] sm:min-h-[560px] md:min-h-[600px] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-5xl sm:rounded-md lg:max-w-6xl" style={{ transform: `translate3d(${modalOffset.x}px, ${modalOffset.y}px, 0)` }}>
@@ -179,12 +189,12 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                 </div>
               ) : (
                 <div className="mt-3 grid grid-cols-2 gap-2">
-                <button type="button" aria-pressed={movie.watched} onClick={() => onPersonal(movie, 'watched')} className={`movie-detail-watched moviebox-translucent-action secondary-button h-9 min-w-0 gap-2 px-2 text-xs uppercase ${movie.watched ? 'border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]' : ''}`}><Eye className="h-[18px] w-[18px]" />Watched</button>
-                <button type="button" aria-pressed={movie.favorite} onClick={() => onPersonal(movie, 'favorite')} className={`movie-detail-favorite moviebox-translucent-action secondary-button h-9 min-w-0 gap-2 px-2 text-xs uppercase ${movie.favorite ? 'border-coral bg-red-50 text-coral' : ''}`}><Heart className={`h-4 w-4 ${movie.favorite ? 'fill-current' : ''}`} />Like</button>
+                <button type="button" aria-pressed={movie.watched} onClick={() => onPersonal(movie, 'watched')} className={`movie-detail-watched moviebox-translucent-action secondary-button h-9 min-w-0 gap-2 px-2 text-xs uppercase ${movie.watched ? 'border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]' : ''}`}><Eye className="h-[18px] w-[18px]" />Vista</button>
+                <button type="button" aria-pressed={movie.favorite} onClick={() => onPersonal(movie, 'favorite')} className={`movie-detail-favorite moviebox-translucent-action secondary-button h-9 min-w-0 gap-2 px-2 text-xs uppercase ${movie.favorite ? 'border-coral bg-red-50 text-coral' : ''}`}><Heart className={`h-4 w-4 ${movie.favorite ? 'fill-current' : ''}`} />Me encanta</button>
                 <button type="button" aria-pressed={movie.watchlist} onClick={() => onPersonal(movie, 'watchlist')} className={`movie-detail-watchlist moviebox-translucent-action secondary-button h-10 min-w-0 gap-1.5 px-1.5 py-1 text-[11px] uppercase ${movie.watchlist ? 'border-aqua bg-mist text-aqua' : ''}`}><Bookmark className={`h-3.5 w-3.5 ${movie.watchlist ? 'fill-current' : ''}`} />Watchlist</button>
-                <div className="moviebox-translucent-action flex h-10 min-w-0 flex-col justify-center rounded-md border border-slate-200 bg-white px-1.5 py-1 text-left">
-                  <span className="field-label mb-0 leading-none">Mi puntuación</span>
-                  <StarRating compact value={movie.personalRating} onChange={(rating) => onRating(movie, rating)} />
+                <div className="grid h-10 min-w-0 grid-cols-2 gap-2">
+                  <button type="button" aria-pressed={movie.thumbsUp} onClick={() => onPersonal(movie, 'thumbsUp')} title="Me gusta" aria-label="Me gusta" className={`movie-detail-thumbs-up moviebox-translucent-action secondary-button h-10 min-w-0 px-1.5 ${movie.thumbsUp ? 'border-[#3b82f6] bg-mist text-[#3b82f6]' : ''}`}><ThumbsUp className="h-[18px] w-[18px]" /></button>
+                  <button type="button" aria-pressed={movie.thumbsDown} onClick={() => onPersonal(movie, 'thumbsDown')} title="No me gusta" aria-label="No me gusta" className={`movie-detail-thumbs-down moviebox-translucent-action secondary-button h-10 min-w-0 px-1.5 ${movie.thumbsDown ? 'border-[#3b82f6] bg-mist text-[#3b82f6]' : ''}`}><ThumbsDown className="h-[18px] w-[18px]" /></button>
                 </div>
               </div>
             )}
@@ -226,15 +236,18 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                   <dt className="field-label flex items-center gap-1.5">Reparto{movie.tmdbId && cast.length > 0 && <button type="button" onClick={() => setCastPhotosOpen(true)} className="grid h-5 w-5 place-items-center rounded text-slate-400 transition-colors hover:bg-mist hover:text-ink" title="Ver imágenes del reparto" aria-label="Ver imágenes del reparto"><ExternalLink className="h-3.5 w-3.5" /></button>}</dt>
                   <dd className="text-sm text-ink">{visibleCast.map((item) => item.name).join(', ') || 'Sin datos'}</dd>
                 </div>
-                <div className={`relative flex flex-col gap-3 ${movie.collections.length ? 'lg:block lg:pr-56' : ''}`}>
-                  <div className="min-w-0">
+                <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_13rem] lg:items-start lg:gap-x-4">
+                  {!hidePlatforms ? <div className="min-w-0">
                     <dt className="field-label">Plataformas</dt>
                     <dd className="mt-1"><PlatformLogos platforms={movie.platforms} large /></dd>
+                  </div> : <div />}
+                  <div className="hidden lg:block">
+                    {ratingField}
+                    {movie.collections.length > 0 && <div className="mt-2 min-w-0">
+                      <dt className="field-label">Colección</dt>
+                      <dd className="text-sm text-ink">{movie.collections.map((collection) => collection.name).join(', ')}</dd>
+                    </div>}
                   </div>
-                  {movie.collections.length > 0 && <div className="hidden min-w-0 lg:absolute lg:right-0 lg:top-0 lg:block lg:w-52">
-                    <dt className="field-label">Colección</dt>
-                    <dd className="text-sm text-ink">{movie.collections.map((collection) => collection.name).join(', ')}</dd>
-                  </div>}
                 </div>
                 {movie.type === 'series' && <div>
                   <dt className="field-label">Temporadas</dt>
@@ -246,15 +259,16 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                 </div>}
                 {/* Mobile: Colección debajo de Reparto (película) o de Temporadas (serie), con VER AHORA a su lado.
                     Sin colección, VER AHORA queda debajo de Plataformas (película) o de Episodios (serie). */}
-                {movie.collections.length > 0 && <div className="min-w-0 lg:hidden">
-                  <dt className="field-label">Colección</dt>
-                  <dd className="text-sm text-ink">{movie.collections.map((collection) => collection.name).join(', ')}</dd>
-                </div>}
-                <div className={`flex items-end lg:hidden ${movie.collections.length > 0 ? '' : 'col-start-2'}`}>
+                <div className="col-start-2 flex flex-col justify-end lg:hidden">
                   {!hideWatchNow && <a href={watchNowDestination.url} target="_blank" rel="noreferrer" className="primary-button h-8 w-full gap-1.5 px-3 text-xs" title={`Ver ahora en ${watchNowDestination.label}`}>
                     <Play className="h-3.5 w-3.5 fill-current" />
                     VER AHORA
                   </a>}
+                  {ratingField}
+                  {movie.collections.length > 0 && <div className="mt-2 min-w-0">
+                    <dt className="field-label">Colección</dt>
+                    <dd className="text-sm text-ink">{movie.collections.map((collection) => collection.name).join(', ')}</dd>
+                  </div>}
                 </div>
               </dl>
             </section>

@@ -57,7 +57,7 @@ export const CinemaMovieModal = ({ cinemaMovie, onClose }: { cinemaMovie: Cinema
     },
   });
   const updatePersonal = useMutation({
-    mutationFn: ({ movie, field }: { movie: MovieItem; field: 'favorite' | 'watched' | 'watchlist' }) => api.movies.updatePersonal(movie.id, { [field]: !movie[field] }),
+    mutationFn: ({ movie, field }: { movie: MovieItem; field: 'favorite' | 'watched' | 'watchlist' | 'thumbsUp' | 'thumbsDown' }) => api.movies.updatePersonal(movie.id, { [field]: !movie[field] }),
     onSuccess: replaceInLibrary,
   });
   const updateRating = useMutation({
@@ -84,6 +84,8 @@ export const CinemaMovieModal = ({ cinemaMovie, onClose }: { cinemaMovie: Cinema
       watched: false,
       favorite: false,
       watchlist: false,
+      thumbsUp: false,
+      thumbsDown: false,
       instagramRecommendation: false,
       personalRating: null,
       imdbRating: data.imdbRating ?? null,
@@ -137,6 +139,7 @@ export const CinemaMovieModal = ({ cinemaMovie, onClose }: { cinemaMovie: Cinema
       movie={previewMovie}
       showNavigation={false}
       hideWatchNow
+      hidePlatforms
       onClose={onClose}
       onAdd={!libraryMovie ? () => addMutation.mutate() : undefined}
       onPersonal={(movie, field) => updatePersonal.mutate({ movie, field })}

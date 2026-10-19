@@ -251,6 +251,13 @@ body {
   color: #fff;
 }
 
+:root[data-theme="dark"] .library-thumbs-button[aria-pressed="true"],
+:root[data-theme="dark"] .library-thumbs-button[aria-pressed="true"]:hover {
+  border-color: #3b82f6 !important;
+  background-color: #3b82f6 !important;
+  color: #fff;
+}
+
 :root[data-theme="dark"] .library-toolbar input[type="radio"] {
   appearance: none;
   border: 1.5px solid #fff;
@@ -574,6 +581,13 @@ body {
   border-color: #65b9bb !important;
   background-color: rgb(18 20 23 / 0.82) !important;
   color: #65b9bb;
+}
+
+:root[data-theme="dark"] .movie-detail-modal .movie-detail-thumbs-up[aria-pressed="true"],
+:root[data-theme="dark"] .movie-detail-modal .movie-detail-thumbs-down[aria-pressed="true"] {
+  border-color: #3b82f6 !important;
+  background-color: rgb(18 20 23 / 0.82) !important;
+  color: #3b82f6;
 }
 
 :root[data-theme="dark"] .movie-detail-modal .star-rating button.text-amber-400 {

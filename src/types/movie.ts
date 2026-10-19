@@ -10,9 +10,13 @@ export const PERSONAL_MOVIE_FIELDS = [
   "favorite",
   "watched",
   "watchlist",
+  "thumbsUp",
+  "thumbsDown",
   "personalRating",
   "collectionIds",
 ] as const;
+
+export type PersonalToggleField = "favorite" | "watched" | "watchlist" | "thumbsUp" | "thumbsDown";
 
 export type MovieType = (typeof MOVIE_TYPES)[number];
 export type CreditType = (typeof CREDIT_TYPES)[number];
@@ -127,6 +131,8 @@ export interface MovieItem {
   watched: boolean;
   favorite: boolean;
   watchlist: boolean;
+  thumbsUp: boolean;
+  thumbsDown: boolean;
   instagramRecommendation: boolean;
   personalRating: number | null;
   imdbRating: number | null;
@@ -227,6 +233,8 @@ export interface CreateMovieInput {
   watched?: boolean;
   favorite?: boolean;
   watchlist?: boolean;
+  thumbsUp?: boolean;
+  thumbsDown?: boolean;
   instagramRecommendation?: boolean;
   personalRating?: number | null;
   imdbRating?: number | null;
@@ -253,6 +261,8 @@ export interface MoviePersonalUpdate {
   favorite?: boolean;
   watched?: boolean;
   watchlist?: boolean;
+  thumbsUp?: boolean;
+  thumbsDown?: boolean;
   personalRating?: number | null;
   collectionIds?: string[];
 }
@@ -375,7 +385,7 @@ export interface JustWatchPlatformPopularResponse {
 
 export type TmdbImportedMovieData = Omit<
   CreateMovieInput,
-  "favorite" | "watched" | "watchlist" | "personalRating" | "collectionIds"
+  "favorite" | "watched" | "watchlist" | "thumbsUp" | "thumbsDown" | "personalRating" | "collectionIds"
 >;
 
 export interface TmdbImportRequest {
@@ -405,7 +415,7 @@ export interface ImdbSearchCandidate {
 
 export type ImdbImportedMovieData = Omit<
   CreateMovieInput,
-  "favorite" | "watched" | "watchlist" | "personalRating" | "collectionIds"
+  "favorite" | "watched" | "watchlist" | "thumbsUp" | "thumbsDown" | "personalRating" | "collectionIds"
 >;
 
 export interface ImdbImportRequest {

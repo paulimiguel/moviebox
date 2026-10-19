@@ -152,7 +152,7 @@ export const MovieDetailPage = () => {
                 className={`moviebox-translucent-action secondary-button min-w-0 px-2 text-xs uppercase ${movie.watched ? "border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]" : ""}`}
               >
                 <Eye className="h-[18px] w-[18px]" />
-                Watched
+                Vista
               </button>
               <button
                 type="button"
@@ -161,7 +161,7 @@ export const MovieDetailPage = () => {
                 className={`moviebox-translucent-action secondary-button min-w-0 px-2 text-xs uppercase ${movie.favorite ? "border-coral bg-red-50 text-coral" : ""}`}
               >
                 <Heart className={`h-4 w-4 ${movie.favorite ? "fill-current" : ""}`} />
-                Like
+                Me encanta
               </button>
               <button
                 type="button"

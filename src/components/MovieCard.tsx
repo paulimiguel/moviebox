@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Bookmark, Check, Download, ExternalLink, Eye, Film, Heart, MoreVertical, Pencil, Printer, Share2, Star, Trash2, Tv, Youtube } from 'lucide-react';
+import { Bookmark, Check, Download, ExternalLink, Eye, Film, Heart, MoreVertical, Pencil, Printer, Share2, Star, ThumbsUp, Trash2, Tv, Youtube } from 'lucide-react';
 import { MovieCollectionPicker } from '@/components/MovieCollectionPicker';
 import { PlatformLogos } from '@/components/PlatformLogos';
 import { StarRating } from '@/components/StarRating';
@@ -14,7 +14,7 @@ interface MovieCardProps {
   movie: MovieItem;
   mode: MovieViewMode;
   onOpen: (movie: MovieItem) => void;
-  onPersonal?: (movie: MovieItem, field: 'favorite' | 'watched' | 'watchlist') => void;
+  onPersonal?: (movie: MovieItem, field: 'favorite' | 'watched' | 'watchlist' | 'thumbsUp' | 'thumbsDown') => void;
   onRating?: (movie: MovieItem, rating: number | null) => void;
   onEdit?: (movie: MovieItem) => void;
   onDelete?: (movie: MovieItem) => void;
@@ -94,8 +94,9 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
   const actionControls = (overlay = false, includeWatch = false, compact = false, largeOnMobile = false, fullWidthMobile = false) => selectionMode ? null : (
     <div ref={menuRef} className={`relative flex shrink-0 flex-col items-end gap-1 ${fullWidthMobile ? 'w-full' : ''} ${menuOpen ? 'z-[60]' : ''}`} onClick={interactive} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) closeMenu(); }}>
       <div className={`flex items-center ${compact ? 'gap-0.5' : fullWidthMobile ? 'w-full justify-between lg:w-auto lg:justify-end gap-1' : 'gap-1'}`}>
-        {includeWatch && <button type="button" aria-pressed={movie.watched} onClick={() => onPersonal?.(movie, 'watched')} className={`${compact ? 'moviebox-icon-only' : overlay ? 'moviebox-bare-action' : 'moviebox-translucent-action'} grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : largeOnMobile ? 'h-9 w-9 lg:h-8 lg:w-8' : 'h-8 w-8'} ${overlay || compact ? '' : 'border-0 bg-white hover:bg-slate-50'} ${movie.watched ? 'text-[#2cbc63]' : 'text-slate-500'}`} title="Watched" aria-label="Watched"><Eye className={compact ? 'h-3.5 w-3.5' : largeOnMobile ? 'h-5 w-5 lg:h-[18px] lg:w-[18px]' : 'h-[18px] w-[18px]'} /></button>}
-        <button type="button" aria-pressed={movie.favorite} onClick={() => onPersonal?.(movie, 'favorite')} className={`${compact ? 'moviebox-icon-only' : overlay ? 'moviebox-bare-action' : 'moviebox-translucent-action'} grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : largeOnMobile ? 'h-9 w-9 lg:h-8 lg:w-8' : 'h-8 w-8'} ${overlay || compact ? '' : 'border-0 bg-white hover:bg-slate-50'} ${movie.favorite ? 'text-coral' : 'text-slate-500'}`} title="Like" aria-label="Like"><Heart className={`${compact ? 'h-3 w-3' : largeOnMobile ? 'h-[18px] w-[18px] lg:h-4 lg:w-4' : 'h-4 w-4'} ${movie.favorite ? 'fill-current' : ''}`} /></button>
+        {includeWatch && <button type="button" aria-pressed={movie.watched} onClick={() => onPersonal?.(movie, 'watched')} className={`${compact ? 'moviebox-icon-only' : overlay ? 'moviebox-bare-action' : 'moviebox-translucent-action'} grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : largeOnMobile ? 'h-9 w-9 lg:h-8 lg:w-8' : 'h-8 w-8'} ${overlay || compact ? '' : 'border-0 bg-white hover:bg-slate-50'} ${movie.watched ? 'text-[#2cbc63]' : 'text-slate-500'}`} title="Vista" aria-label="Vista"><Eye className={compact ? 'h-3.5 w-3.5' : largeOnMobile ? 'h-5 w-5 lg:h-[18px] lg:w-[18px]' : 'h-[18px] w-[18px]'} /></button>}
+        <button type="button" aria-pressed={movie.favorite} onClick={() => onPersonal?.(movie, 'favorite')} className={`${compact ? 'moviebox-icon-only' : overlay ? 'moviebox-bare-action' : 'moviebox-translucent-action'} grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : largeOnMobile ? 'h-9 w-9 lg:h-8 lg:w-8' : 'h-8 w-8'} ${overlay || compact ? '' : 'border-0 bg-white hover:bg-slate-50'} ${movie.favorite ? 'text-coral' : 'text-slate-500'}`} title="Me encanta" aria-label="Me encanta"><Heart className={`${compact ? 'h-3 w-3' : largeOnMobile ? 'h-[18px] w-[18px] lg:h-4 lg:w-4' : 'h-4 w-4'} ${movie.favorite ? 'fill-current' : ''}`} /></button>
+        <button type="button" aria-pressed={movie.thumbsUp} onClick={() => onPersonal?.(movie, 'thumbsUp')} className={`${compact ? 'moviebox-icon-only' : overlay ? 'moviebox-bare-action' : 'moviebox-translucent-action'} grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : largeOnMobile ? 'h-9 w-9 lg:h-8 lg:w-8' : 'h-8 w-8'} ${overlay || compact ? '' : 'border-0 bg-white hover:bg-slate-50'} ${movie.thumbsUp ? 'text-[#3b82f6]' : 'text-slate-500'}`} title="Me gusta" aria-label="Me gusta"><ThumbsUp className={compact ? 'h-3 w-3' : largeOnMobile ? 'h-[18px] w-[18px] lg:h-4 lg:w-4' : 'h-4 w-4'} /></button>
         <button type="button" aria-pressed={movie.watchlist} onClick={() => onPersonal?.(movie, 'watchlist')} className={`${compact ? 'moviebox-icon-only' : overlay ? 'moviebox-bare-action' : 'moviebox-translucent-action'} grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : largeOnMobile ? 'h-9 w-9 lg:h-8 lg:w-8' : 'h-8 w-8'} ${overlay || compact ? '' : 'border-0 bg-white hover:bg-slate-50'} ${movie.watchlist ? 'text-aqua' : 'text-slate-500'}`} title={movie.watchlist ? 'Quitar de Watchlist' : 'Agregar a Watchlist'} aria-label={movie.watchlist ? 'Quitar de Watchlist' : 'Agregar a Watchlist'}><Bookmark className={`${compact ? 'h-3 w-3' : largeOnMobile ? 'h-[18px] w-[18px] lg:h-4 lg:w-4' : 'h-4 w-4'} ${movie.watchlist ? 'fill-current' : ''}`} /></button>
         <button type="button" onClick={() => setMenuOpen((current) => !current)} className={`${compact ? 'moviebox-icon-only' : overlay ? 'moviebox-bare-action' : 'moviebox-translucent-action'} grid place-items-center rounded-md ${compact ? 'h-[22px] w-[22px]' : largeOnMobile ? 'h-9 w-9 lg:h-8 lg:w-8' : 'h-8 w-8'} ${overlay || compact ? '' : 'border-0 bg-white text-slate-500 hover:bg-slate-50'}`} title="Más acciones" aria-label="Más acciones" aria-expanded={menuOpen}><MoreVertical className={compact ? 'h-3 w-3' : largeOnMobile ? 'h-[18px] w-[18px] lg:h-4 lg:w-4' : 'h-4 w-4'} /></button>
       </div>
@@ -225,7 +226,7 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
             {typeLabel}
           </span>
           <div className="absolute bottom-2 right-2 flex shrink-0 gap-1" onClick={interactive}>
-            <button type="button" aria-pressed={movie.watched} onClick={() => onPersonal?.(movie, 'watched')} className={`moviebox-bare-action grid h-8 w-8 place-items-center rounded-md ${movie.watched ? 'text-[#2cbc63]' : 'text-gray-500'}`} title="Watched" aria-label="Watched"><Eye className="h-[18px] w-[18px]" /></button>
+            <button type="button" aria-pressed={movie.watched} onClick={() => onPersonal?.(movie, 'watched')} className={`moviebox-bare-action grid h-8 w-8 place-items-center rounded-md ${movie.watched ? 'text-[#2cbc63]' : 'text-gray-500'}`} title="Vista" aria-label="Vista"><Eye className="h-[18px] w-[18px]" /></button>
             {actionControls(true)}
           </div>
         </div>

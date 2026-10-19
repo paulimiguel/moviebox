@@ -17,7 +17,7 @@ export const CollectionDetailPage = () => {
   const collections = useQuery({ queryKey: ['collections'], queryFn: api.collections.getAll });
   const movies = useQuery({ queryKey: ['movies'], queryFn: api.movies.getAll });
   const personal = useMutation({
-    mutationFn: ({ movie, field }: { movie: MovieItem; field: 'favorite' | 'watched' | 'watchlist' }) => api.movies.updatePersonal(movie.id, { [field]: !movie[field] }),
+    mutationFn: ({ movie, field }: { movie: MovieItem; field: 'favorite' | 'watched' | 'watchlist' | 'thumbsUp' | 'thumbsDown' }) => api.movies.updatePersonal(movie.id, { [field]: !movie[field] }),
     onSuccess: (saved) => {
       queryClient.invalidateQueries({ queryKey: ['movies'] });
       setDetailMovie((current) => current?.id === saved.id ? saved : current);

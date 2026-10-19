@@ -350,7 +350,7 @@ export const MovieBulkEditModal = ({
                 className={`moviebox-translucent-action inline-flex h-11 min-w-0 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold transition-colors ${markWatched ? 'border-coral bg-coral text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
               >
                 <Eye className="h-4 w-4 shrink-0" />
-                Watched
+                Vista
               </button>
               <button
                 type="button"
@@ -359,7 +359,7 @@ export const MovieBulkEditModal = ({
                 className={`moviebox-translucent-action inline-flex h-11 min-w-0 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold transition-colors ${markFavorite ? 'border-coral bg-coral text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
               >
                 <Heart className={`h-4 w-4 shrink-0 ${markFavorite ? 'fill-current' : ''}`} />
-                Like
+                Me encanta
               </button>
               <button
                 type="button"

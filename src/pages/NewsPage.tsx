@@ -637,6 +637,8 @@ export const NewsPage = () => {
       watched: false,
       favorite: false,
       watchlist: false,
+      thumbsUp: false,
+      thumbsDown: false,
       instagramRecommendation: false,
       personalRating: null,
       imdbRating: details?.imdbRating ?? null,
@@ -831,7 +833,7 @@ export const NewsPage = () => {
   );
 
   const updatePersonal = useMutation({
-    mutationFn: ({ movie, field }: { movie: MovieItem; field: 'favorite' | 'watched' | 'watchlist' }) =>
+    mutationFn: ({ movie, field }: { movie: MovieItem; field: 'favorite' | 'watched' | 'watchlist' | 'thumbsUp' | 'thumbsDown' }) =>
       api.movies.updatePersonal(movie.id, { [field]: !movie[field] }),
     onSuccess: (updated) => {
       queryClient.setQueryData<MovieItem[]>(['movies'], (current = []) =>

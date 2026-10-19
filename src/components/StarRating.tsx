@@ -7,7 +7,7 @@ export const StarRating = ({ value, onChange, disabled = false, allowClear = tru
   allowClear?: boolean;
   compact?: boolean;
 }) => (
-  <div className={`star-rating flex items-center ${compact ? 'flex-nowrap gap-0' : 'flex-wrap gap-1'}`} role="group" aria-label="Rate">
+  <div className={`star-rating flex items-center ${compact ? 'flex-nowrap gap-0' : 'flex-wrap gap-1'}`} role="group" aria-label="Mi puntuación">
     {Array.from({ length: 5 }, (_, index) => index + 1).map((rating) => {
       const selected = value != null && rating <= value;
       return (
@@ -26,7 +26,7 @@ export const StarRating = ({ value, onChange, disabled = false, allowClear = tru
       );
     })}
     {allowClear && value != null && (
-      <button type="button" disabled={disabled} onClick={() => onChange(null)} className={`${compact ? 'ml-0 h-5 w-4' : 'ml-1 h-8 w-8'} grid place-items-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-ink`} title="Quitar rate" aria-label="Quitar rate">
+      <button type="button" disabled={disabled} onClick={() => onChange(null)} className={`${compact ? 'ml-0 h-5 w-4' : 'ml-1 h-8 w-8'} grid place-items-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-ink`} title="Quitar puntuación" aria-label="Quitar puntuación">
         <X className={compact ? 'h-2.5 w-2.5' : 'h-4 w-4'} />
       </button>
     )}

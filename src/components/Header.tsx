@@ -16,9 +16,9 @@ const libraryOptions: Array<{ label: string; preset: LibraryFilterPreset; icon: 
   { label: 'Películas', preset: 'movie', icon: <Film className="h-4 w-4" /> },
   { label: 'Series', preset: 'series', icon: <Tv className="h-4 w-4" /> },
   { label: 'Watchlist', preset: 'watchlist', icon: <Bookmark className="h-4 w-4" /> },
-  { label: 'Like', preset: 'favorite', icon: <Heart className="h-4 w-4" /> },
-  { label: 'Watched', preset: 'watched', icon: <Eye className="h-4 w-4" /> },
-  { label: 'Unwatched', preset: 'unwatched', icon: <EyeOff className="h-4 w-4" /> },
+  { label: 'Me encanta', preset: 'favorite', icon: <Heart className="h-4 w-4" /> },
+  { label: 'Vista', preset: 'watched', icon: <Eye className="h-4 w-4" /> },
+  { label: 'No vista', preset: 'unwatched', icon: <EyeOff className="h-4 w-4" /> },
 ];
 
 export const Header = () => {

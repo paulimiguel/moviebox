@@ -157,7 +157,7 @@ router.get('/public/justwatch-posters', async (_req, res) => {
 });
 
 router.use(authenticateToken);
-router.get('/status', (_req, res) => res.json({ configured: Boolean(token), protectedFields: ['favorite', 'watched', 'watchlist', 'personalRating', 'collectionIds'] }));
+router.get('/status', (_req, res) => res.json({ configured: Boolean(token), protectedFields: ['favorite', 'watched', 'watchlist', 'thumbsUp', 'thumbsDown', 'personalRating', 'collectionIds'] }));
 router.get('/cast', async (req, res) => {
   if (!token) return res.status(503).json({ error: 'TMDB todavía no está configurado' });
   const type = String(req.query.type || '');

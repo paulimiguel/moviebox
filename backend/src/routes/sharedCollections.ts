@@ -56,6 +56,8 @@ const toInput = (movie: MovieWithRelations) => inputSchema.safeParse({
   watched: false,
   favorite: false,
   watchlist: false,
+  thumbsUp: false,
+  thumbsDown: false,
   instagramRecommendation: false,
   personalRating: null,
   imdbRating: movie.imdbRating,

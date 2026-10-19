@@ -10,7 +10,7 @@ import { MovieEditModal } from '@/components/MovieEditModal';
 import { MovieExportOptionsModal } from '@/components/MovieExportOptionsModal';
 import { MoviePlatformSearchModal } from '@/components/MoviePlatformSearchModal';
 import { EmptyFieldsModal, type EmptyMovieField } from '@/components/EmptyFieldsModal';
-import { MovieLibraryToolbar, type MovieBulkMode, type MovieLibrarySort, type MovieSearchScope } from '@/components/MovieLibraryToolbar';
+import { MovieLibraryToolbar, type MovieBulkMode, type MovieLibrarySort, type MovieSearchScope, type ThumbsFilter } from '@/components/MovieLibraryToolbar';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/services/api';
 import { printMovies } from '@/utils/printMovies';
@@ -66,6 +66,8 @@ export const MovieLibraryPage = () => {
   const [openedCollectionId, setOpenedCollectionId] = useState<string | null>(null);
   const [collectionIds, setCollectionIds] = useState<string[]>([]);
   const [years, setYears] = useState<string[]>([]);
+  const [ratings, setRatings] = useState<number[]>([]);
+  const [thumbs, setThumbs] = useState<ThumbsFilter>('all');
   const [watched, setWatched] = useState<WatchedFilter>('all');
   const [favorite, setFavorite] = useState<FavoriteFilter>('all');
   const [watchlist, setWatchlist] = useState<WatchlistFilter>('all');
@@ -121,6 +123,8 @@ export const MovieLibraryPage = () => {
       setPlatformIds([]);
       setCollectionIds([]);
       setYears([]);
+      setRatings([]);
+      setThumbs('all');
       setWatched(preset === 'watched' ? 'watched' : preset === 'unwatched' ? 'unwatched' : 'all');
       setFavorite(preset === 'favorite' ? 'favorites' : 'all');
       setWatchlist(preset === 'watchlist' ? 'watchlist' : 'all');
@@ -260,10 +264,10 @@ export const MovieLibraryPage = () => {
   ].filter((context): context is { title: string; backTo: string; otherCatalogFilters: number } => context !== null);
   const catalogContext = openedContexts.length === 1 ? openedContexts[0] : null;
   // El nombre ya figura en el título: se ocultan sus etiquetas mientras sea el único filtro.
-  const onlyCatalogFilter = Boolean(catalogContext) && catalogContext?.otherCatalogFilters === 0 && years.length === 0 && type === 'all' && watched === 'all' && favorite === 'all' && watchlist === 'all' && emptyFields.length === 0;
+  const onlyCatalogFilter = Boolean(catalogContext) && catalogContext?.otherCatalogFilters === 0 && years.length === 0 && ratings.length === 0 && thumbs === 'all' && type === 'all' && watched === 'all' && favorite === 'all' && watchlist === 'all' && emptyFields.length === 0;
 
   const personalMutation = useMutation({
-    mutationFn: ({ movie, field }: { movie: MovieItem; field: 'favorite' | 'watched' | 'watchlist' }) => api.movies.updatePersonal(movie.id, { [field]: !movie[field] }),
+    mutationFn: ({ movie, field }: { movie: MovieItem; field: 'favorite' | 'watched' | 'watchlist' | 'thumbsUp' | 'thumbsDown' }) => api.movies.updatePersonal(movie.id, { [field]: !movie[field] }),
     onSuccess: (saved) => {
       queryClient.invalidateQueries({ queryKey: ['movies'] });
       setDetailMovie((current) => current?.id === saved.id ? saved : current);
@@ -302,6 +306,9 @@ export const MovieLibraryPage = () => {
       if (platformIds.length && !movie.platforms.some((item) => platformIds.includes(item.id))) return false;
       if (collectionIds.length && !movie.collections.some((item) => collectionIds.includes(item.id))) return false;
       if (years.length && (!movie.year || !years.includes(String(movie.year)))) return false;
+      if (ratings.length && !ratings.includes(Math.round(movie.personalRating || 0))) return false;
+      if (thumbs === 'up' && !movie.thumbsUp) return false;
+      if (thumbs === 'down' && !movie.thumbsDown) return false;
       if (watched === 'watched' && !movie.watched) return false;
       if (watched === 'unwatched' && movie.watched) return false;
       if (favorite === 'favorites' && !movie.favorite) return false;
@@ -327,7 +334,7 @@ export const MovieLibraryPage = () => {
       }
       return factor * textValue(left).localeCompare(textValue(right), 'es');
     });
-  }, [collectionIds, emptyFields, favorite, genreIds, moviesQuery.data, platformIds, search, searchScope, sortDirection, sortKey, type, watched, watchlist, years]);
+  }, [collectionIds, emptyFields, favorite, genreIds, moviesQuery.data, platformIds, search, searchScope, sortDirection, sortKey, type, watched, watchlist, years, ratings, thumbs]);
 
   const selectedMovies = (moviesQuery.data || []).filter((movie) => selectedIds.has(movie.id));
   const refreshLibrary = () => {
@@ -473,7 +480,11 @@ export const MovieLibraryPage = () => {
         onWatchlistChange={setWatchlist}
         years={years}
         onYearChange={setYears}
-        onClearFilters={() => { setGenreIds([]); setPlatformIds([]); setCollectionIds([]); setType('all'); setWatched('all'); setFavorite('all'); setWatchlist('all'); setYears([]); setEmptyFields([]); }}
+        thumbs={thumbs}
+        onThumbsChange={setThumbs}
+        ratings={ratings}
+        onRatingChange={setRatings}
+        onClearFilters={() => { setGenreIds([]); setPlatformIds([]); setCollectionIds([]); setType('all'); setWatched('all'); setFavorite('all'); setWatchlist('all'); setYears([]); setRatings([]); setThumbs('all'); setEmptyFields([]); }}
         emptyFieldsCount={emptyFields.length}
         onEmptyFieldsSearch={() => setEmptyFieldsOpen(true)}
         onClearEmptyFields={() => setEmptyFields([])}

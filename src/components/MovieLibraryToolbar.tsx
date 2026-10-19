@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ArrowDown, ArrowLeft, ArrowUp, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronsUpDown, Edit3, Eye, EyeOff, FileText, Film, Filter, Grid3x3, Heart, LayoutGrid, List, ListChecks, Plus, Search, Square, Tags, Tv, X } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowUp, ArrowUpDown, Bookmark, Check, ChevronDown, ChevronsUpDown, Edit3, Eye, EyeOff, FileText, Film, Filter, Grid3x3, Heart, LayoutGrid, List, ListChecks, Plus, Search, Square, Star, Tags, ThumbsDown, ThumbsUp, Tv, X } from 'lucide-react';
 import type { MovieViewMode } from '@/components/MovieCard';
 import { resolvePlatformLogoUrl } from '@/components/PlatformLogos';
 import type { FavoriteFilter, MovieTypeFilter, SortDirection, WatchedFilter, WatchlistFilter } from '@/types/movie';
 import { getGenreIconImage } from '@/utils/genreIcons';
 
+export type ThumbsFilter = 'all' | 'up' | 'down';
 export type MovieLibrarySort = 'title' | 'createdAt' | 'year' | 'collection' | 'genre' | 'imdbRating';
 export type MovieBulkMode = 'edit' | 'print' | 'delete' | 'exportTxt' | 'share' | null;
 export type MovieSearchScope = 'name' | 'actor' | 'genre';
@@ -53,6 +54,10 @@ interface ToolbarProps {
   onWatchlistChange: (value: WatchlistFilter) => void;
   years: string[];
   onYearChange: (value: string[]) => void;
+  thumbs?: ThumbsFilter;
+  onThumbsChange?: (value: ThumbsFilter) => void;
+  ratings?: number[];
+  onRatingChange?: (value: number[]) => void;
   onClearFilters: () => void;
   emptyFieldsCount: number;
   onEmptyFieldsSearch: () => void;
@@ -80,7 +85,7 @@ const PlatformFilterIcon = ({ platform }: { platform: ToolbarPlatform }) => {
 
 export const MovieLibraryToolbar = (props: ToolbarProps) => {
   const [, setSearchParams] = useSearchParams();
-  const [openMenu, setOpenMenu] = useState<'view' | 'sort' | 'genre' | 'platform' | 'collection' | null>(null);
+  const [openMenu, setOpenMenu] = useState<'view' | 'sort' | 'genre' | 'platform' | 'collection' | 'rating' | null>(null);
   const [genreSearch, setGenreSearch] = useState('');
   const [platformSearch, setPlatformSearch] = useState('');
   const [collectionSearch, setCollectionSearch] = useState('');
@@ -158,13 +163,29 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
     && props.platformIds.length === 0
     && collectionIds.length === 0
     && props.years.length === 0
+    && (props.ratings?.length ?? 0) === 0
+    && (props.thumbs ?? 'all') === 'all'
     && props.type === 'all'
     && props.watched === 'all'
     && props.favorite === 'all'
     && props.watchlist === 'all'
     && props.emptyFieldsCount === 0;
   const filterButtonClass = (active: boolean) => `library-filter-button moviebox-translucent-action inline-flex h-10 w-full items-center justify-center gap-1 sm:gap-1.5 rounded-md border px-1 sm:px-1.5 text-xs font-semibold whitespace-nowrap transition-colors ${active ? 'border-coral bg-coral text-white shadow-sm' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`;
+  const thumbsButtonClass = (active: boolean) => `library-filter-button library-thumbs-button moviebox-translucent-action inline-flex h-10 w-full items-center justify-center gap-1 sm:gap-1.5 rounded-md border px-1 sm:px-1.5 text-xs font-semibold whitespace-nowrap transition-colors ${active ? 'border-[#3b82f6] bg-[#3b82f6] text-white shadow-sm' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`;
   const quickTypeButtonClass = (active: boolean) => `library-filter-button moviebox-translucent-action inline-flex h-8 w-full md:w-auto items-center justify-center gap-1.5 rounded-md border px-2 sm:px-2.5 text-[10px] font-semibold uppercase transition-colors shrink-0 ${active ? 'border-coral bg-coral text-white shadow-sm' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`;
+  const selectedRatings = props.ratings || [];
+  const ratingOptions = [
+    { value: 5, label: '5 estrellas' },
+    { value: 4, label: '4 estrellas' },
+    { value: 3, label: '3 estrellas' },
+    { value: 2, label: '2 estrellas' },
+    { value: 1, label: '1 estrella' },
+    { value: 0, label: 'Sin puntuar' },
+  ];
+  const toggleRating = (value: number) => {
+    props.onRatingChange?.(selectedRatings.includes(value) ? selectedRatings.filter((item) => item !== value) : [...selectedRatings, value]);
+    setOpenMenu(null);
+  };
   const toggleGenre = (genreId: string) => {
     props.onGenreChange(
       props.genreIds.includes(genreId)
@@ -218,15 +239,17 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
           <h1 className="font-bebas truncate text-xl font-normal text-ink sm:text-2xl">{props.title || `Títulos de ${props.ownerName}`}</h1>
           <p className="mt-0.5 truncate text-xs text-slate-500">Mostrando {props.visibleCount} de {props.totalCount} títulos</p>
           {props.backAction && <button type="button" onClick={props.backAction.onClick} className="mt-2 inline-flex h-7 items-center gap-1 rounded-md bg-aqua px-2.5 text-xs font-semibold uppercase text-white shadow-sm transition hover:brightness-110"><ArrowLeft className="h-3.5 w-3.5" />{props.backAction.label}</button>}
-          {!props.hideActiveFilters && (selectedGenreNames.length > 0 || selectedPlatformNames.length > 0 || selectedCollectionNames.length > 0 || props.years.length > 0 || props.type !== 'all' || props.watched !== 'all' || props.favorite !== 'all' || props.watchlist !== 'all' || props.emptyFieldsCount > 0) && (
+          {!props.hideActiveFilters && (selectedGenreNames.length > 0 || selectedPlatformNames.length > 0 || selectedCollectionNames.length > 0 || props.years.length > 0 || (props.ratings?.length ?? 0) > 0 || (props.thumbs ?? 'all') !== 'all' || props.type !== 'all' || props.watched !== 'all' || props.favorite !== 'all' || props.watchlist !== 'all' || props.emptyFieldsCount > 0) && (
             <div className="mt-2 flex flex-wrap gap-1">
               {selectedGenreNames.map((genre) => <button key={`active-genre-${genre.id}`} type="button" onClick={() => toggleGenre(genre.id)} className="inline-flex max-w-full items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar género ${genre.name}`}><span className="truncate">{genre.name}</span><X className="h-3 w-3 shrink-0" /></button>)}
               {selectedPlatformNames.map((platform) => <button key={`active-platform-${platform.id}`} type="button" onClick={() => props.onPlatformChange(props.platformIds.filter((id) => id !== platform.id))} className="inline-flex max-w-full items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar plataforma ${platform.name}`}><span className="truncate">{platform.name}</span><X className="h-3 w-3 shrink-0" /></button>)}
               {selectedCollectionNames.map((collection) => <button key={`active-collection-${collection.id}`} type="button" onClick={() => props.onCollectionChange?.(collectionIds.filter((id) => id !== collection.id))} className="inline-flex max-w-full items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar colección ${collection.name}`}><span className="truncate">{collection.name}</span><X className="h-3 w-3 shrink-0" /></button>)}
               {props.years.map((year) => <button key={`active-year-${year}`} type="button" onClick={() => props.onYearChange(props.years.filter((value) => value !== year))} className="inline-flex items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar año ${year}`}>{year}<X className="h-3 w-3" /></button>)}
+              {(props.ratings || []).map((rating) => <button key={`active-rating-${rating}`} type="button" onClick={() => props.onRatingChange?.((props.ratings || []).filter((value) => value !== rating))} className="inline-flex items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title="Quitar filtro de Mi puntuación">{rating === 0 ? 'Sin puntuar' : `${rating} ${rating === 1 ? 'estrella' : 'estrellas'}`}<X className="h-3 w-3" /></button>)}
+              {props.thumbs && props.thumbs !== 'all' && <button type="button" onClick={() => props.onThumbsChange?.('all')} className="inline-flex items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar filtro ${props.thumbs === 'up' ? 'Me gusta' : 'No me gusta'}`}>{props.thumbs === 'up' ? 'Me gusta' : 'No me gusta'}<X className="h-3 w-3" /></button>}
               {props.type !== 'all' && <button type="button" onClick={() => props.onTypeChange('all')} className="inline-flex items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title="Quitar filtro de tipo">{props.type === 'movie' ? 'Película' : 'Serie'}<X className="h-3 w-3" /></button>}
-              {props.watched !== 'all' && <button type="button" onClick={() => props.onWatchedChange('all')} className="inline-flex items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar filtro ${props.watched === 'watched' ? 'Watched' : 'Unwatched'}`}>{props.watched === 'watched' ? 'Watched' : 'Unwatched'}<X className="h-3 w-3" /></button>}
-              {props.favorite === 'favorites' && <button type="button" onClick={() => props.onFavoriteChange('all')} className="inline-flex items-center gap-1 rounded bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-coral" title="Quitar filtro Like">Like<X className="h-3 w-3" /></button>}
+              {props.watched !== 'all' && <button type="button" onClick={() => props.onWatchedChange('all')} className="inline-flex items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title={`Quitar filtro ${props.watched === 'watched' ? 'Vista' : 'No vista'}`}>{props.watched === 'watched' ? 'Vista' : 'No vista'}<X className="h-3 w-3" /></button>}
+              {props.favorite === 'favorites' && <button type="button" onClick={() => props.onFavoriteChange('all')} className="inline-flex items-center gap-1 rounded bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-coral" title="Quitar filtro Me encanta">Me encanta<X className="h-3 w-3" /></button>}
               {props.watchlist === 'watchlist' && <button type="button" onClick={() => props.onWatchlistChange('all')} className="inline-flex items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title="Quitar filtro Watchlist">Watchlist<X className="h-3 w-3" /></button>}
               {props.emptyFieldsCount > 0 && <button type="button" onClick={props.onClearEmptyFields} className="inline-flex items-center gap-1 rounded bg-mist px-1.5 py-0.5 text-[11px] font-medium text-slate-600" title="Quitar búsqueda de campos vacíos">Campos vacíos: {props.emptyFieldsCount}<X className="h-3 w-3" /></button>}
               <button type="button" onClick={() => { props.onClearFilters(); setGenreSearch(''); setPlatformSearch(''); setCollectionSearch(''); setYearDraft(''); setOpenMenu(null); }} className="ml-1 px-1 py-0.5 text-[11px] font-semibold uppercase text-coral hover:underline">Limpiar</button>
@@ -427,14 +450,45 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
                 <label htmlFor="movie-year-filter" className="field-label">Año</label>
                 <input id="movie-year-filter" className="control w-full" type="text" inputMode="numeric" value={yearDraft} onChange={(event) => setYearDraft(event.target.value.replace(/\D/g, '').slice(0, 4))} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addYear(); } }} placeholder="Escribir y Enter" aria-label="Agregar año" />
               </div>
+
+              {props.onRatingChange && (
+                <div className={`relative min-w-0 flex-1 ${openMenu === 'rating' ? 'z-50' : ''}`}>
+                  <span className="field-label">Mi puntuación</span>
+                  <button type="button" onClick={() => setOpenMenu(openMenu === 'rating' ? null : 'rating')} className={`control flex w-full items-center justify-between gap-2 text-left ${openMenu === 'rating' ? 'border-coral' : ''}`} aria-haspopup="listbox" aria-expanded={openMenu === 'rating'}>
+                    <span className={`truncate ${selectedRatings.length ? 'text-ink' : 'text-slate-400'}`}>{selectedRatings.length ? `${selectedRatings.length} seleccionada${selectedRatings.length > 1 ? 's' : ''}` : 'Filtrar por puntuación'}</span>
+                    <ChevronsUpDown className="h-4 w-4 shrink-0 text-slate-400" />
+                  </button>
+                  {openMenu === 'rating' && (
+                    <div className="library-toolbar-dropdown absolute left-0 top-full z-50 mt-1 w-full min-w-[200px] overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
+                      <div className="p-1.5" role="listbox" aria-multiselectable="true">
+                        {ratingOptions.map((option) => {
+                          const selected = selectedRatings.includes(option.value);
+                          return (
+                            <button key={option.value} type="button" onClick={() => toggleRating(option.value)} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${selected ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`} role="option" aria-selected={selected}>
+                              <Check className={`h-4 w-4 shrink-0 ${selected ? 'text-coral' : 'text-transparent'}`} />
+                              <span className="flex min-w-0 flex-1 items-center gap-0.5">
+                                {option.value === 0
+                                  ? option.label
+                                  : Array.from({ length: option.value }, (_, index) => <Star key={index} className="h-4 w-4 fill-amber-400 text-amber-400" />)}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
-            <div className="grid w-full grid-cols-3 gap-1.5 sm:grid-cols-4 sm:gap-2 md:grid-cols-7">
+            <div className={`grid w-full grid-cols-3 gap-1.5 sm:grid-cols-4 sm:gap-2 ${props.onThumbsChange ? 'md:grid-cols-9' : 'md:grid-cols-7'}`}>
               <button type="button" aria-pressed={props.type === 'movie'} onClick={() => props.onTypeChange(props.type === 'movie' ? 'all' : 'movie')} className={filterButtonClass(props.type === 'movie')}><Film className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">Película</span></button>
               <button type="button" aria-pressed={props.type === 'series'} onClick={() => props.onTypeChange(props.type === 'series' ? 'all' : 'series')} className={filterButtonClass(props.type === 'series')}><Tv className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">Serie</span></button>
-              <button type="button" aria-pressed={props.watched === 'watched'} onClick={() => props.onWatchedChange(props.watched === 'watched' ? 'all' : 'watched')} className={filterButtonClass(props.watched === 'watched')}><Eye className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">Watched</span></button>
-              <button type="button" aria-pressed={props.watched === 'unwatched'} onClick={() => props.onWatchedChange(props.watched === 'unwatched' ? 'all' : 'unwatched')} className={filterButtonClass(props.watched === 'unwatched')}><EyeOff className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">Unwatched</span></button>
-              <button type="button" aria-pressed={props.favorite === 'favorites'} onClick={() => props.onFavoriteChange(props.favorite === 'favorites' ? 'all' : 'favorites')} className={filterButtonClass(props.favorite === 'favorites')}><Heart className={`h-4 w-4 shrink-0 ${props.favorite === 'favorites' ? 'fill-current' : ''}`} /><span className="whitespace-nowrap">Like</span></button>
+              <button type="button" aria-pressed={props.watched === 'watched'} onClick={() => props.onWatchedChange(props.watched === 'watched' ? 'all' : 'watched')} className={filterButtonClass(props.watched === 'watched')}><Eye className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">Vista</span></button>
+              <button type="button" aria-pressed={props.watched === 'unwatched'} onClick={() => props.onWatchedChange(props.watched === 'unwatched' ? 'all' : 'unwatched')} className={filterButtonClass(props.watched === 'unwatched')}><EyeOff className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">No vista</span></button>
+              <button type="button" aria-pressed={props.favorite === 'favorites'} onClick={() => props.onFavoriteChange(props.favorite === 'favorites' ? 'all' : 'favorites')} className={filterButtonClass(props.favorite === 'favorites')}><Heart className={`h-4 w-4 shrink-0 ${props.favorite === 'favorites' ? 'fill-current' : ''}`} /><span className="whitespace-nowrap">Me encanta</span></button>
+              {props.onThumbsChange && <button type="button" aria-pressed={props.thumbs === 'up'} onClick={() => props.onThumbsChange?.(props.thumbs === 'up' ? 'all' : 'up')} className={thumbsButtonClass(props.thumbs === 'up')}><ThumbsUp className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">Me gusta</span></button>}
+              {props.onThumbsChange && <button type="button" aria-pressed={props.thumbs === 'down'} onClick={() => props.onThumbsChange?.(props.thumbs === 'down' ? 'all' : 'down')} className={thumbsButtonClass(props.thumbs === 'down')}><ThumbsDown className="h-4 w-4 shrink-0" /><span className="whitespace-nowrap">No me gusta</span></button>}
               <button type="button" aria-pressed={props.watchlist === 'watchlist'} onClick={() => props.onWatchlistChange(props.watchlist === 'watchlist' ? 'all' : 'watchlist')} className={filterButtonClass(props.watchlist === 'watchlist')}><Bookmark className={`h-4 w-4 shrink-0 ${props.watchlist === 'watchlist' ? 'fill-current' : ''}`} /><span className="whitespace-nowrap">Watchlist</span></button>
               <button type="button" aria-pressed={allFiltersClear} onClick={() => { props.onClearFilters(); setGenreSearch(''); setPlatformSearch(''); setCollectionSearch(''); setYearDraft(''); setOpenMenu(null); }} className={`${filterButtonClass(allFiltersClear)} col-start-2 sm:col-start-auto`}><span className="whitespace-nowrap">Todos</span></button>
             </div>
