@@ -320,6 +320,22 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
     createCollection.mutate(name);
   };
 
+  // Botones de estado: en mobile van dentro del formulario (debajo de Reparto o Temporadas/Episodios); desde tablet, a la izquierda.
+  const estadoSection = (
+  <section>
+      <h3 className="field-label">Estado</h3>
+      <div className="grid grid-cols-2 gap-2">
+    <button type="button" aria-pressed={watched} onClick={() => setWatched((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${watched ? 'border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]' : ''}`}><Eye className="h-[18px] w-[18px]" />Vista</button>
+    <button type="button" aria-pressed={favorite} onClick={() => setFavorite((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${favorite ? 'border-coral bg-red-50 text-coral' : ''}`}><Heart className={`h-4 w-4 ${favorite ? 'fill-current' : ''}`} />Me encanta</button>
+    <button type="button" aria-pressed={watchlist} onClick={() => setWatchlist((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${watchlist ? 'border-aqua bg-mist text-aqua' : ''}`}><Bookmark className={`h-4 w-4 ${watchlist ? 'fill-current' : ''}`} />Watchlist</button>
+      <div className="grid min-w-0 grid-cols-2 gap-2">
+        <button type="button" aria-pressed={thumbsUp} onClick={() => { setThumbsUp((current) => !current); setThumbsDown(false); }} title="Me gusta" aria-label="Me gusta" className={`moviebox-translucent-action secondary-button h-10 min-w-0 px-1.5 ${thumbsUp ? 'border-[#3b82f6] bg-mist text-[#3b82f6]' : ''}`}><ThumbsUp className="h-[18px] w-[18px]" /></button>
+        <button type="button" aria-pressed={thumbsDown} onClick={() => { setThumbsDown((current) => !current); setThumbsUp(false); }} title="No me gusta" aria-label="No me gusta" className={`moviebox-translucent-action secondary-button h-10 min-w-0 px-1.5 ${thumbsDown ? 'border-[#3b82f6] bg-mist text-[#3b82f6]' : ''}`}><ThumbsDown className="h-[18px] w-[18px]" /></button>
+      </div>
+      </div>
+    </section>
+  );
+
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/55 sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="movie-edit-title">
       <form onSubmit={(event) => { event.preventDefault(); setError(''); setNotice(''); save.mutate(true); }} className="movie-detail-modal flex flex-col max-h-[85vh] sm:max-h-[92vh] sm:min-h-[560px] md:min-h-[600px] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-5xl sm:rounded-md">
@@ -367,18 +383,7 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
             </label>
             <textarea value={imageUrls} onChange={(event) => setImageUrls(event.target.value)} className="control min-h-24 w-full py-2" placeholder="También podés pegar una URL por línea" />
             </section>
-              <section className="order-1 md:order-none md:mt-4">
-                <h3 className="field-label">Estado</h3>
-                <div className="grid grid-cols-2 gap-2">
-              <button type="button" aria-pressed={watched} onClick={() => setWatched((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${watched ? 'border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]' : ''}`}><Eye className="h-[18px] w-[18px]" />Vista</button>
-              <button type="button" aria-pressed={favorite} onClick={() => setFavorite((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${favorite ? 'border-coral bg-red-50 text-coral' : ''}`}><Heart className={`h-4 w-4 ${favorite ? 'fill-current' : ''}`} />Me encanta</button>
-              <button type="button" aria-pressed={watchlist} onClick={() => setWatchlist((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${watchlist ? 'border-aqua bg-mist text-aqua' : ''}`}><Bookmark className={`h-4 w-4 ${watchlist ? 'fill-current' : ''}`} />Watchlist</button>
-                <div className="grid min-w-0 grid-cols-2 gap-2">
-                  <button type="button" aria-pressed={thumbsUp} onClick={() => { setThumbsUp((current) => !current); setThumbsDown(false); }} title="Me gusta" aria-label="Me gusta" className={`moviebox-translucent-action secondary-button h-10 min-w-0 px-1.5 ${thumbsUp ? 'border-[#3b82f6] bg-mist text-[#3b82f6]' : ''}`}><ThumbsUp className="h-[18px] w-[18px]" /></button>
-                  <button type="button" aria-pressed={thumbsDown} onClick={() => { setThumbsDown((current) => !current); setThumbsUp(false); }} title="No me gusta" aria-label="No me gusta" className={`moviebox-translucent-action secondary-button h-10 min-w-0 px-1.5 ${thumbsDown ? 'border-[#3b82f6] bg-mist text-[#3b82f6]' : ''}`}><ThumbsDown className="h-[18px] w-[18px]" /></button>
-                </div>
-                </div>
-              </section>
+              <div className="hidden md:mt-4 md:block">{estadoSection}</div>
             </div>
 
             <section className="order-2 min-w-0 space-y-5 md:order-none">
@@ -413,6 +418,7 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
                     <label><span className="field-label">Episodios</span><input type="number" min="1" max="99999" value={episodes} onChange={(event) => setEpisodes(event.target.value)} className="control w-full" /></label>
                   </div>
                 )}
+                <div className="sm:col-span-2 md:hidden">{estadoSection}</div>
             <div ref={collectionRootRef} className="relative min-w-0">
               <span className="field-label">Colección</span>
               <button type="button" onClick={() => { setCollectionDraft(''); setCollectionOpen((current) => !current); }} className={`control flex w-full items-center justify-between gap-2 text-left ${collectionOpen ? 'border-coral' : ''}`} aria-haspopup="listbox" aria-expanded={collectionOpen}>
