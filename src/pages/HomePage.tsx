@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bookmark, ChevronLeft, ChevronRight, Eye, Film, Heart, Library, Sparkles, Star } from 'lucide-react';
+import { Bookmark, Check, ChevronLeft, ChevronRight, Eye, Film, Heart, Library, Loader2, Plus, Sparkles, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { MovieDetailModal } from '@/components/MovieDetailModal';
+import { resolveImdbCandidate } from '@/components/CinemaMovieModal';
 import { MovieEditModal } from '@/components/MovieEditModal';
 import { PLATFORM_PREFERENCES } from '@/constants/platformPreferences';
 import { useAuth } from '@/contexts/AuthContext';
@@ -69,7 +70,57 @@ const HorizontalRow = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+const normalizeTitle = (text: string | null | undefined) => (text || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+
+const LibraryBadge = ({ added, adding, onAdd }: { added: boolean; adding: boolean; onAdd: () => void }) => (
+  <div className="pointer-events-none absolute inset-x-0 top-0 z-10 aspect-[2/3]">
+  <div className="pointer-events-auto absolute bottom-2 right-2">
+    {added ? (
+      <span className="grid h-6 w-6 place-items-center rounded-md bg-[#2cbc63] text-white shadow-md" title="En tu biblioteca" aria-label="En tu biblioteca">
+        <Check className="h-4 w-4" strokeWidth={3} />
+      </span>
+    ) : (
+      <button type="button" disabled={adding} onClick={onAdd} className="grid h-6 w-6 place-items-center rounded-md bg-red-600 text-white shadow-md transition hover:scale-110 hover:bg-red-500 active:scale-95 disabled:opacity-60" title="Agregar a la biblioteca" aria-label="Agregar a la biblioteca">
+        {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" strokeWidth={3} />}
+      </button>
+    )}
+  </div>
+  </div>
+);
+
+type QuickAddTarget = { key: string; imdbId?: string; type?: TmdbSuggestionCandidate['type']; cinema?: CinemaMovie };
+
+const useQuickAdd = () => {
+  const queryClient = useQueryClient();
+  const mutation = useMutation({
+    mutationFn: async (target: QuickAddTarget) => {
+      let imdbId = target.imdbId;
+      let type = target.type || 'movie';
+      if (!imdbId && target.cinema) {
+        const candidate = await resolveImdbCandidate(target.cinema);
+        if (!candidate) throw new Error('No se encontró la película');
+        imdbId = candidate.imdbId;
+        type = candidate.type;
+      }
+      const imported = await api.imdb.import({ imdbId: imdbId!, type });
+      return api.movies.create({ ...imported, favorite: false, watched: false, watchlist: false, personalRating: null, collectionIds: [] });
+    },
+    onSuccess: (saved) => {
+      queryClient.setQueryData<MovieItem[]>(['movies'], (current = []) => current.some((movie) => movie.id === saved.id) ? current : [saved, ...current]);
+      queryClient.invalidateQueries({ queryKey: ['movies'] });
+      queryClient.invalidateQueries({ queryKey: ['metadata'] });
+    },
+  });
+  return { add: (target: QuickAddTarget) => mutation.mutate(target), isAdding: (key: string) => mutation.isPending && mutation.variables?.key === key };
+};
+
 const CinemaHomeRow = () => {
+  const library = useQuery({ queryKey: ['movies'], queryFn: api.movies.getAll }).data || [];
+  const quickAdd = useQuickAdd();
+  const isInLibrary = (movie: CinemaMovie) => {
+    const names = [movie.originalTitle, movie.title].map(normalizeTitle).filter(Boolean);
+    return library.some((item) => [item.originalTitle, item.spanishTitle].map(normalizeTitle).some((name) => names.includes(name)) && (!movie.year || !item.year || Math.abs(item.year - movie.year) <= 1));
+  };
   const query = useQuery({ queryKey: ['cinema', 'en-cartel'], queryFn: () => api.cinema.list('en-cartel'), staleTime: 30 * 60 * 1000, retry: 1 });
   const items: CinemaMovie[] = query.data?.items || [];
   if (query.isLoading) return <div className="h-56 animate-pulse rounded-lg bg-mist" />;
@@ -77,13 +128,16 @@ const CinemaHomeRow = () => {
   return (
     <HorizontalRow>
       {items.slice(0, 20).map((movie) => (
-        <Link key={movie.slug} to="/cine" className="block w-32 shrink-0 snap-start sm:w-36" title={movie.title}>
-          <div className="aspect-[2/3] overflow-hidden rounded-lg bg-mist shadow-md ring-1 ring-black/5">
+        <div key={movie.slug} className="group/card relative w-[132px] shrink-0 snap-start sm:w-[156px]">
+        <Link to="/cine" className="block" title={movie.title}>
+          <div className="relative aspect-[2/3] overflow-hidden rounded-lg border border-slate-200 bg-mist shadow-card transition group-hover/card:-translate-y-1 group-hover/card:border-aqua">
             {movie.posterUrl ? <img src={movie.posterUrl} alt={`Póster de ${movie.title}`} referrerPolicy="no-referrer" loading="lazy" className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center text-aqua/50"><Film className="h-8 w-8" /></div>}
           </div>
-          <h3 className="mt-2 line-clamp-2 font-bebas text-lg uppercase leading-tight text-ink">{movie.title}</h3>
+          <h3 className="mt-2 line-clamp-1 font-bebas text-lg uppercase leading-tight text-ink transition-colors group-hover/card:text-aqua">{movie.title}</h3>
           {movie.genres[0] && <p className="mt-0.5 truncate text-xs text-slate-500">{movie.genres[0]}</p>}
         </Link>
+        <LibraryBadge added={isInLibrary(movie)} adding={quickAdd.isAdding(movie.slug)} onAdd={() => quickAdd.add({ key: movie.slug, cinema: movie })} />
+        </div>
       ))}
     </HorizontalRow>
   );
@@ -117,8 +171,9 @@ const SectionTitle = ({ title, subtitle, to, color, buttonLabel, buttonIcon }: {
 
 type HomeNewsItem = TmdbSuggestionCandidate & { platformNames: string[] };
 
-const NewsCard = ({ item, onSelect }: { item: HomeNewsItem; onSelect: (item: HomeNewsItem) => void }) => (
-  <button type="button" onClick={() => onSelect(item)} className="group/card w-[132px] shrink-0 snap-start text-left sm:w-[156px]" title={`Ver ficha: ${item.title}`}>
+const NewsCard = ({ item, onSelect, added, adding, onAdd }: { item: HomeNewsItem; onSelect: (item: HomeNewsItem) => void; added: boolean; adding: boolean; onAdd: () => void }) => (
+  <div className="group/card relative w-[132px] shrink-0 snap-start sm:w-[156px]">
+  <button type="button" onClick={() => onSelect(item)} className="block w-full text-left" title={`Ver ficha: ${item.title}`}>
     <div className="relative aspect-[2/3] overflow-hidden rounded-lg border border-slate-200 bg-mist shadow-card transition group-hover/card:-translate-y-1 group-hover/card:border-coral">
       {item.posterUrl ? <img src={item.posterUrl} alt={item.title} className="h-full w-full object-cover" loading="lazy" /> : <div className="grid h-full place-items-center text-slate-400"><Film className="h-8 w-8" /></div>}
     </div>
@@ -126,12 +181,15 @@ const NewsCard = ({ item, onSelect }: { item: HomeNewsItem; onSelect: (item: Hom
     <p className="mt-0.5 truncate text-xs text-slate-500">{item.type === 'series' ? 'Serie' : 'Película'}{item.year ? ` · ${item.year}` : ''}{item.genres?.[0] ? ` · ${item.genres[0]}` : ''}</p>
     <p className="mt-0.5 truncate text-[11px] font-medium text-aqua">{item.platformNames.join(' · ')}</p>
   </button>
+  <LibraryBadge added={added} adding={adding} onAdd={onAdd} />
+  </div>
 );
 
 const LibraryCard = ({ movie, onSelect }: { movie: MovieItem; onSelect: (movie: MovieItem) => void }) => {
   const image = imageFor(movie);
   return (
-    <button type="button" onClick={() => onSelect(movie)} className="group/card w-[132px] shrink-0 snap-start text-left sm:w-[156px]" title={`Abrir ${titleFor(movie)}`}>
+    <div className="group/card relative w-[132px] shrink-0 snap-start sm:w-[156px]">
+    <button type="button" onClick={() => onSelect(movie)} className="block w-full text-left" title={`Abrir ${titleFor(movie)}`}>
       <div className="relative aspect-[2/3] overflow-hidden rounded-lg border border-slate-200 bg-mist shadow-card transition group-hover/card:-translate-y-1 group-hover/card:border-aqua">
         {image ? <img src={image} alt={titleFor(movie)} className="h-full w-full object-cover" loading="lazy" /> : <div className="grid h-full place-items-center text-slate-400"><Film className="h-8 w-8" /></div>}
         <div className="absolute right-2 top-2 flex items-center gap-1.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)]">
@@ -144,6 +202,7 @@ const LibraryCard = ({ movie, onSelect }: { movie: MovieItem; onSelect: (movie: 
       <p className="mt-0.5 truncate text-xs text-slate-500">{movie.type === 'series' ? 'Serie' : 'Película'}{movie.year ? ` · ${movie.year}` : ''}{movie.genres[0] ? ` · ${movie.genres[0].name}` : ''}</p>
       <p className="mt-0.5 truncate text-[11px] font-medium text-aqua">{movie.platforms.length ? movie.platforms.map((platform) => platform.name).join(' · ') : 'Sin plataforma asociada'}</p>
     </button>
+    </div>
   );
 };
 
@@ -156,6 +215,7 @@ export const HomePage = () => {
     [user?.preferredPlatforms],
   );
   const libraryQuery = useQuery({ queryKey: ['movies'], queryFn: api.movies.getAll });
+  const quickAdd = useQuickAdd();
   const platformQueries = useQueries({
     queries: selectedPlatforms.map((platform) => ({
       queryKey: ['newReleases', platform.id, dayKey],
@@ -406,7 +466,7 @@ export const HomePage = () => {
         </section>
         <section>
           <SectionTitle title="Novedades" subtitle="Los últimos estrenos, series y películas que no te podés perder." to="/novedades" color="coral" />
-          {platformQueries.some((query) => query.isLoading) && !news.length ? <div className="h-56 animate-pulse rounded-lg bg-mist" /> : news.length ? <HorizontalRow>{news.map((item) => <NewsCard key={`${item.type}-${item.tmdbId}`} item={item} onSelect={(selected) => setModalTarget({ candidate: selected, platformNames: selected.platformNames })} />)}</HorizontalRow> : <Link to="/novedades" className="grid h-36 place-items-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500">Explorar novedades</Link>}
+          {platformQueries.some((query) => query.isLoading) && !news.length ? <div className="h-56 animate-pulse rounded-lg bg-mist" /> : news.length ? <HorizontalRow>{news.map((item) => <NewsCard key={`${item.type}-${item.tmdbId}`} item={item} added={library.some((movie) => (item.tmdbId && movie.tmdbId === item.tmdbId) || (item.imdbId && movie.imdbId === item.imdbId))} adding={quickAdd.isAdding(`${item.type}-${item.tmdbId}`)} onAdd={() => quickAdd.add({ key: `${item.type}-${item.tmdbId}`, imdbId: item.imdbId, type: item.type })} onSelect={(selected) => setModalTarget({ candidate: selected, platformNames: selected.platformNames })} />)}</HorizontalRow> : <Link to="/novedades" className="grid h-36 place-items-center rounded-lg border border-dashed border-slate-300 text-sm text-slate-500">Explorar novedades</Link>}
         </section>
         <section>
           <SectionTitle title="Estrenos en cine" subtitle="La cartelera actual de los cines." to="/cine" color="aqua" buttonLabel="Ver estrenos" buttonIcon={Film} />

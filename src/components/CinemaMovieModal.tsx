@@ -8,7 +8,7 @@ import type { ImdbSearchCandidate, MovieItem } from '@/types/movie';
 const normalize = (text: string) => text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
 
 // Busca la película de la cartelera en IMDb por título original (o local) y año.
-const resolveImdbCandidate = async (movie: CinemaMovie): Promise<ImdbSearchCandidate | null> => {
+export const resolveImdbCandidate = async (movie: CinemaMovie): Promise<ImdbSearchCandidate | null> => {
   const queries = [...new Set([movie.originalTitle, movie.title].filter((value): value is string => Boolean(value)))];
   for (const query of queries) {
     const results = (await api.imdb.search(query)).filter((item) => item.type === 'movie');
