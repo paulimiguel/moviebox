@@ -49,7 +49,11 @@ export const MovieCollectionSelect = ({ movie }: { movie: MovieItem }) => {
   });
   const busy = saveMutation.isPending || createMutation.isPending;
 
-  const toggle = (id: string) => saveMutation.mutate(selectedIds.includes(id) ? selectedIds.filter((item) => item !== id) : [...selectedIds, id]);
+  // Al elegir una colección se cierra el desplegable; se vuelve a abrir para elegir otra.
+  const toggle = (id: string) => {
+    saveMutation.mutate(selectedIds.includes(id) ? selectedIds.filter((item) => item !== id) : [...selectedIds, id]);
+    setOpen(false);
+  };
   const query = normalize(search);
   const visible = collections.filter((collection) => !query || normalize(collection.name).includes(query));
   const exactMatch = collections.find((collection) => normalize(collection.name) === query);
@@ -57,10 +61,12 @@ export const MovieCollectionSelect = ({ movie }: { movie: MovieItem }) => {
     if (!search.trim() || busy) return;
     if (exactMatch) {
       if (!selectedIds.includes(exactMatch.id)) toggle(exactMatch.id);
+      else setOpen(false);
       setSearch('');
       return;
     }
     createMutation.mutate(search.trim());
+    setOpen(false);
   };
 
   return (
@@ -71,7 +77,7 @@ export const MovieCollectionSelect = ({ movie }: { movie: MovieItem }) => {
         {busy ? <Loader2 className="h-4 w-4 shrink-0 animate-spin text-aqua" /> : <ChevronsUpDown className="h-4 w-4 shrink-0 text-slate-400" />}
       </button>
       {open && (
-        <div className="library-toolbar-dropdown absolute left-0 top-full z-50 mt-1 w-full min-w-[220px] overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
+        <div className="library-toolbar-dropdown absolute left-0 top-full z-50 mt-1 w-full min-w-[200px] overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
           <label className="relative block border-b border-slate-200">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input autoFocus type="search" value={search} onChange={(event) => setSearch(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); submit(); } }} className="h-10 w-full pl-9 pr-3 text-sm outline-none" placeholder="Buscar o crear con Enter" />

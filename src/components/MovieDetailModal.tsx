@@ -270,7 +270,8 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                     <dd className="text-sm text-ink">{movie.totalEpisodes ?? 'Sin datos'}</dd>
                   </div>}
                 </div>}
-                {(movie.type === 'series' || !onAdd) && <div className="hidden min-w-0 lg:block">
+                {(movie.type === 'series' || !onAdd) && <div className="hidden min-w-0 lg:grid lg:grid-cols-[minmax(0,1fr)_13rem] lg:gap-x-4">
+                  <div />
                   {!onAdd && <MovieCollectionSelect key={movie.id} movie={movie} />}
                 </div>}
                 {/* Mobile: Colección debajo de Reparto (película) o de Temporadas (serie), con VER AHORA a su lado.
