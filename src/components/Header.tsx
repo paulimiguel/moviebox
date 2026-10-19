@@ -915,7 +915,7 @@ export const Header = () => {
     </header>
     <div aria-hidden="true" className="h-[73px]" />
     {/* Pie de página en tablet: acceso rápido a las secciones principales */}
-    <nav aria-label="Navegación principal" className="moviebox-tabbar fixed inset-x-0 bottom-0 z-40 hidden grid-cols-4 border-t border-slate-200 bg-canvas/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:grid lg:hidden">
+    <nav aria-label="Navegación principal" className="moviebox-tabbar fixed inset-x-0 bottom-0 z-40 grid-cols-4 border-t border-slate-200 bg-canvas/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
       {([
         { label: 'Mi biblioteca', icon: Library, active: location.pathname.startsWith('/biblioteca') && !profileMenuOpen, onClick: () => { setProfileMenuOpen(false); setMenuOpen(false); navigate('/biblioteca'); } },
         { label: 'Novedades', icon: Sparkles, active: location.pathname.startsWith('/novedades') && !profileMenuOpen, onClick: () => { setProfileMenuOpen(false); setMenuOpen(false); navigate('/novedades'); } },

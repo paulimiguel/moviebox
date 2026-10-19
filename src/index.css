@@ -87,7 +87,16 @@ body {
   border-top: 1px solid rgb(24 26 30);
 }
 
-@media (min-width: 768px) and (max-width: 1023px) {
+/* Pie de página de tablet: anchos de 768 a 1023 px, o cualquier pantalla táctil de al menos 768 x 600 (tablet en horizontal). */
+.moviebox-tabbar {
+  display: none;
+}
+
+@media (min-width: 768px) and (max-width: 1023px), (min-width: 768px) and (min-height: 600px) and (pointer: coarse) {
+  .moviebox-tabbar {
+    display: grid;
+  }
+
   body:has(.moviebox-tabbar) {
     padding-bottom: calc(48px + env(safe-area-inset-bottom));
   }
