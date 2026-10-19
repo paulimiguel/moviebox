@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckSquare, Edit3, FileText, Film, Loader2, Printer, Share2, Square, Trash2, X } from 'lucide-react';
 import { Header } from '@/components/Header';
@@ -76,6 +76,10 @@ export const MovieLibraryPage = () => {
   const [sortDirection, setSortDirection] = useState<SortDirection>(initialSort.direction);
   const [viewMode, setViewMode] = useState<MovieViewMode>(getInitialViewMode);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+  // Vistas personales del menú de perfil: Mis títulos favoritos / vistos.
+  const personalViewParam = searchParams.get('vista');
+  const personalView = personalViewParam === 'favoritos' || personalViewParam === 'vistos' || personalViewParam === 'watchlist' ? personalViewParam : null;
   const [bulkMode, setBulkMode] = useState<MovieBulkMode>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const selectionAnchorId = useRef<string | null>(null);
@@ -243,6 +247,30 @@ export const MovieLibraryPage = () => {
       window.removeEventListener('moviebox:action-close-bulk', handleActionCloseBulk);
     };
   }, []);
+
+  const previousPersonalView = useRef<typeof personalView>(null);
+  useEffect(() => {
+    if (personalView) {
+      setSearch('');
+      setType('all');
+      setGenreIds([]);
+      setPlatformIds([]);
+      setCollectionIds([]);
+      setYears([]);
+      setRatings([]);
+      setThumbs('all');
+      setWatchlist(personalView === 'watchlist' ? 'watchlist' : 'all');
+      setEmptyFields([]);
+      setFavorite(personalView === 'favoritos' ? 'favorites' : 'all');
+      setWatched(personalView === 'vistos' ? 'watched' : 'all');
+      setFiltersOpen(false);
+    } else if (previousPersonalView.current) {
+      setFavorite('all');
+      setWatched('all');
+      setWatchlist('all');
+    }
+    previousPersonalView.current = personalView;
+  }, [personalView]);
 
   const moviesQuery = useQuery({ queryKey: ['movies'], queryFn: api.movies.getAll });
   const metadataQuery = useQuery({ queryKey: ['metadata'], queryFn: api.metadata.getAll });
@@ -443,8 +471,9 @@ export const MovieLibraryPage = () => {
       <Header />
       <MovieLibraryToolbar
         ownerName={user?.alias || user?.name || 'Usuario'}
-        title={catalogContext?.title}
-        hideActiveFilters={onlyCatalogFilter}
+        title={personalView === 'favoritos' ? 'Mis títulos favoritos' : personalView === 'vistos' ? 'Mis títulos vistos' : personalView === 'watchlist' ? 'Mi Watchlist' : catalogContext?.title}
+        hideActiveFilters={onlyCatalogFilter || Boolean(personalView)}
+        hideFilterAndAdd={Boolean(personalView)}
         backAction={catalogContext ? { label: 'Atrás', onClick: () => navigate(catalogContext.backTo) } : undefined}
         visibleCount={filteredMovies.length}
         totalCount={moviesQuery.data?.length || 0}

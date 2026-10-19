@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Search, X } from 'lucide-react';
 
 export type EmptyMovieField =
@@ -14,11 +14,11 @@ export const emptyMovieFieldOptions: Array<{ id: EmptyMovieField; label: string 
   { id: 'durationMinutes', label: 'Duración' },
   { id: 'seasons', label: 'Temporadas (series)' },
   { id: 'totalEpisodes', label: 'Episodios (series)' },
-  { id: 'personalRating', label: 'Rate' },
+  { id: 'personalRating', label: 'Mi puntuación' },
   { id: 'imdbRating', label: 'Puntuación IMDb' },
-  { id: 'imdbId', label: 'ID de IMDb' },
+  { id: 'imdbId', label: 'Link de IMDb' },
   { id: 'imdbUrl', label: 'Link de IMDb' },
-  { id: 'tmdbId', label: 'ID de TMDB' },
+  { id: 'tmdbId', label: 'Link de TMDB' },
   { id: 'tmdbUrl', label: 'Link de TMDB' },
   { id: 'justwatchUrl', label: 'Link de JustWatch' },
   { id: 'trailerUrl', label: 'Link del trailer' },
@@ -32,13 +32,13 @@ export const emptyMovieFieldOptions: Array<{ id: EmptyMovieField; label: string 
   { id: 'collections', label: 'Colecciones' },
 ];
 
-export const EmptyFieldsModal = ({ selected, onApply, onClose }: {
-  selected: EmptyMovieField[];
+export const EmptyFieldsModal = ({ onApply, onClose }: {
+  selected?: EmptyMovieField[];
   onApply: (fields: EmptyMovieField[]) => void;
   onClose: () => void;
 }) => {
-  const [draft, setDraft] = useState<EmptyMovieField[]>(selected);
-  useEffect(() => setDraft(selected), [selected]);
+  // Cada vez que se abre arranca sin opciones marcadas.
+  const [draft, setDraft] = useState<EmptyMovieField[]>([]);
   const toggle = (field: EmptyMovieField) => setDraft((current) => current.includes(field)
     ? current.filter((item) => item !== field)
     : [...current, field]);

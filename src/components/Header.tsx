@@ -124,9 +124,24 @@ export const Header = () => {
     }
     setLibraryMenuOpen(false);
     setMenuOpen(false);
+    setProfileMenuOpen(false);
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     navigate('/biblioteca');
     window.setTimeout(() => window.dispatchEvent(new CustomEvent('moviebox:filter-library', { detail: preset })), 0);
+  };
+  const openPersonalView = (view: 'favoritos' | 'vistos' | 'watchlist') => {
+    try {
+      window.sessionStorage.removeItem('moviebox:library-filter');
+      window.sessionStorage.removeItem('moviebox:genre-filter');
+      window.sessionStorage.removeItem('moviebox:platform-filter');
+      window.sessionStorage.removeItem('moviebox:collection-filter');
+    } catch {
+      // Sin almacenamiento: la vista se arma igual desde la URL.
+    }
+    setMenuOpen(false);
+    setProfileMenuOpen(false);
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    navigate(`/biblioteca?vista=${view}`);
   };
   const filterLibraryByGenre = (genreId: string) => {
     try {
@@ -469,6 +484,18 @@ export const Header = () => {
                   <Tv className="h-4 w-4 text-aqua" />
                   <span>Plataformas que utilizo</span>
                 </button>
+                <button type="button" onClick={() => openPersonalView('favoritos')} className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink">
+                  <Heart className="h-4 w-4 text-coral" />
+                  <span>Mis títulos favoritos</span>
+                </button>
+                <button type="button" onClick={() => openPersonalView('vistos')} className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink">
+                  <Eye className="h-4 w-4 text-[#2cbc63]" />
+                  <span>Mis títulos vistos</span>
+                </button>
+                <button type="button" onClick={() => openPersonalView('watchlist')} className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink">
+                  <Bookmark className="h-4 w-4 text-aqua" />
+                  <span>Mi Watchlist</span>
+                </button>
                 <div className="border-b border-slate-100 px-3 py-2">
                   <p className="mb-2 text-xs font-semibold uppercase text-slate-400">Temas</p>
                   <div className="grid grid-cols-2 gap-2">
@@ -510,6 +537,33 @@ export const Header = () => {
               >
                 <Tv className="h-4 w-4 text-aqua" />
                 <span>Plataformas que utilizo</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => openPersonalView('favoritos')}
+                className="hidden w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink lg:flex"
+              >
+                <Heart className="h-4 w-4 text-coral" />
+                <span>Mis títulos favoritos</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => openPersonalView('vistos')}
+                className="hidden w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink lg:flex"
+              >
+                <Eye className="h-4 w-4 text-[#2cbc63]" />
+                <span>Mis títulos vistos</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => openPersonalView('watchlist')}
+                className="hidden w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink lg:flex"
+              >
+                <Bookmark className="h-4 w-4 text-aqua" />
+                <span>Mi Watchlist</span>
               </button>
 
               {/* Inicio */}

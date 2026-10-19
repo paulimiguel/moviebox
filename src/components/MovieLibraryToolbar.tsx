@@ -20,6 +20,7 @@ interface ToolbarProps {
   backAction?: { label: string; onClick: () => void };
   ownerName?: string;
   hideActiveFilters?: boolean;
+  hideFilterAndAdd?: boolean;
   visibleCount: number;
   totalCount: number;
   search: string;
@@ -336,7 +337,7 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
               })}
             </div>
 
-            <div className="order-4 grid grid-cols-3 gap-2 w-full md:order-none md:grid-cols-4 md:w-[450px] lg:w-[540px] shrink-0 md:ml-auto">
+            <div className={`order-4 grid gap-2 shrink-0 ml-auto md:order-none ${props.hideFilterAndAdd ? 'w-2/3 grid-cols-2 md:w-[225px] md:grid-cols-2 lg:w-[270px]' : 'w-full grid-cols-3 md:grid-cols-4 md:w-[450px] lg:w-[540px]'}`}>
               <div className="relative w-full">
                 <button type="button" onClick={() => setOpenMenu(openMenu === 'view' ? null : 'view')} className={menuButton} aria-expanded={openMenu === 'view'}>{activeViewIcon}<span className="whitespace-nowrap">Ver</span><ChevronDown className="h-3.5 w-3.5 shrink-0" /></button>
                 {openMenu === 'view' && <div className="library-toolbar-dropdown absolute left-0 top-full z-40 mt-1.5 w-52 rounded-md border border-slate-200 bg-white p-1.5 shadow-card">{viewOptions.map((option) => <button key={option.value} type="button" onClick={() => { props.onViewModeChange(option.value); setOpenMenu(null); }} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${props.viewMode === option.value ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`}>{option.icon}<span className="flex-1">{option.label}</span>{props.viewMode === option.value && <Check className="h-4 w-4 text-coral" />}</button>)}</div>}
@@ -345,28 +346,32 @@ export const MovieLibraryToolbar = (props: ToolbarProps) => {
                 <button type="button" onClick={() => setOpenMenu(openMenu === 'sort' ? null : 'sort')} className={menuButton} aria-expanded={openMenu === 'sort'}><ArrowUpDown className="h-3.5 w-3.5 shrink-0" /><span className="whitespace-nowrap">Ordenar</span><ChevronDown className="h-3.5 w-3.5 shrink-0" /></button>
                 {openMenu === 'sort' && <div className="library-toolbar-dropdown absolute left-0 sm:left-1/2 sm:-translate-x-1/2 top-full z-40 mt-1.5 w-52 rounded-md border border-slate-200 bg-white p-1.5 shadow-card">{sortOptions.map((option) => { const active = props.sortKey === option.value; return <button key={option.value} type="button" onClick={() => { props.onSortChange(option.value); setOpenMenu(null); }} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${active ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`}><Check className={`h-4 w-4 ${active ? 'text-coral' : 'text-transparent'}`} /><span className="flex-1">{option.label}</span>{active ? (props.sortDirection === 'asc' ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />) : <ArrowUpDown className="h-4 w-4 opacity-30" />}</button>; })}</div>}
               </div>
-              <div className="relative w-full">
-                <button type="button" onClick={() => { setOpenMenu(null); props.onFiltersToggle(); }} className={`${menuButton} ${props.filtersOpen ? 'border-coral bg-red-50 text-coral' : ''}`}><Filter className="h-3.5 w-3.5 shrink-0" /><span className="whitespace-nowrap">Filtrar</span><ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${props.filtersOpen ? 'rotate-180' : ''}`} /></button>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setOpenMenu(null);
-                  if (props.onAddClick) {
-                    props.onAddClick();
-                    return;
-                  }
-                  setSearchParams((current) => {
-                    const nextParams = new URLSearchParams(current);
-                    nextParams.set('agregar', '1');
-                    return nextParams;
-                  });
-                }}
-                className="primary-button hidden h-10 w-full justify-center px-2.5 text-xs uppercase md:inline-flex"
-              >
-                <Plus className="h-3.5 w-3.5 shrink-0" />
-                <span className="whitespace-nowrap">Nuevo título</span>
-              </button>
+              {!props.hideFilterAndAdd && (
+                <div className="relative w-full">
+                  <button type="button" onClick={() => { setOpenMenu(null); props.onFiltersToggle(); }} className={`${menuButton} ${props.filtersOpen ? 'border-coral bg-red-50 text-coral' : ''}`}><Filter className="h-3.5 w-3.5 shrink-0" /><span className="whitespace-nowrap">Filtrar</span><ChevronDown className={`h-3.5 w-3.5 shrink-0 transition-transform ${props.filtersOpen ? 'rotate-180' : ''}`} /></button>
+                </div>
+              )}
+              {!props.hideFilterAndAdd && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpenMenu(null);
+                    if (props.onAddClick) {
+                      props.onAddClick();
+                      return;
+                    }
+                    setSearchParams((current) => {
+                      const nextParams = new URLSearchParams(current);
+                      nextParams.set('agregar', '1');
+                      return nextParams;
+                    });
+                  }}
+                  className="primary-button hidden h-10 w-full justify-center px-2.5 text-xs uppercase md:inline-flex"
+                >
+                  <Plus className="h-3.5 w-3.5 shrink-0" />
+                  <span className="whitespace-nowrap">Nuevo título</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Bookmark, Check, Download, ExternalLink, Eye, Film, Heart, MoreVertical, Pencil, Printer, Share2, Star, ThumbsUp, Trash2, Tv, Youtube } from 'lucide-react';
+import { Bookmark, Check, ExternalLink, Eye, Film, Heart, MoreVertical, Pencil, Printer, Share2, Star, ThumbsUp, Trash2, Tv, Youtube } from 'lucide-react';
 import { MovieCollectionPicker } from '@/components/MovieCollectionPicker';
 import { PlatformLogos } from '@/components/PlatformLogos';
 import { StarRating } from '@/components/StarRating';
@@ -77,15 +77,6 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
     <TrailerModal title={title} trailerUrl={movie.trailerUrl} onClose={() => setTrailerOpen(false)} />
   ) : null;
   const closeMenu = () => setMenuOpen(false);
-  const downloadMovie = () => {
-    const filename = title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').toLocaleLowerCase() || 'movie';
-    const url = URL.createObjectURL(new Blob([JSON.stringify(movie, null, 2)], { type: 'application/json' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${filename}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-  };
   const shareMovie = async () => {
     const url = `${window.location.origin}/titulo/${movie.id}`;
     if (navigator.share) await navigator.share({ title, text: [title, movie.year].filter(Boolean).join(' · '), url });
@@ -103,12 +94,10 @@ export const MovieCard = ({ movie, mode, onOpen, onPersonal, onRating, onEdit, o
       {menuOpen && <div className={`movie-card-dropdown absolute bottom-full ${fullWidthMobile ? 'left-0 lg:left-auto lg:right-0' : 'right-0'} z-[70] mb-1 w-52 rounded-md border border-slate-200 bg-white p-1.5 text-xs shadow-card`}>
         {movie.trailerUrl ? <button type="button" onClick={() => { closeMenu(); setTrailerOpen(true); }} className="movie-trailer-link flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-slate-600 hover:bg-slate-50"><Youtube className="h-4 w-4" />Ver trailer</button> : <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-3 py-1.5 text-slate-300"><Youtube className="h-4 w-4" />Ver trailer</span>}
         {movie.imdbUrl ? <a href={movie.imdbUrl} target="_blank" rel="noreferrer" onClick={closeMenu} className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-slate-600 hover:bg-slate-50"><ExternalLink className="h-4 w-4" />Ver en IMDb</a> : <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-3 py-1.5 text-slate-300"><ExternalLink className="h-4 w-4" />Ver en IMDb</span>}
-        {tmdbUrl ? <a href={tmdbUrl} target="_blank" rel="noreferrer" onClick={closeMenu} className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-slate-600 hover:bg-slate-50"><ExternalLink className="h-4 w-4" />Ver en TMDB</a> : <span className="flex w-full cursor-not-allowed items-center gap-2 rounded-md px-3 py-1.5 text-slate-300"><ExternalLink className="h-4 w-4" />Ver en TMDB</span>}
         <a href={`/titulo/${movie.id}`} target="_blank" rel="noreferrer" onClick={closeMenu} className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-slate-600 hover:bg-slate-50"><ExternalLink className="h-4 w-4" />Abrir en nueva pestaña</a>
         <div className="my-1 border-t border-slate-100" />
         <button type="button" onClick={() => { closeMenu(); onEdit?.(movie); }} disabled={!onEdit} className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-300"><Pencil className="h-4 w-4" />Editar</button>
         <button type="button" onClick={() => { closeMenu(); printMovies([movie], 'cards'); }} className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-slate-600 hover:bg-slate-50"><Printer className="h-4 w-4" />Imprimir</button>
-        <button type="button" onClick={() => { closeMenu(); downloadMovie(); }} className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-slate-600 hover:bg-slate-50"><Download className="h-4 w-4" />Descargar</button>
         <button type="button" onClick={() => { closeMenu(); void shareMovie().catch(() => undefined); }} className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-slate-600 hover:bg-slate-50"><Share2 className="h-4 w-4" />Compartir</button>
         <div className="my-1 border-t border-slate-100" />
         <button type="button" onClick={() => { closeMenu(); onDelete?.(movie); }} disabled={!onDelete} className="flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:text-slate-300"><Trash2 className="h-4 w-4" />Eliminar</button>
