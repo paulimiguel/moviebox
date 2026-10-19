@@ -87,12 +87,12 @@ body {
   border-top: 1px solid rgb(24 26 30);
 }
 
-/* Pie de página de tablet: anchos de 768 a 1023 px, o cualquier pantalla táctil de al menos 768 x 600 (tablet en horizontal). */
+/* Pie de página: tablet y escritorio (768 px o más). En mobile no se muestra. */
 .moviebox-tabbar {
   display: none;
 }
 
-@media (min-width: 768px) and (max-width: 1023px), (min-width: 768px) and (min-height: 600px) and (pointer: coarse) {
+@media (min-width: 768px) {
   .moviebox-tabbar {
     display: grid;
   }

@@ -45,6 +45,7 @@ model MovieItem {
   thumbsUp           Boolean   @default(false)
   thumbsDown         Boolean   @default(false)
   instagramRecommendation Boolean @default(false)
+  comments           String?
   personalRating     Float?
   imdbRating         Float?
   tmdbId             Int?

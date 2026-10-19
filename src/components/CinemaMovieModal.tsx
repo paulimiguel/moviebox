@@ -86,6 +86,7 @@ export const CinemaMovieModal = ({ cinemaMovie, onClose }: { cinemaMovie: Cinema
       watchlist: false,
       thumbsUp: false,
       thumbsDown: false,
+      comments: null,
       instagramRecommendation: false,
       personalRating: null,
       imdbRating: data.imdbRating ?? null,

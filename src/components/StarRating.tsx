@@ -1,14 +1,15 @@
 import { Star, X } from 'lucide-react';
 
-export const StarRating = ({ value, onChange, disabled = false, allowClear = true, compact = false }: {
+export const StarRating = ({ value, onChange, disabled = false, allowClear = true, compact = false, small = false }: {
   value: number | null;
   onChange: (value: number | null) => void;
   disabled?: boolean;
   allowClear?: boolean;
   compact?: boolean;
+  small?: boolean;
 }) => (
-  <div className={`star-rating flex items-center ${compact ? 'flex-nowrap gap-0' : 'flex-wrap gap-1'}`} role="group" aria-label="Mi puntuación">
-    {Array.from({ length: 5 }, (_, index) => index + 1).map((rating) => {
+  <div className={`star-rating flex items-center ${compact ? 'flex-wrap gap-0' : 'flex-wrap gap-0.5'}`} role="group" aria-label="Mi puntuación">
+    {Array.from({ length: 10 }, (_, index) => index + 1).map((rating) => {
       const selected = value != null && rating <= value;
       return (
         <button
@@ -16,12 +17,12 @@ export const StarRating = ({ value, onChange, disabled = false, allowClear = tru
           type="button"
           disabled={disabled}
           onClick={() => onChange(allowClear && value === rating ? null : rating)}
-          className={`grid place-items-center rounded-md transition-colors hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60 ${compact ? 'h-6 w-5' : 'h-10 w-10'} ${selected ? 'text-amber-400' : 'text-slate-300'}`}
+          className={`grid place-items-center rounded-md transition-colors hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60 ${compact ? 'h-5 w-[17px]' : small ? 'h-6 w-6' : 'h-8 w-8'} ${selected ? 'text-amber-400' : 'text-slate-300'}`}
           aria-label={`${rating} ${rating === 1 ? 'estrella' : 'estrellas'}`}
           aria-pressed={value === rating}
           title={`${rating} ${rating === 1 ? 'estrella' : 'estrellas'}`}
         >
-          <Star className={`${compact ? 'h-4 w-4' : 'h-7 w-7'} ${selected ? 'fill-current' : ''}`} />
+          <Star className={`${compact ? 'h-3.5 w-3.5' : small ? 'h-4 w-4' : 'h-6 w-6'} ${selected ? 'fill-current' : ''}`} />
         </button>
       );
     })}

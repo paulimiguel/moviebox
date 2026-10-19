@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Bookmark, Eye, Heart, ImagePlus, Loader2, Plus, Tags, Trash2, Tv, X } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Bookmark, Check, ChevronsUpDown, Eye, Heart, ImagePlus, Loader2, Plus, Search, Tags, ThumbsDown, ThumbsUp, Trash2, Tv, X } from 'lucide-react';
 import { api, resolveMovieImageUrl } from '@/services/api';
 import { resolvePlatformLogoUrl } from '@/components/PlatformLogos';
 import { StarRating } from '@/components/StarRating';
@@ -37,6 +37,14 @@ const AssociationPicker = ({ label, kind, options, selected, onChange }: {
   onChange: (names: string[]) => void;
 }) => {
   const [draft, setDraft] = useState('');
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return undefined;
+    const close = (event: MouseEvent) => { if (!rootRef.current?.contains(event.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [open]);
   const visibleOptions = useMemo(() => {
     const byName = new Map(options.map((option) => [option.name.toLocaleLowerCase('es'), option]));
     selected.forEach((name) => {
@@ -45,9 +53,13 @@ const AssociationPicker = ({ label, kind, options, selected, onChange }: {
     });
     return Array.from(byName.values()).sort((left, right) => left.name.localeCompare(right.name, 'es'));
   }, [options, selected]);
-  const toggle = (name: string) => onChange(selected.includes(name)
-    ? selected.filter((item) => item !== name)
-    : [...selected, name]);
+  const toggle = (name: string) => {
+    onChange(selected.includes(name)
+      ? selected.filter((item) => item !== name)
+      : [...selected, name]);
+    setDraft('');
+    setOpen(false);
+  };
   const addDraft = () => {
     const name = draft.trim();
     if (!name) return;
@@ -55,25 +67,39 @@ const AssociationPicker = ({ label, kind, options, selected, onChange }: {
     const value = existing?.name || name;
     if (!selected.some((item) => normalizeValue(item) === normalizeValue(value))) onChange([...selected, value]);
     setDraft('');
+    setOpen(false);
   };
+  const filteredOptions = visibleOptions.filter((option) => !draft.trim() || normalizeValue(option.name).includes(normalizeValue(draft)));
 
   return (
-    <fieldset>
-      <legend className="field-label">{label}</legend>
-      <div className="max-h-44 overflow-y-auto rounded-md border border-slate-200 bg-white p-2">
-        {visibleOptions.length ? visibleOptions.map((option) => (
-          <label key={option.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-slate-50">
-            <input type="checkbox" checked={selected.includes(option.name)} onChange={() => toggle(option.name)} className="h-4 w-4 accent-aqua" />
-            <AssociationOptionIcon kind={kind} option={option} />
-            <span>{option.name}</span>
+    <div ref={rootRef} className="relative min-w-0">
+      <span className="field-label">{label}</span>
+      <button type="button" onClick={() => { setDraft(''); setOpen((current) => !current); }} className={`control flex w-full items-center justify-between gap-2 text-left ${open ? 'border-coral' : ''}`} aria-haspopup="listbox" aria-expanded={open}>
+        <span className={`truncate ${selected.length ? 'text-ink' : 'text-slate-400'}`}>{selected.length ? selected.join(', ') : `Elegir ${label.toLocaleLowerCase('es')}`}</span>
+        <ChevronsUpDown className="h-4 w-4 shrink-0 text-slate-400" />
+      </button>
+      {open && (
+        <div className="library-toolbar-dropdown absolute left-0 top-full z-50 mt-1 w-full min-w-[220px] overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
+          <label className="relative block border-b border-slate-200">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input autoFocus type="search" value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addDraft(); } }} className="h-10 w-full pl-9 pr-3 text-sm outline-none" placeholder={`Buscar o crear ${label.toLocaleLowerCase('es')} con Enter`} />
           </label>
-        )) : <p className="px-2 py-3 text-sm text-slate-400">No hay opciones.</p>}
-      </div>
-      <div className="mt-2 flex gap-2">
-        <input value={draft} onChange={(event) => setDraft(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); addDraft(); } }} className="control min-w-0 flex-1" placeholder={`Agregar ${label.toLocaleLowerCase('es')}`} />
-        <button type="button" onClick={addDraft} disabled={!draft.trim()} className="icon-button" title={`Agregar ${label.toLocaleLowerCase('es')}`} aria-label={`Agregar ${label.toLocaleLowerCase('es')}`}><Plus className="h-4 w-4" /></button>
-      </div>
-    </fieldset>
+          <div className="max-h-[min(16rem,38vh)] overflow-y-auto p-1.5" role="listbox" aria-multiselectable="true">
+            {filteredOptions.map((option) => {
+              const isSelected = selected.includes(option.name);
+              return (
+                <button key={option.id} type="button" onClick={() => toggle(option.name)} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${isSelected ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`} role="option" aria-selected={isSelected}>
+                  <Check className={`h-4 w-4 shrink-0 ${isSelected ? 'text-coral' : 'text-transparent'}`} />
+                  <AssociationOptionIcon kind={kind} option={option} />
+                  <span className="min-w-0 flex-1 truncate">{option.name}</span>
+                </button>
+              );
+            })}
+            {!filteredOptions.length && <p className="px-3 py-3 text-center text-sm text-slate-400">{draft.trim() ? `Enter para crear "${draft.trim()}".` : 'No hay opciones.'}</p>}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -90,11 +116,22 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
   const [watched, setWatched] = useState(movie.watched);
   const [favorite, setFavorite] = useState(movie.favorite);
   const [watchlist, setWatchlist] = useState(movie.watchlist);
+  const [thumbsUp, setThumbsUp] = useState(movie.thumbsUp);
+  const [thumbsDown, setThumbsDown] = useState(movie.thumbsDown);
+  const [comments, setComments] = useState(movie.comments || '');
   const [instagramRecommendation, setInstagramRecommendation] = useState(movie.instagramRecommendation);
   const [genreNames, setGenreNames] = useState(movie.genres.map((genre) => genre.name));
   const [platformNames, setPlatformNames] = useState(movie.platforms.map((platform) => platform.name));
   const [collectionIds, setCollectionIds] = useState(movie.collections.map((collection) => collection.id));
   const [collectionDraft, setCollectionDraft] = useState('');
+  const [collectionOpen, setCollectionOpen] = useState(false);
+  const collectionRootRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!collectionOpen) return undefined;
+    const close = (event: MouseEvent) => { if (!collectionRootRef.current?.contains(event.target as Node)) setCollectionOpen(false); };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [collectionOpen]);
   const [personalRating, setPersonalRating] = useState<number | null>(movie.personalRating);
   const [type, setType] = useState<MovieType>(movie.type);
   const [originalTitle, setOriginalTitle] = useState(movie.originalTitle);
@@ -116,6 +153,7 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
   const [imageUrls, setImageUrls] = useState(movie.images.map((image) => image.url).join('\n'));
   const [isDraggingImages, setIsDraggingImages] = useState(false);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
 
   const imageList = useMemo(() => imageUrls
     .split(/\r?\n/)
@@ -142,12 +180,13 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
       queryClient.invalidateQueries({ queryKey: ['collections'] });
       setCollectionIds((current) => current.includes(collection.id) ? current : [...current, collection.id]);
       setCollectionDraft('');
+      setCollectionOpen(false);
     },
     onError: (reason: Error) => setError(reason.message),
   });
 
   const save = useMutation({
-    mutationFn: () => {
+    mutationFn: (_closeAfter: boolean) => {
       const castNames = splitValues(cast);
       if (castNames.length > MAX_PRINCIPAL_CAST) throw new Error(`El reparto principal admite hasta ${MAX_PRINCIPAL_CAST} personas`);
       return api.movies.update(movie.id, {
@@ -155,6 +194,9 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
         watched,
         favorite,
         watchlist,
+        thumbsUp,
+        thumbsDown,
+        comments: comments.trim() || null,
         instagramRecommendation,
         personalRating,
         collectionIds,
@@ -210,8 +252,20 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
         trailerUrl: trailerUrl.trim() || null,
       });
     },
-    onSuccess: onSaved,
-    onError: (reason: Error) => setError(reason.message),
+    onSuccess: (saved, closeAfter) => {
+      if (closeAfter) {
+        onSaved(saved);
+        return;
+      }
+      // Actualizar: guarda y deja el cuadro abierto.
+      queryClient.setQueryData(['movie', saved.id], saved);
+      queryClient.invalidateQueries({ queryKey: ['movies'] });
+      queryClient.invalidateQueries({ queryKey: ['metadata'] });
+      queryClient.invalidateQueries({ queryKey: ['collections'] });
+      setNotice('Cambios guardados');
+      window.setTimeout(() => setNotice(''), 2500);
+    },
+    onError: (reason: Error) => { setNotice(''); setError(reason.message); },
   });
 
   const handleImageDrop = (event: React.DragEvent<HTMLDivElement>) => {
@@ -249,6 +303,8 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
     setCollectionIds((current) => current.includes(collectionId)
       ? current.filter((id) => id !== collectionId)
       : [...current, collectionId]);
+    setCollectionDraft('');
+    setCollectionOpen(false);
   };
   const submitCollection = () => {
     const name = collectionDraft.trim();
@@ -257,6 +313,7 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
     if (existing) {
       setCollectionIds((current) => current.includes(existing.id) ? current : [...current, existing.id]);
       setCollectionDraft('');
+      setCollectionOpen(false);
       return;
     }
     setError('');
@@ -265,7 +322,7 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/55 sm:items-center sm:p-5" role="dialog" aria-modal="true" aria-labelledby="movie-edit-title">
-      <form onSubmit={(event) => { event.preventDefault(); setError(''); save.mutate(); }} className="movie-detail-modal flex flex-col max-h-[85vh] sm:max-h-[92vh] sm:min-h-[560px] md:min-h-[600px] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-5xl sm:rounded-md">
+      <form onSubmit={(event) => { event.preventDefault(); setError(''); setNotice(''); save.mutate(true); }} className="movie-detail-modal flex flex-col max-h-[85vh] sm:max-h-[92vh] sm:min-h-[560px] md:min-h-[600px] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-5xl sm:rounded-md">
         <header className="flex h-16 shrink-0 items-center gap-3 border-b border-slate-200 bg-white px-4 sm:px-6">
           <div className="min-w-0 flex-1">
             <h2 id="movie-edit-title" className="font-bebas truncate text-[24px] font-normal uppercase leading-7 text-ink">Editar {movie.originalTitle}</h2>
@@ -279,50 +336,10 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
         </header>
 
         <div className="flex max-h-[calc(85vh-128px)] sm:max-h-[calc(92vh-128px)] flex-1 flex-col overflow-y-auto p-4 sm:p-6">
-          <section>
-            <h3 className="field-label">Estado</h3>
-            <div className="grid gap-2 sm:grid-cols-3">
-              <button type="button" aria-pressed={watched} onClick={() => setWatched((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${watched ? 'border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]' : ''}`}><Eye className="h-[18px] w-[18px]" />Vista</button>
-              <button type="button" aria-pressed={favorite} onClick={() => setFavorite((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${favorite ? 'border-coral bg-red-50 text-coral' : ''}`}><Heart className={`h-4 w-4 ${favorite ? 'fill-current' : ''}`} />Me encanta</button>
-              <button type="button" aria-pressed={watchlist} onClick={() => setWatchlist((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${watchlist ? 'border-aqua bg-mist text-aqua' : ''}`}><Bookmark className={`h-4 w-4 ${watchlist ? 'fill-current' : ''}`} />Watchlist</button>
-            </div>
-          </section>
-
-          <div className="mt-5 grid gap-5 sm:grid-cols-2">
-            <AssociationPicker label="Género" kind="genre" options={metadata.data?.genres || []} selected={genreNames} onChange={setGenreNames} />
-            <AssociationPicker label="Plataforma" kind="platform" options={metadata.data?.platforms || []} selected={platformNames} onChange={setPlatformNames} />
-          </div>
-
-          <div className="mt-5 grid gap-5 sm:grid-cols-2">
-            <fieldset>
-              <legend className="field-label">Colección</legend>
-              <div className="max-h-44 overflow-y-auto rounded-md border border-slate-200 bg-white p-2">
-                {collections.isLoading ? <div className="grid h-20 place-items-center"><Loader2 className="h-5 w-5 animate-spin text-aqua" /></div>
-                  : collections.data?.length ? collections.data.map((collection) => (
-                    <label key={collection.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-slate-50">
-                      <input type="checkbox" checked={collectionIds.includes(collection.id)} onChange={() => toggleCollection(collection.id)} className="h-4 w-4 accent-aqua" />
-                      <span>{collection.name}</span>
-                    </label>
-                  )) : <p className="px-2 py-3 text-sm text-slate-400">Todavía no hay colecciones.</p>}
-              </div>
-              <div className="mt-2 flex gap-2">
-                <input value={collectionDraft} onChange={(event) => setCollectionDraft(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); submitCollection(); } }} className="control min-w-0 flex-1" placeholder="Crear colección" />
-                <button type="button" onClick={submitCollection} disabled={!collectionDraft.trim() || createCollection.isPending} className="icon-button" title="Crear y seleccionar colección" aria-label="Crear y seleccionar colección">
-                  {createCollection.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-                </button>
-              </div>
-            </fieldset>
-
-            <div>
-              <span className="field-label">Mi puntuación</span>
-              <StarRating value={personalRating} onChange={setPersonalRating} disabled={save.isPending} />
-              <p className="mt-1 text-xs text-slate-400">{personalRating ? `${personalRating} de 5` : 'Sin puntuación'}</p>
-            </div>
-          </div>
-
-          <section className="order-last mt-5 flex flex-col rounded-md border border-slate-200 bg-white p-4">
-            <h3 className="field-label mb-3">Otros campos</h3>
-            <section className={`relative order-last mt-5 rounded-md border-2 border-dashed p-3 transition-colors ${isDraggingImages ? 'border-coral bg-red-50' : 'border-slate-200'}`}
+          {/* Mismo orden que la ficha del título: portada y estado a la izquierda; datos a la derecha. */}
+          <div className="grid gap-6 md:grid-cols-[250px_minmax(0,1fr)]">
+            <div className="mx-auto w-full max-w-[250px] md:max-w-none">
+            <section className={`relative rounded-md border-2 border-dashed p-3 transition-colors ${isDraggingImages ? 'border-coral bg-red-50' : 'border-slate-200'}`}
               onDragEnter={(event) => { event.preventDefault(); setIsDraggingImages(true); }}
               onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; setIsDraggingImages(true); }}
               onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsDraggingImages(false); }}
@@ -330,10 +347,10 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
             {isDraggingImages && <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center rounded-md border-2 border-coral bg-white/90 text-coral"><div className="flex items-center gap-2 text-sm font-semibold"><ImagePlus className="h-5 w-5" />Soltar imágenes</div></div>}
             <h3 className="field-label">Imágenes (máximo 5)</h3>
             {imageList.length > 0 && (
-              <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
+              <div className="mb-3 grid grid-cols-2 gap-2">
                 {imageList.map((url, index) => (
                   <div key={`${url}-${index}`} className="overflow-hidden rounded-md border border-slate-200 bg-white">
-                    <img src={resolveMovieImageUrl(url)} alt="" className="aspect-[2/3] w-full object-cover" />
+                    <img src={resolveMovieImageUrl(url)} alt="" className="aspect-[2/3] w-full bg-slate-100 object-contain" />
                     <div className="flex justify-center gap-1 p-1">
                       <button type="button" disabled={index === 0} onClick={() => { const next = [...imageList]; [next[index - 1], next[index]] = [next[index], next[index - 1]]; setImageUrls(next.join('\n')); }} className="icon-button h-8 w-8" title="Mover antes"><ArrowUp className="h-3.5 w-3.5" /></button>
                       <button type="button" disabled={index === imageList.length - 1} onClick={() => { const next = [...imageList]; [next[index + 1], next[index]] = [next[index], next[index + 1]]; setImageUrls(next.join('\n')); }} className="icon-button h-8 w-8" title="Mover después"><ArrowDown className="h-3.5 w-3.5" /></button>
@@ -350,36 +367,99 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
             </label>
             <textarea value={imageUrls} onChange={(event) => setImageUrls(event.target.value)} className="control min-h-24 w-full py-2" placeholder="También podés pegar una URL por línea" />
             </section>
-
-            <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <label><span className="field-label">Tipo</span><select value={type} onChange={(event) => setType(event.target.value as MovieType)} className="control w-full"><option value="movie">Película</option><option value="series">Serie</option></select></label>
-              <label><span className="field-label">Título original</span><input value={originalTitle} onChange={(event) => setOriginalTitle(event.target.value)} className="control w-full" maxLength={250} required /></label>
-              <label><span className="field-label">Título en español</span><input value={spanishTitle} onChange={(event) => setSpanishTitle(event.target.value)} className="control w-full" maxLength={250} /></label>
-              <label><span className="field-label">Año</span><input type="number" min="1888" max="2200" value={year} onChange={(event) => setYear(event.target.value)} className="control w-full" /></label>
-              <label><span className="field-label">Duración en minutos</span><input type="number" min="1" max="9999" value={duration} onChange={(event) => setDuration(event.target.value)} className="control w-full" /></label>
-              <label><span className="field-label">Puntuación IMDb</span><input type="number" min="0" max="10" step="0.1" value={imdbRating} onChange={(event) => setImdbRating(event.target.value)} className="control w-full" /></label>
-              {type === 'series' && <>
-                <label><span className="field-label">Temporadas</span><input type="number" min="1" max="999" value={seasons} onChange={(event) => setSeasons(event.target.value)} className="control w-full" /></label>
-                <label><span className="field-label">Episodios</span><input type="number" min="1" max="99999" value={episodes} onChange={(event) => setEpisodes(event.target.value)} className="control w-full" /></label>
-              </>}
-              <label className="sm:col-span-2 lg:col-span-3"><span className="field-label">Sinopsis</span><textarea value={synopsis} onChange={(event) => setSynopsis(event.target.value)} className="control min-h-32 w-full py-2" maxLength={10000} /></label>
-              <label><span className="field-label">País</span><input value={countries} onChange={(event) => setCountries(event.target.value)} className="control w-full" placeholder="Separar con comas" /></label>
-              <label><span className="field-label">Dirección</span><input value={directors} onChange={(event) => setDirectors(event.target.value)} className="control w-full" placeholder="Separar con comas" /></label>
-              <label><span className="field-label">Reparto</span><input value={cast} onChange={(event) => setCast(event.target.value)} className="control w-full" placeholder={`Hasta ${MAX_PRINCIPAL_CAST}, separados con comas`} /></label>
-              <label className="sm:col-span-2 lg:col-span-3"><span className="field-label">Palabras clave</span><input value={keywords} onChange={(event) => setKeywords(event.target.value)} className="control w-full" placeholder="Separar con comas" /></label>
-              <label><span className="field-label">Link IMDb</span><input type="url" value={imdbUrl} onChange={(event) => setImdbUrl(event.target.value)} className="control w-full" placeholder="https://..." /></label>
-              <label><span className="field-label">Link TMDB</span><input type="url" value={tmdbUrl} onChange={(event) => setTmdbUrl(event.target.value)} className="control w-full" placeholder="https://..." /></label>
-              <label><span className="field-label">Link JustWatch</span><input type="url" value={justwatchUrl} onChange={(event) => setJustwatchUrl(event.target.value)} className="control w-full" placeholder="https://..." /></label>
-              <label><span className="field-label">Link del trailer</span><input type="url" value={trailerUrl} onChange={(event) => setTrailerUrl(event.target.value)} className="control w-full" placeholder="https://..." /></label>
+              <section className="mt-4">
+                <h3 className="field-label">Estado</h3>
+                <div className="grid grid-cols-2 gap-2">
+              <button type="button" aria-pressed={watched} onClick={() => setWatched((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${watched ? 'border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]' : ''}`}><Eye className="h-[18px] w-[18px]" />Vista</button>
+              <button type="button" aria-pressed={favorite} onClick={() => setFavorite((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${favorite ? 'border-coral bg-red-50 text-coral' : ''}`}><Heart className={`h-4 w-4 ${favorite ? 'fill-current' : ''}`} />Me encanta</button>
+              <button type="button" aria-pressed={watchlist} onClick={() => setWatchlist((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${watchlist ? 'border-aqua bg-mist text-aqua' : ''}`}><Bookmark className={`h-4 w-4 ${watchlist ? 'fill-current' : ''}`} />Watchlist</button>
+                <div className="grid min-w-0 grid-cols-2 gap-2">
+                  <button type="button" aria-pressed={thumbsUp} onClick={() => { setThumbsUp((current) => !current); setThumbsDown(false); }} title="Me gusta" aria-label="Me gusta" className={`moviebox-translucent-action secondary-button h-10 min-w-0 px-1.5 ${thumbsUp ? 'border-[#3b82f6] bg-mist text-[#3b82f6]' : ''}`}><ThumbsUp className="h-[18px] w-[18px]" /></button>
+                  <button type="button" aria-pressed={thumbsDown} onClick={() => { setThumbsDown((current) => !current); setThumbsUp(false); }} title="No me gusta" aria-label="No me gusta" className={`moviebox-translucent-action secondary-button h-10 min-w-0 px-1.5 ${thumbsDown ? 'border-[#3b82f6] bg-mist text-[#3b82f6]' : ''}`}><ThumbsDown className="h-[18px] w-[18px]" /></button>
+                </div>
+                </div>
+              </section>
             </div>
-          </section>
 
+            <section className="min-w-0 space-y-5">
+              <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
+                <label><span className="field-label">Título original</span><input value={originalTitle} onChange={(event) => setOriginalTitle(event.target.value)} className="control w-full" maxLength={250} required /></label>
+                <label><span className="field-label">Título en español</span><input value={spanishTitle} onChange={(event) => setSpanishTitle(event.target.value)} className="control w-full" maxLength={250} /></label>
+              </div>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-5 lg:grid-cols-4">
+                <label><span className="field-label">Año</span><input type="number" min="1888" max="2200" value={year} onChange={(event) => setYear(event.target.value)} className="control w-full" /></label>
+                <label><span className="field-label">Puntuación IMDb</span><input type="number" min="0" max="10" step="0.1" value={imdbRating} onChange={(event) => setImdbRating(event.target.value)} className="control w-full" /></label>
+                <label><span className="field-label">Duración en minutos</span><input type="number" min="1" max="9999" value={duration} onChange={(event) => setDuration(event.target.value)} className="control w-full" /></label>
+                <label><span className="field-label">Tipo</span><select value={type} onChange={(event) => setType(event.target.value as MovieType)} className="control w-full"><option value="movie">Película</option><option value="series">Serie</option></select></label>
+              </div>
+              <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
+                <AssociationPicker label="Género" kind="genre" options={metadata.data?.genres || []} selected={genreNames} onChange={setGenreNames} />
+                <AssociationPicker label="Plataforma" kind="platform" options={metadata.data?.platforms || []} selected={platformNames} onChange={setPlatformNames} />
+              </div>
+              <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
+                <label><span className="field-label">Link IMDb</span><input type="url" value={imdbUrl} onChange={(event) => setImdbUrl(event.target.value)} className="control w-full" placeholder="https://..." /></label>
+                <label><span className="field-label">Link TMDB</span><input type="url" value={tmdbUrl} onChange={(event) => setTmdbUrl(event.target.value)} className="control w-full" placeholder="https://..." /></label>
+                <label><span className="field-label">Link JustWatch</span><input type="url" value={justwatchUrl} onChange={(event) => setJustwatchUrl(event.target.value)} className="control w-full" placeholder="https://..." /></label>
+                <label><span className="field-label">Link del trailer</span><input type="url" value={trailerUrl} onChange={(event) => setTrailerUrl(event.target.value)} className="control w-full" placeholder="https://..." /></label>
+              </div>
+              <label className="block"><span className="field-label">Sinopsis</span><textarea value={synopsis} onChange={(event) => setSynopsis(event.target.value)} className="control min-h-36 w-full py-2" maxLength={10000} /></label>
+              <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
+                <label><span className="field-label">País</span><input value={countries} onChange={(event) => setCountries(event.target.value)} className="control w-full" placeholder="Separar con comas" /></label>
+                <label><span className="field-label">Dirección</span><input value={directors} onChange={(event) => setDirectors(event.target.value)} className="control w-full" placeholder="Separar con comas" /></label>
+                <label className="sm:col-span-2"><span className="field-label">Reparto</span><input value={cast} onChange={(event) => setCast(event.target.value)} className="control w-full" placeholder={`Hasta ${MAX_PRINCIPAL_CAST}, separados con comas`} /></label>
+                {type === 'series' && (
+                  <div className="grid grid-cols-2 gap-x-6 sm:col-span-2">
+                    <label><span className="field-label">Temporadas</span><input type="number" min="1" max="999" value={seasons} onChange={(event) => setSeasons(event.target.value)} className="control w-full" /></label>
+                    <label><span className="field-label">Episodios</span><input type="number" min="1" max="99999" value={episodes} onChange={(event) => setEpisodes(event.target.value)} className="control w-full" /></label>
+                  </div>
+                )}
+            <div ref={collectionRootRef} className="relative min-w-0">
+              <span className="field-label">Colección</span>
+              <button type="button" onClick={() => { setCollectionDraft(''); setCollectionOpen((current) => !current); }} className={`control flex w-full items-center justify-between gap-2 text-left ${collectionOpen ? 'border-coral' : ''}`} aria-haspopup="listbox" aria-expanded={collectionOpen}>
+                <span className={`truncate ${collectionIds.length ? 'text-ink' : 'text-slate-400'}`}>{collectionIds.length ? (collections.data || []).filter((collection) => collectionIds.includes(collection.id)).map((collection) => collection.name).join(', ') || 'Cargando…' : 'Elegir colección'}</span>
+                {createCollection.isPending ? <Loader2 className="h-4 w-4 shrink-0 animate-spin text-aqua" /> : <ChevronsUpDown className="h-4 w-4 shrink-0 text-slate-400" />}
+              </button>
+              {collectionOpen && (
+                <div className="library-toolbar-dropdown absolute left-0 top-full z-50 mt-1 w-full min-w-[220px] overflow-hidden rounded-md border border-slate-200 bg-white shadow-card">
+                  <label className="relative block border-b border-slate-200">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <input autoFocus type="search" value={collectionDraft} onChange={(event) => setCollectionDraft(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); submitCollection(); } }} className="h-10 w-full pl-9 pr-3 text-sm outline-none" placeholder="Buscar o crear colección con Enter" />
+                  </label>
+                  <div className="max-h-[min(16rem,38vh)] overflow-y-auto p-1.5" role="listbox" aria-multiselectable="true">
+                    {collections.isLoading && <p className="px-3 py-3 text-center text-sm text-slate-400">Cargando…</p>}
+                    {(collections.data || []).filter((collection) => !collectionDraft.trim() || normalizeValue(collection.name).includes(normalizeValue(collectionDraft))).map((collection) => {
+                      const isSelected = collectionIds.includes(collection.id);
+                      return (
+                        <button key={collection.id} type="button" onClick={() => toggleCollection(collection.id)} className={`flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm ${isSelected ? 'bg-mist font-semibold text-ink' : 'text-slate-600 hover:bg-slate-50'}`} role="option" aria-selected={isSelected}>
+                          <Check className={`h-4 w-4 shrink-0 ${isSelected ? 'text-coral' : 'text-transparent'}`} />
+                          <span className="min-w-0 flex-1 truncate">{collection.name}</span>
+                        </button>
+                      );
+                    })}
+                    {!collections.isLoading && !(collections.data || []).some((collection) => !collectionDraft.trim() || normalizeValue(collection.name).includes(normalizeValue(collectionDraft))) && <p className="px-3 py-3 text-center text-sm text-slate-400">{collectionDraft.trim() ? `Enter para crear "${collectionDraft.trim()}".` : 'Todavía no hay colecciones.'}</p>}
+                  </div>
+                </div>
+              )}
+            </div>
+                <div>
+            <div>
+              <span className="field-label">Mi puntuación{personalRating ? ` · ${personalRating} de 10` : ''}</span>
+              <StarRating small value={personalRating} onChange={setPersonalRating} disabled={save.isPending} />
+            </div>
+                </div>
+              </div>
+              <label className="block"><span className="field-label">Palabras clave</span><input value={keywords} onChange={(event) => setKeywords(event.target.value)} className="control w-full" placeholder="Separar con comas" /></label>
+              <label className="block"><span className="field-label">Comentarios</span><textarea value={comments} onChange={(event) => setComments(event.target.value)} className="control min-h-28 w-full py-2" maxLength={5000} placeholder="Tus notas o comentarios sobre este título" /></label>
+            </section>
+          </div>
           {error && <p className="order-last mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
         </div>
 
         <footer className="flex h-16 items-center justify-end gap-2 border-t border-slate-200 bg-white px-4 sm:px-6">
+          {notice && <span className="mr-auto text-sm font-medium text-[#218f4c]" role="status">{notice}</span>}
           <button type="button" onClick={onClose} className="secondary-button">Cancelar</button>
-          <button type="submit" disabled={save.isPending || imageUpload.isPending || createCollection.isPending || !originalTitle.trim()} className="primary-button">{save.isPending && <Loader2 className="h-4 w-4 animate-spin" />}Guardar</button>
+          <button type="button" onClick={() => { setError(''); setNotice(''); save.mutate(false); }} disabled={save.isPending || imageUpload.isPending || createCollection.isPending || !originalTitle.trim()} className="secondary-button">{save.isPending && save.variables === false && <Loader2 className="h-4 w-4 animate-spin" />}Actualizar</button>
+          <button type="submit" disabled={save.isPending || imageUpload.isPending || createCollection.isPending || !originalTitle.trim()} className="primary-button">{save.isPending && save.variables === true && <Loader2 className="h-4 w-4 animate-spin" />}Guardar</button>
         </footer>
       </form>
     </div>

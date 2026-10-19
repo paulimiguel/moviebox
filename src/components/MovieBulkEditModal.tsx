@@ -323,7 +323,7 @@ export const MovieBulkEditModal = ({
                 disabled={mutation.isPending}
               />
               <span className="text-xs text-slate-400">
-                {rate !== null ? `${rate} de 5` : 'No cambiar'}
+                {rate !== null ? `${rate} de 10` : 'No cambiar'}
               </span>
             </div>
           </div>

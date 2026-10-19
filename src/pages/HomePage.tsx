@@ -298,6 +298,7 @@ export const HomePage = () => {
       watchlist: false,
       thumbsUp: false,
       thumbsDown: false,
+      comments: null,
       instagramRecommendation: false,
       personalRating: null,
       imdbRating: details?.imdbRating ?? null,

@@ -184,7 +184,7 @@ export const GenresPage = () => {
                 const iconImage = getGenreIconImage(genre.name);
                 const GenreIcon = getGenreIcon(genre.name);
                 return <article key={genre.id} role="button" tabIndex={0} onClick={() => showGenreMovies(genre.id)} onKeyDown={(event) => { if ((event.key === 'Enter' || event.key === ' ') && event.target === event.currentTarget) { event.preventDefault(); showGenreMovies(genre.id); } }} className={`movie-card relative flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-md bg-white shadow-card transition-transform hover:-translate-y-0.5 ${openMenuId === genre.id ? 'z-20 overflow-visible' : ''}`}>
-                  <div className="relative aspect-square overflow-hidden rounded-t-md bg-slate-100">
+                  <div className={`relative aspect-square rounded-t-md bg-slate-100 ${openMenuId === genre.id ? 'overflow-visible' : 'overflow-hidden'}`}>
                     {iconImage
                       ? <div className="grid h-full place-items-center" title={`Icono de ${genre.name}`}><img src={iconImage} alt={`Icono de ${genre.name}`} className="h-[72%] w-[72%] object-contain" /></div>
                       : imageUrl
@@ -193,8 +193,8 @@ export const GenresPage = () => {
                     <div className="absolute right-2 top-2" onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpenMenuId(null); }}>
                       <button type="button" onClick={() => setOpenMenuId((current) => current === genre.id ? null : genre.id)} className={`moviebox-translucent-action grid place-items-center rounded-md border border-white/60 bg-white/80 text-slate-600 shadow-sm backdrop-blur-sm hover:bg-white ${viewMode === 'large' ? 'h-8 w-8' : 'h-6 w-6'}`} title="Más acciones" aria-label={`Acciones de ${genre.name}`} aria-expanded={openMenuId === genre.id}><MoreVertical className={viewMode === 'large' ? 'h-4 w-4' : 'h-3.5 w-3.5'} /></button>
                       {openMenuId === genre.id && <div className={`movie-card-dropdown absolute right-0 z-30 w-40 rounded-md border border-slate-200 bg-white p-1.5 text-sm shadow-card ${viewMode === 'large' ? 'top-9' : 'top-7'}`}>
-                        <button type="button" onClick={() => beginEdit(genre)} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-slate-600 hover:bg-slate-50"><Pencil className="h-4 w-4" />Editar</button>
-                        <button type="button" onClick={() => { setOpenMenuId(null); setDeleting(genre); }} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" />Eliminar</button>
+                        <button type="button" onClick={() => beginEdit(genre)} className="flex w-full items-center gap-2 rounded-md py-2 pl-4 pr-3 text-left text-slate-600 hover:bg-slate-50"><Pencil className="h-4 w-4" />Editar</button>
+                        <button type="button" onClick={() => { setOpenMenuId(null); setDeleting(genre); }} className="flex w-full items-center gap-2 rounded-md py-2 pl-4 pr-3 text-left text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" />Eliminar</button>
                       </div>}
                     </div>
                   </div>

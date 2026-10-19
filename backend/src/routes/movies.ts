@@ -13,7 +13,7 @@ export const inputSchema = z.object({
   spanishTitle: z.string().trim().max(250).nullable().optional(), year: z.number().int().min(1888).max(2200).nullable().optional(),
   synopsis: z.string().trim().max(5000).nullable().optional(), durationMinutes: z.number().int().positive().max(2000).nullable().optional(),
   seasons: z.number().int().positive().max(999).nullable().optional(), totalEpisodes: z.number().int().positive().max(99999).nullable().optional(),
-  watched: z.boolean().optional(), favorite: z.boolean().optional(), watchlist: z.boolean().optional(), thumbsUp: z.boolean().optional(), thumbsDown: z.boolean().optional(), instagramRecommendation: z.boolean().optional(), personalRating: z.number().int().min(1).max(5).nullable().optional(),
+  watched: z.boolean().optional(), favorite: z.boolean().optional(), watchlist: z.boolean().optional(), thumbsUp: z.boolean().optional(), thumbsDown: z.boolean().optional(), comments: z.string().trim().max(5000).nullable().optional(), instagramRecommendation: z.boolean().optional(), personalRating: z.number().int().min(1).max(10).nullable().optional(),
   imdbRating: z.number().min(0).max(10).nullable().optional(), tmdbId: z.number().int().positive().nullable().optional(),
   imdbId: z.string().trim().max(30).nullable().optional(), imdbUrl: z.string().trim().url().nullable().optional(),
   tmdbUrl: z.string().trim().url().nullable().optional(), justwatchUrl: z.string().trim().url().nullable().optional(), trailerUrl: z.string().trim().url().nullable().optional(),
@@ -107,7 +107,8 @@ export const scalarData = (input: MovieInput) => ({
   type: input.type, originalTitle: input.originalTitle, spanishTitle: input.spanishTitle || null, year: input.year ?? null,
   synopsis: input.synopsis || null, durationMinutes: input.durationMinutes ?? null, seasons: input.type === 'series' ? input.seasons ?? null : null,
   totalEpisodes: input.type === 'series' ? input.totalEpisodes ?? null : null, watched: input.watched ?? false, favorite: input.favorite ?? false, watchlist: input.watchlist ?? false,
-  thumbsUp: input.thumbsUp ?? false, thumbsDown: input.thumbsUp ? false : input.thumbsDown ?? false,
+  ...(input.thumbsUp !== undefined || input.thumbsDown !== undefined ? { thumbsUp: input.thumbsUp ?? false, thumbsDown: input.thumbsUp ? false : input.thumbsDown ?? false } : {}),
+  ...(input.comments !== undefined ? { comments: input.comments?.trim() || null } : {}),
   instagramRecommendation: input.instagramRecommendation ?? false,
   personalRating: input.personalRating ?? null, imdbRating: input.imdbRating ?? null, tmdbId: input.tmdbId ?? null, imdbId: input.imdbId || null,
   imdbUrl: input.imdbUrl || null, tmdbUrl: input.tmdbUrl || null, justwatchUrl: input.justwatchUrl || null, trailerUrl: input.trailerUrl || null,
@@ -142,9 +143,10 @@ router.put('/:id', async (req: AuthRequest, res) => {
   return res.json(serializeMovie(movie));
 });
 router.patch('/:id/personal', async (req: AuthRequest, res) => {
-  const parsed = z.object({ favorite: z.boolean().optional(), watched: z.boolean().optional(), watchlist: z.boolean().optional(), thumbsUp: z.boolean().optional(), thumbsDown: z.boolean().optional(), personalRating: z.number().int().min(1).max(5).nullable().optional(), collectionIds: z.array(z.string()).max(100).optional() }).safeParse(req.body); if (!parsed.success) return res.status(400).json({ error: 'Valor personal no valido' });
+  const parsed = z.object({ favorite: z.boolean().optional(), watched: z.boolean().optional(), watchlist: z.boolean().optional(), thumbsUp: z.boolean().optional(), thumbsDown: z.boolean().optional(), comments: z.string().trim().max(5000).nullable().optional(), personalRating: z.number().int().min(1).max(10).nullable().optional(), collectionIds: z.array(z.string()).max(100).optional() }).safeParse(req.body); if (!parsed.success) return res.status(400).json({ error: 'Valor personal no valido' });
   const current = await findOwnedMovie(prisma, String(req.params.id), req.user!.userId); if (!current) return res.status(404).json({ error: 'Titulo no encontrado' });
   const { collectionIds, ...personalData } = parsed.data;
+  if (personalData.comments !== undefined) personalData.comments = personalData.comments?.trim() || null;
   // Me gusta y No me gusta son excluyentes.
   if (personalData.thumbsUp) personalData.thumbsDown = false;
   else if (personalData.thumbsDown) personalData.thumbsUp = false;

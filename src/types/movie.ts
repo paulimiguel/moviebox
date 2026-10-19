@@ -134,6 +134,7 @@ export interface MovieItem {
   thumbsUp: boolean;
   thumbsDown: boolean;
   instagramRecommendation: boolean;
+  comments: string | null;
   personalRating: number | null;
   imdbRating: number | null;
   tmdbId: number | null;
@@ -236,6 +237,7 @@ export interface CreateMovieInput {
   thumbsUp?: boolean;
   thumbsDown?: boolean;
   instagramRecommendation?: boolean;
+  comments?: string | null;
   personalRating?: number | null;
   imdbRating?: number | null;
   tmdbId?: number | null;
@@ -258,6 +260,7 @@ export interface CreateMovieInput {
 export type UpdateMovieInput = Partial<CreateMovieInput>;
 
 export interface MoviePersonalUpdate {
+  comments?: string | null;
   favorite?: boolean;
   watched?: boolean;
   watchlist?: boolean;

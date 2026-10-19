@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
-import { ArrowLeft, ArrowRight, Bookmark, ExternalLink, Eye, Film, Heart, Pencil, Play, Star, ThumbsDown, ThumbsUp, Trash2, X, Plus } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bookmark, ExternalLink, Eye, Film, Heart, MessageSquare, Pencil, Play, Star, ThumbsDown, ThumbsUp, Trash2, X, Plus } from 'lucide-react';
 import { PlatformLogos } from '@/components/PlatformLogos';
 import { CastPhotosModal } from '@/components/CastPhotosModal';
 import { MovieCollectionSelect } from '@/components/MovieCollectionSelect';
+import { MovieCommentsDialog } from '@/components/MovieCommentsDialog';
 import { StarRating } from '@/components/StarRating';
 import { TrailerModal } from '@/components/TrailerModal';
 import { resolveMovieImageUrl } from '@/services/api';
@@ -75,6 +76,9 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
     return () => { window.dispatchEvent(new CustomEvent('moviebox:movie-modal', { detail: false })); };
   }, []);
   const [trailerOpen, setTrailerOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentsText, setCommentsText] = useState(movie.comments || '');
+  useEffect(() => { setCommentsText(movie.comments || ''); }, [movie.id, movie.comments]);
   const [castPhotosOpen, setCastPhotosOpen] = useState(false);
   const [modalOffset, setModalOffset] = useState({ x: 0, y: 0 });
   const modalRef = useRef<HTMLDivElement>(null);
@@ -149,6 +153,7 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
   ) : null;
 
   return (<>
+    {commentsOpen && <MovieCommentsDialog movie={movie} comments={commentsText} onSaved={setCommentsText} onClose={() => setCommentsOpen(false)} />}
     <div className={`fixed inset-0 ${overlayClassName} flex items-end justify-center bg-ink/55 sm:items-center sm:p-5`} role="dialog" aria-modal="true" aria-labelledby="movie-detail-title">
       <div ref={modalRef} className="movie-detail-modal flex flex-col max-h-[85vh] sm:max-h-[92vh] sm:min-h-[560px] md:min-h-[600px] w-full overflow-hidden rounded-t-md bg-canvas shadow-xl sm:max-w-5xl sm:rounded-md lg:max-w-6xl" style={{ transform: `translate3d(${modalOffset.x}px, ${modalOffset.y}px, 0)` }}>
         <header onPointerDown={startDragging} onPointerMove={dragModal} onPointerUp={stopDragging} onPointerCancel={stopDragging} className="flex min-h-16 shrink-0 touch-none select-none items-center gap-4 border-b border-slate-200 bg-white px-4 py-3 sm:cursor-move sm:px-6">
@@ -243,10 +248,13 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                   <dd className="text-sm text-ink">{visibleCast.map((item) => item.name).join(', ') || 'Sin datos'}</dd>
                 </div>
                 <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_13rem] lg:items-start lg:gap-x-4">
-                  {!hidePlatforms ? <div className="min-w-0">
-                    <dt className="field-label">Plataformas</dt>
-                    <dd className="mt-1"><PlatformLogos platforms={movie.platforms} large /></dd>
-                  </div> : <div />}
+                  <div className="min-w-0">
+                    {!hidePlatforms && <>
+                      <dt className="field-label">Plataformas</dt>
+                      <dd className="mt-1"><PlatformLogos platforms={movie.platforms} large /></dd>
+                    </>}
+                    {!onAdd && <button type="button" onClick={() => setCommentsOpen(true)} className={`secondary-button h-8 w-full gap-1.5 px-3 text-xs uppercase sm:w-auto lg:hidden ${hidePlatforms ? '' : 'mt-3'}`}><MessageSquare className="h-3.5 w-3.5" />Ver comentarios</button>}
+                  </div>
                   <div className="hidden lg:block">
                     {ratingField}
                   </div>
@@ -271,7 +279,12 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                   </div>}
                 </div>}
                 {(movie.type === 'series' || !onAdd) && <div className="hidden min-w-0 lg:grid lg:grid-cols-[minmax(0,1fr)_13rem] lg:gap-x-4">
-                  <div />
+                  {!onAdd ? (
+                    <div className="min-w-0">
+                      <span className="field-label">Comentarios</span>
+                      <button type="button" onClick={() => setCommentsOpen(true)} className="secondary-button h-10 w-full justify-center gap-1.5 px-3 text-xs uppercase"><MessageSquare className="h-3.5 w-3.5" />Ver comentarios</button>
+                    </div>
+                  ) : <div />}
                   {!onAdd && <MovieCollectionSelect key={movie.id} movie={movie} />}
                 </div>}
                 {/* Mobile: Colección debajo de Reparto (película) o de Temporadas (serie), con VER AHORA a su lado.

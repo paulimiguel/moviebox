@@ -230,7 +230,7 @@ export const MovieDetailPage = () => {
                 <div className="mt-2">
                   <StarRating value={movie.personalRating} onChange={(personalRating) => personal.mutate({ personalRating })} disabled={personal.isPending} />
                 </div>
-                <p className="mt-1 text-xs text-slate-400">{movie.personalRating ? `${movie.personalRating} de 5` : "Sin puntuación"}</p>
+                <p className="mt-1 text-xs text-slate-400">{movie.personalRating ? `${movie.personalRating} de 10` : "Sin puntuación"}</p>
               </div>
               <div className="movie-detail-rating-box rounded-md border border-slate-200 bg-white p-4">
                 <p className="text-xs font-semibold uppercase text-slate-400">

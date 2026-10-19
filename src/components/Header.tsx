@@ -917,10 +917,10 @@ export const Header = () => {
     {/* Pie de página en tablet: acceso rápido a las secciones principales */}
     <nav aria-label="Navegación principal" className="moviebox-tabbar fixed inset-x-0 bottom-0 z-40 grid-cols-4 border-t border-slate-200 bg-canvas/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
       {([
-        { label: 'Mi biblioteca', icon: Library, active: location.pathname.startsWith('/biblioteca') && !profileMenuOpen, onClick: () => { setProfileMenuOpen(false); setMenuOpen(false); navigate('/biblioteca'); } },
-        { label: 'Novedades', icon: Sparkles, active: location.pathname.startsWith('/novedades') && !profileMenuOpen, onClick: () => { setProfileMenuOpen(false); setMenuOpen(false); navigate('/novedades'); } },
-        { label: 'Estrenos de cine', icon: Clapperboard, active: location.pathname.startsWith('/cine') && !profileMenuOpen, onClick: () => { setProfileMenuOpen(false); setMenuOpen(false); navigate('/cine'); } },
-        { label: 'Mi perfil', icon: User, active: profileMenuOpen, onClick: () => { setMenuOpen(false); setProfileMenuOpen(true); window.scrollTo({ top: 0, left: 0, behavior: 'auto' }); } },
+        { label: 'Mi biblioteca', icon: Library, active: location.pathname.startsWith('/biblioteca'), onClick: () => { setProfileMenuOpen(false); setMenuOpen(false); navigate('/biblioteca'); } },
+        { label: 'Novedades', icon: Sparkles, active: location.pathname.startsWith('/novedades'), onClick: () => { setProfileMenuOpen(false); setMenuOpen(false); navigate('/novedades'); } },
+        { label: 'Estrenos de cine', icon: Clapperboard, active: location.pathname.startsWith('/cine'), onClick: () => { setProfileMenuOpen(false); setMenuOpen(false); navigate('/cine'); } },
+        { label: 'Mi perfil', icon: User, active: location.pathname.startsWith('/perfil'), onClick: () => { setProfileMenuOpen(false); setMenuOpen(false); navigate('/perfil'); } },
       ] as const).map((item) => (
         <button
           key={item.label}

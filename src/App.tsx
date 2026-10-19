@@ -11,6 +11,7 @@ import { PlatformsPage } from '@/pages/PlatformsPage';
 import { GenresPage } from '@/pages/GenresPage';
 import { NewsPage } from '@/pages/NewsPage';
 import { CinePage } from '@/pages/CinePage';
+import { ProfilePage } from '@/pages/ProfilePage';
 import { PlatformNewsPage } from '@/pages/PlatformNewsPage';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { PopcornCursor } from '@/components/PopcornCursor';
@@ -85,6 +86,7 @@ const AppContent = () => {
       <Route path="/generos" element={<GenresPage />} />
       <Route path="/novedades" element={<NewsPage />} />
       <Route path="/cine" element={<CinePage />} />
+      <Route path="/perfil" element={<ProfilePage />} />
       <Route path="/novedades/:platformId" element={<PlatformNewsPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
