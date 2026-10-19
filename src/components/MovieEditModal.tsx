@@ -338,8 +338,8 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
         <div className="flex max-h-[calc(85vh-128px)] sm:max-h-[calc(92vh-128px)] flex-1 flex-col overflow-y-auto p-4 sm:p-6">
           {/* Mismo orden que la ficha del título: portada y estado a la izquierda; datos a la derecha. */}
           <div className="grid gap-6 md:grid-cols-[250px_minmax(0,1fr)]">
-            <div className="mx-auto w-full max-w-[250px] md:max-w-none">
-            <section className={`relative rounded-md border-2 border-dashed p-3 transition-colors ${isDraggingImages ? 'border-coral bg-red-50' : 'border-slate-200'}`}
+            <div className="contents md:block">
+            <section className={`relative order-3 rounded-md border-2 border-dashed p-3 transition-colors md:order-none ${isDraggingImages ? 'border-coral bg-red-50' : 'border-slate-200'}`}
               onDragEnter={(event) => { event.preventDefault(); setIsDraggingImages(true); }}
               onDragOver={(event) => { event.preventDefault(); event.dataTransfer.dropEffect = 'copy'; setIsDraggingImages(true); }}
               onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsDraggingImages(false); }}
@@ -367,7 +367,7 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
             </label>
             <textarea value={imageUrls} onChange={(event) => setImageUrls(event.target.value)} className="control min-h-24 w-full py-2" placeholder="También podés pegar una URL por línea" />
             </section>
-              <section className="mt-4">
+              <section className="order-1 md:order-none md:mt-4">
                 <h3 className="field-label">Estado</h3>
                 <div className="grid grid-cols-2 gap-2">
               <button type="button" aria-pressed={watched} onClick={() => setWatched((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${watched ? 'border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]' : ''}`}><Eye className="h-[18px] w-[18px]" />Vista</button>
@@ -381,7 +381,7 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
               </section>
             </div>
 
-            <section className="min-w-0 space-y-5">
+            <section className="order-2 min-w-0 space-y-5 md:order-none">
               <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
                 <label><span className="field-label">Título original</span><input value={originalTitle} onChange={(event) => setOriginalTitle(event.target.value)} className="control w-full" maxLength={250} required /></label>
                 <label><span className="field-label">Título en español</span><input value={spanishTitle} onChange={(event) => setSpanishTitle(event.target.value)} className="control w-full" maxLength={250} /></label>
