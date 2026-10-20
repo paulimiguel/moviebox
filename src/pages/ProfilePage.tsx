@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { MovieCard, type MovieViewMode } from '@/components/MovieCard';
 import { MovieDetailModal } from '@/components/MovieDetailModal';
@@ -29,15 +30,37 @@ const gridClassFor = (viewMode: MovieViewMode) => viewMode === 'small'
     ? 'grid grid-cols-2 gap-3 min-[520px]:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 sm:gap-4 2xl:grid-cols-7'
     : 'grid grid-cols-1 gap-4 min-[520px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 sm:gap-5 2xl:grid-cols-5';
 
-const SECTIONS: { id: string; title: string; empty: string; matches: (movie: MovieItem) => boolean }[] = [
-  { id: 'mis-favoritos', title: 'Mis títulos favoritos', empty: 'Todavía no marcaste títulos con Me encanta.', matches: (movie) => movie.favorite },
-  { id: 'mis-vistos', title: 'Mis títulos vistos', empty: 'Todavía no marcaste títulos como vistos.', matches: (movie) => movie.watched },
-  { id: 'mi-watchlist', title: 'Mi lista', empty: 'Tu lista está vacía.', matches: (movie) => movie.watchlist },
+const SECTIONS: { id: string; title: string; empty: string; view: 'watchlist' | 'favoritos' | 'vistos'; matches: (movie: MovieItem) => boolean }[] = [
+  { id: 'mi-lista', title: 'Mi lista', empty: 'Tu lista está vacía.', view: 'watchlist', matches: (movie) => movie.watchlist },
+  { id: 'mis-favoritos', title: 'Mis títulos favoritos', empty: 'Todavía no marcaste títulos con Me encanta.', view: 'favoritos', matches: (movie) => movie.favorite },
+  { id: 'mis-vistos', title: 'Mis títulos vistos', empty: 'Todavía no marcaste títulos como vistos.', view: 'vistos', matches: (movie) => movie.watched },
 ];
+
+const SECTION_ROWS = 3;
+
+// Cantidad de columnas de la grilla según el tamaño de pantalla (mismos cortes que gridClassFor).
+const columnsFor = (viewMode: MovieViewMode, width: number) => {
+  if (viewMode === 'list' || viewMode === 'details') return 1;
+  if (viewMode === 'small') return width >= 1536 ? 9 : width >= 1280 ? 8 : width >= 1024 ? 7 : width >= 768 ? 5 : width >= 640 ? 4 : 3;
+  if (viewMode === 'mediumIcons') return width >= 1536 ? 7 : width >= 1024 ? 6 : width >= 768 ? 5 : width >= 640 ? 4 : width >= 520 ? 3 : 2;
+  return width >= 1536 ? 5 : width >= 1024 ? 4 : width >= 768 ? 3 : width >= 520 ? 2 : 1;
+};
+
+const useViewportWidth = () => {
+  const [width, setWidth] = useState(() => window.innerWidth);
+  useEffect(() => {
+    const update = () => setWidth(window.innerWidth);
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+  return width;
+};
 
 export const ProfilePage = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const viewportWidth = useViewportWidth();
   const moviesQuery = useQuery({ queryKey: ['movies'], queryFn: api.movies.getAll });
   const [search, setSearch] = useState('');
   const [searchScope, setSearchScope] = useState<MovieSearchScope>('name');
@@ -184,10 +207,14 @@ export const ProfilePage = () => {
           <section key={section.id} id={section.id} className="scroll-mt-20 border-b border-slate-200/50 py-8 last:border-b-0 sm:py-10">
             <div className="mb-5 text-center">
               <h2 className="font-bebas text-3xl font-normal uppercase text-ink sm:text-4xl">{section.title}</h2>
-              <p className="mt-1 text-xs text-slate-500">{section.movies.length} {section.movies.length === 1 ? 'título' : 'títulos'}</p>
             </div>
             {section.movies.length
-              ? renderCards(section.movies)
+              ? <>
+                {renderCards(section.movies.slice(0, columnsFor(viewMode, viewportWidth) * SECTION_ROWS))}
+                <div className="mt-5 flex justify-center">
+                  <button type="button" onClick={() => navigate(`/biblioteca?vista=${section.view}`)} className="secondary-button moviebox-translucent-action px-6 uppercase">Ver más ({section.movies.length})</button>
+                </div>
+              </>
               : <p className="rounded-lg border border-dashed border-slate-300 px-4 py-8 text-center text-sm text-slate-500">{search.trim() || type !== 'all' ? 'No hay títulos que coincidan con la búsqueda.' : section.empty}</p>}
           </section>
         ))}
