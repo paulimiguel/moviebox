@@ -145,13 +145,13 @@ const CinemaHomeRow = () => {
   );
 };
 
-const HomeSectionButton = ({ to, color, label = 'Mi biblioteca', icon: Icon = Library, wide = false }: { to: string; color: 'coral' | 'aqua'; label?: string; icon?: typeof Library; wide?: boolean }) => color === 'coral' ? (
-  <Link to={to} className="home-hero-primary-button inline-flex h-9 w-40 items-center justify-center gap-2 overflow-hidden rounded-md bg-coral px-3 text-xs font-semibold uppercase text-white transition hover:brightness-110 sm:h-10 sm:w-48 sm:px-4 sm:text-sm">
+const HomeSectionButton = ({ to, color, label = 'Mi biblioteca', icon: Icon = Library, wide = false, translucent = false }: { to: string; color: 'coral' | 'aqua'; label?: string; icon?: typeof Library; wide?: boolean; translucent?: boolean }) => color === 'coral' ? (
+  <Link to={to} className={`home-hero-primary-button inline-flex h-9 w-40 items-center justify-center gap-2 overflow-hidden rounded-md ${translucent ? 'bg-coral/60 backdrop-blur-sm hover:bg-coral' : 'bg-coral'} px-3 text-xs font-semibold uppercase text-white transition hover:brightness-110 sm:h-10 sm:w-48 sm:px-4 sm:text-sm`}>
     <Star className="relative z-10 h-4 w-4 fill-current" />
     <span className="relative z-10">Ver novedades</span>
   </Link>
 ) : (
-  <Link to={to} className={`inline-flex h-9 items-center justify-center gap-2 rounded-md border border-aqua bg-aqua px-3 text-xs font-semibold uppercase text-white transition hover:brightness-110 sm:h-10 sm:px-4 sm:text-sm ${wide ? 'w-auto' : 'w-40 sm:w-48'}`}>
+  <Link to={to} className={`inline-flex h-9 items-center justify-center gap-2 rounded-md border ${translucent ? 'border-aqua/60 bg-aqua/60 backdrop-blur-sm hover:border-aqua hover:bg-aqua' : 'border-aqua bg-aqua'} px-3 text-xs font-semibold uppercase text-white transition hover:brightness-110 sm:h-10 sm:px-4 sm:text-sm ${wide ? 'w-auto' : 'w-40 sm:w-48'}`}>
     <Icon className="h-4 w-4" />
     {label}
   </Link>
@@ -193,7 +193,7 @@ const LibraryCard = ({ movie, onSelect }: { movie: MovieItem; onSelect: (movie: 
     <div className="group/card relative w-[132px] shrink-0 snap-start sm:w-[156px]">
     <button type="button" onClick={() => onSelect(movie)} className="block w-full text-left" title={`Abrir ${titleFor(movie)}`}>
       <div className="relative aspect-[2/3] overflow-hidden rounded-lg border border-slate-200 bg-mist shadow-card transition group-hover/card:-translate-y-1 group-hover/card:border-aqua">
-        {image ? <img src={image} alt={titleFor(movie)} className="h-full w-full object-cover" loading="lazy" /> : <div className="grid h-full place-items-center text-slate-400"><Film className="h-8 w-8" /></div>}
+        {image ? <img src={image} referrerPolicy="no-referrer" alt={titleFor(movie)} className="h-full w-full object-cover" loading="lazy" /> : <div className="grid h-full place-items-center text-slate-400"><Film className="h-8 w-8" /></div>}
         <div className="absolute right-2 top-2 flex items-center gap-1.5 drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)]">
           {movie.watched && <Eye className="h-4 w-4 text-[#2cbc63]" strokeWidth={2.5} aria-label="Vista" />}
           {movie.favorite && <Heart className="h-4 w-4 fill-[#e53935] text-[#e53935]" aria-label="Favorita" />}
@@ -449,9 +449,9 @@ export const HomePage = () => {
             </div>}
             <p className="home-hero-muted mt-3 hidden max-w-xl text-xs leading-relaxed sm:line-clamp-3 sm:block sm:text-base">{banner?.overview || 'Descubrí los últimos estrenos disponibles en tus plataformas.'}</p>
             <div className="mt-4 hidden w-full flex-wrap justify-start gap-2 sm:mt-6 sm:flex sm:gap-3">
-              <HomeSectionButton to="/biblioteca" color="aqua" />
-              <HomeSectionButton to="/novedades" color="coral" />
-              <HomeSectionButton to="/cine" color="aqua" label="Estrenos en cine" icon={Film} />
+              <HomeSectionButton to="/biblioteca" color="aqua" translucent />
+              <HomeSectionButton to="/novedades" color="coral" translucent />
+              <HomeSectionButton to="/cine" color="aqua" label="Estrenos en cine" icon={Film} translucent />
             </div>
           </div>
         </div>

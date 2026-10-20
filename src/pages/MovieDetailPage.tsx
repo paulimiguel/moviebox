@@ -170,7 +170,7 @@ export const MovieDetailPage = () => {
                 className={`moviebox-translucent-action secondary-button col-span-2 min-w-0 px-2 text-xs uppercase sm:col-span-1 ${movie.watchlist ? "border-aqua bg-mist text-aqua" : ""}`}
               >
                 <Bookmark className={`h-4 w-4 ${movie.watchlist ? "fill-current" : ""}`} />
-                Watchlist
+                Mi lista
               </button>
             </div>
             {movie.images.length > 1 && (

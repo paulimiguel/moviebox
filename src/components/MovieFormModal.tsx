@@ -278,7 +278,7 @@ export const MovieFormModal = ({
         .split(/\r?\n/)
         .map((url) => url.trim())
         .filter(Boolean)
-        .slice(0, 5),
+        .slice(0, 6),
     [imageUrls],
   );
   const appendImageUrls = (urls: string[]) => {
@@ -287,7 +287,7 @@ export const MovieFormModal = ({
         .split(/\r?\n/)
         .map((url) => url.trim())
         .filter(Boolean);
-      return Array.from(new Set([...current, ...urls])).slice(0, 5).join("\n");
+      return Array.from(new Set([...current, ...urls])).slice(0, 6).join("\n");
     });
   };
   const imageUpload = useMutation({
@@ -302,9 +302,9 @@ export const MovieFormModal = ({
     setIsDraggingImages(false);
     setError("");
 
-    const remainingSlots = 5 - imageList.length;
+    const remainingSlots = 6 - imageList.length;
     if (remainingSlots <= 0) {
-      setError("Podes agregar hasta 5 imagenes.");
+      setError("Podes agregar hasta 6 imagenes.");
       return;
     }
 
@@ -651,12 +651,12 @@ export const MovieFormModal = ({
               onDrop={handleImageDrop}
             >
               {isDraggingImages && <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center rounded-md border-2 border-coral bg-white/90 text-coral"><div className="flex items-center gap-2 text-sm font-semibold"><ImagePlus className="h-5 w-5" />Soltar imagenes</div></div>}
-              <span className="field-label">Imagenes (maximo 5)</span>
+              <span className="field-label">Imagenes (maximo 6)</span>
               {imageList.length > 0 && (
                 <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
                   {imageList.map((url, index) => (
                     <div key={`${url}-${index}`} className="overflow-hidden rounded-md border border-slate-200 bg-white">
-                      <img src={resolveMovieImageUrl(url)} alt="" className="aspect-[2/3] w-full bg-slate-100 object-contain" />
+                      <img src={resolveMovieImageUrl(url)} referrerPolicy="no-referrer" alt="" className="aspect-[2/3] w-full bg-slate-100 object-contain" />
                       <div className="flex justify-center gap-1 p-1">
                         <button type="button" disabled={index === 0} onClick={() => { const next = [...imageList]; [next[index - 1], next[index]] = [next[index], next[index - 1]]; setImageUrls(next.join("\n")); }} className="icon-button h-8 w-8" title="Mover antes"><ArrowUp className="h-3.5 w-3.5" /></button>
                         <button type="button" disabled={index === imageList.length - 1} onClick={() => { const next = [...imageList]; [next[index + 1], next[index]] = [next[index], next[index + 1]]; setImageUrls(next.join("\n")); }} className="icon-button h-8 w-8" title="Mover despues"><ArrowDown className="h-3.5 w-3.5" /></button>
@@ -674,11 +674,11 @@ export const MovieFormModal = ({
                   accept="image/jpeg,image/png,image/webp"
                   multiple
                   className="sr-only"
-                  disabled={imageUpload.isPending || imageList.length >= 5}
+                  disabled={imageUpload.isPending || imageList.length >= 6}
                   onChange={(event) => {
                     const files = Array.from(event.target.files || []).slice(
                       0,
-                      5 - imageList.length,
+                      6 - imageList.length,
                     );
                     if (files.length) imageUpload.mutate(files);
                     event.target.value = "";

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Bookmark, Check, ChevronsUpDown, Eye, Heart, ImagePlus, Loader2, Plus, Search, Tags, ThumbsDown, ThumbsUp, Trash2, Tv, X } from 'lucide-react';
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Bookmark, Check, ChevronsUpDown, Eye, Heart, ImagePlus, Link2, Loader2, Plus, Search, Tags, ThumbsDown, ThumbsUp, Trash2, Tv, X } from 'lucide-react';
 import { api, resolveMovieImageUrl } from '@/services/api';
+import { ImageUrlsDialog } from '@/components/ImageUrlsDialog';
 import { resolvePlatformLogoUrl } from '@/components/PlatformLogos';
 import { StarRating } from '@/components/StarRating';
 import { getGenreIconImage } from '@/utils/genreIcons';
@@ -152,6 +153,7 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
   const [trailerUrl, setTrailerUrl] = useState(movie.trailerUrl || '');
   const [imageUrls, setImageUrls] = useState(movie.images.map((image) => image.url).join('\n'));
   const [isDraggingImages, setIsDraggingImages] = useState(false);
+  const [imageUrlsOpen, setImageUrlsOpen] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
 
@@ -159,12 +161,12 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
     .split(/\r?\n/)
     .map((url) => url.trim())
     .filter(Boolean)
-    .slice(0, 5), [imageUrls]);
+    .slice(0, 6), [imageUrls]);
 
   const appendImageUrls = (urls: string[]) => {
     setImageUrls((currentValue) => {
       const current = currentValue.split(/\r?\n/).map((url) => url.trim()).filter(Boolean);
-      return Array.from(new Set([...current, ...urls])).slice(0, 5).join('\n');
+      return Array.from(new Set([...current, ...urls])).slice(0, 6).join('\n');
     });
   };
 
@@ -272,9 +274,9 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
     event.preventDefault();
     setIsDraggingImages(false);
     setError('');
-    const remainingSlots = 5 - imageList.length;
+    const remainingSlots = 6 - imageList.length;
     if (remainingSlots <= 0) {
-      setError('Podés agregar hasta 5 imágenes.');
+      setError('Podés agregar hasta 6 imágenes.');
       return;
     }
 
@@ -325,12 +327,12 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
   <section>
       <h3 className="field-label">Estado</h3>
       <div className="grid grid-cols-2 gap-2">
-    <button type="button" aria-pressed={watched} onClick={() => setWatched((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${watched ? 'border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]' : ''}`}><Eye className="h-[18px] w-[18px]" />Vista</button>
-    <button type="button" aria-pressed={favorite} onClick={() => setFavorite((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${favorite ? 'border-coral bg-red-50 text-coral' : ''}`}><Heart className={`h-4 w-4 ${favorite ? 'fill-current' : ''}`} />Me encanta</button>
-    <button type="button" aria-pressed={watchlist} onClick={() => setWatchlist((current) => !current)} className={`moviebox-translucent-action secondary-button gap-2 text-xs uppercase ${watchlist ? 'border-aqua bg-mist text-aqua' : ''}`}><Bookmark className={`h-4 w-4 ${watchlist ? 'fill-current' : ''}`} />Watchlist</button>
+    <button type="button" aria-pressed={watched} onClick={() => setWatched((current) => !current)} className={`movie-detail-watched moviebox-translucent-action secondary-button h-10 w-full min-w-0 gap-2 px-2 text-xs uppercase ${watched ? 'border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]' : ''}`}><Eye className="h-4 w-4" />Vista</button>
+    <button type="button" aria-pressed={watchlist} onClick={() => setWatchlist((current) => !current)} className={`movie-detail-watchlist moviebox-translucent-action secondary-button h-10 w-full min-w-0 gap-2 px-2 text-xs uppercase ${watchlist ? 'border-aqua bg-mist text-aqua' : ''}`}><Bookmark className={`h-4 w-4 ${watchlist ? 'fill-current' : ''}`} />Mi lista</button>
+    <button type="button" aria-pressed={favorite} onClick={() => setFavorite((current) => !current)} className={`movie-detail-favorite moviebox-translucent-action secondary-button h-10 w-full min-w-0 gap-2 px-2 text-xs uppercase ${favorite ? 'border-coral bg-red-50 text-coral' : ''}`}><Heart className={`h-4 w-4 ${favorite ? 'fill-current' : ''}`} />Me encanta</button>
       <div className="grid min-w-0 grid-cols-2 gap-2">
-        <button type="button" aria-pressed={thumbsUp} onClick={() => { setThumbsUp((current) => !current); setThumbsDown(false); }} title="Me gusta" aria-label="Me gusta" className={`moviebox-translucent-action secondary-button h-10 min-w-0 px-1.5 ${thumbsUp ? 'border-[#3b82f6] bg-mist text-[#3b82f6]' : ''}`}><ThumbsUp className="h-[18px] w-[18px]" /></button>
-        <button type="button" aria-pressed={thumbsDown} onClick={() => { setThumbsDown((current) => !current); setThumbsUp(false); }} title="No me gusta" aria-label="No me gusta" className={`moviebox-translucent-action secondary-button h-10 min-w-0 px-1.5 ${thumbsDown ? 'border-[#3b82f6] bg-mist text-[#3b82f6]' : ''}`}><ThumbsDown className="h-[18px] w-[18px]" /></button>
+        <button type="button" aria-pressed={thumbsUp} onClick={() => { setThumbsUp((current) => !current); setThumbsDown(false); }} title="Me gusta" aria-label="Me gusta" className={`movie-detail-thumbs-up moviebox-translucent-action secondary-button h-10 min-w-0 px-1.5 ${thumbsUp ? 'border-[#3b82f6] bg-mist text-[#3b82f6]' : ''}`}><ThumbsUp className="h-[18px] w-[18px]" /></button>
+        <button type="button" aria-pressed={thumbsDown} onClick={() => { setThumbsDown((current) => !current); setThumbsUp(false); }} title="No me gusta" aria-label="No me gusta" className={`movie-detail-thumbs-down moviebox-translucent-action secondary-button h-10 min-w-0 px-1.5 ${thumbsDown ? 'border-[#3b82f6] bg-mist text-[#3b82f6]' : ''}`}><ThumbsDown className="h-[18px] w-[18px]" /></button>
       </div>
       </div>
     </section>
@@ -361,12 +363,12 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
               onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsDraggingImages(false); }}
               onDrop={handleImageDrop}>
             {isDraggingImages && <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center rounded-md border-2 border-coral bg-white/90 text-coral"><div className="flex items-center gap-2 text-sm font-semibold"><ImagePlus className="h-5 w-5" />Soltar imágenes</div></div>}
-            <h3 className="field-label">Imágenes (máximo 5)</h3>
+            <h3 className="field-label">Imágenes (máximo 6)</h3>
             {imageList.length > 0 && (
               <div className="mb-3 grid grid-cols-2 gap-2">
                 {imageList.map((url, index) => (
                   <div key={`${url}-${index}`} className="overflow-hidden rounded-md border border-slate-200 bg-white">
-                    <img src={resolveMovieImageUrl(url)} alt="" className="aspect-[2/3] w-full bg-slate-100 object-contain" />
+                    <img src={resolveMovieImageUrl(url)} referrerPolicy="no-referrer" alt="" className="aspect-[2/3] w-full bg-slate-100 object-contain" />
                     <div className="flex justify-center gap-1 p-1">
                       <button type="button" disabled={index === 0} onClick={() => { const next = [...imageList]; [next[index - 1], next[index]] = [next[index], next[index - 1]]; setImageUrls(next.join('\n')); }} className="icon-button h-8 w-8" title="Mover antes"><ArrowUp className="h-3.5 w-3.5" /></button>
                       <button type="button" disabled={index === imageList.length - 1} onClick={() => { const next = [...imageList]; [next[index + 1], next[index]] = [next[index], next[index + 1]]; setImageUrls(next.join('\n')); }} className="icon-button h-8 w-8" title="Mover después"><ArrowDown className="h-3.5 w-3.5" /></button>
@@ -376,12 +378,12 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
                 ))}
               </div>
             )}
-            <label className="secondary-button mb-2 cursor-pointer gap-2">
+            <button type="button" onClick={() => setImageUrlsOpen(true)} className="secondary-button mb-2 w-full justify-center gap-2"><Link2 className="h-4 w-4" />Pegar URL de la portada</button>
+            <label className="secondary-button w-full cursor-pointer justify-center gap-2">
               <ImagePlus className="h-4 w-4" />
               {imageUpload.isPending ? 'Procesando...' : 'Subir imágenes'}
-              <input type="file" accept="image/jpeg,image/png,image/webp" multiple className="sr-only" disabled={imageUpload.isPending || imageList.length >= 5} onChange={(event) => { const files = Array.from(event.target.files || []).slice(0, 5 - imageList.length); if (files.length) imageUpload.mutate(files); event.target.value = ''; }} />
+              <input type="file" accept="image/jpeg,image/png,image/webp" multiple className="sr-only" disabled={imageUpload.isPending || imageList.length >= 6} onChange={(event) => { const files = Array.from(event.target.files || []).slice(0, 6 - imageList.length); if (files.length) imageUpload.mutate(files); event.target.value = ''; }} />
             </label>
-            <textarea value={imageUrls} onChange={(event) => setImageUrls(event.target.value)} className="control min-h-24 w-full py-2" placeholder="También podés pegar una URL por línea" />
             </section>
               <div className="hidden md:mt-4 md:block">{estadoSection}</div>
             </div>
@@ -458,7 +460,7 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
               <label className="block"><span className="field-label">Comentarios</span><textarea value={comments} onChange={(event) => setComments(event.target.value)} className="control min-h-28 w-full py-2" maxLength={5000} placeholder="Tus notas o comentarios sobre este título" /></label>
             </section>
           </div>
-          {error && <p className="order-last mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+          {error && <p className="movie-import-feedback order-last mt-4 rounded-md bg-red-50 p-3 text-sm text-red-700">{error}</p>}
         </div>
 
         <footer className="flex h-16 items-center justify-end gap-2 border-t border-slate-200 bg-white px-4 sm:px-6">
@@ -468,6 +470,7 @@ export const MovieEditModal = ({ movie, onClose, onSaved, onPrevious, onNext }: 
           <button type="submit" disabled={save.isPending || imageUpload.isPending || createCollection.isPending || !originalTitle.trim()} className="primary-button">{save.isPending && save.variables === true && <Loader2 className="h-4 w-4 animate-spin" />}Guardar</button>
         </footer>
       </form>
+      {imageUrlsOpen && <ImageUrlsDialog urls={imageList} max={6} onChange={(next) => setImageUrls(next.join('\n'))} onClose={() => setImageUrlsOpen(false)} />}
     </div>
   );
 };

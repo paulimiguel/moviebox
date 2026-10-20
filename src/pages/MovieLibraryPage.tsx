@@ -471,7 +471,7 @@ export const MovieLibraryPage = () => {
       <Header />
       <MovieLibraryToolbar
         ownerName={user?.alias || user?.name || 'Usuario'}
-        title={personalView === 'favoritos' ? 'Mis títulos favoritos' : personalView === 'vistos' ? 'Mis títulos vistos' : personalView === 'watchlist' ? 'Mi Watchlist' : catalogContext?.title}
+        title={personalView === 'favoritos' ? 'Mis títulos favoritos' : personalView === 'vistos' ? 'Mis títulos vistos' : personalView === 'watchlist' ? 'Mi lista' : catalogContext?.title}
         hideActiveFilters={onlyCatalogFilter || Boolean(personalView)}
         hideFilterAndAdd={Boolean(personalView)}
         backAction={catalogContext ? { label: 'Atrás', onClick: () => navigate(catalogContext.backTo) } : undefined}

@@ -15,7 +15,7 @@ const libraryOptions: Array<{ label: string; preset: LibraryFilterPreset; icon: 
   { label: 'Todos los títulos', preset: 'all', icon: <LayoutGrid className="h-4 w-4" /> },
   { label: 'Películas', preset: 'movie', icon: <Film className="h-4 w-4" /> },
   { label: 'Series', preset: 'series', icon: <Tv className="h-4 w-4" /> },
-  { label: 'Watchlist', preset: 'watchlist', icon: <Bookmark className="h-4 w-4" /> },
+  { label: 'Mi lista', preset: 'watchlist', icon: <Bookmark className="h-4 w-4" /> },
   { label: 'Me encanta', preset: 'favorite', icon: <Heart className="h-4 w-4" /> },
   { label: 'Vista', preset: 'watched', icon: <Eye className="h-4 w-4" /> },
   { label: 'No vista', preset: 'unwatched', icon: <EyeOff className="h-4 w-4" /> },
@@ -494,7 +494,7 @@ export const Header = () => {
                 </button>
                 <button type="button" onClick={() => openPersonalView('watchlist')} className="flex w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink">
                   <Bookmark className="h-4 w-4 text-aqua" />
-                  <span>Mi Watchlist</span>
+                  <span>Mi lista</span>
                 </button>
                 <div className="border-b border-slate-100 px-3 py-2">
                   <p className="mb-2 text-xs font-semibold uppercase text-slate-400">Temas</p>
@@ -563,7 +563,7 @@ export const Header = () => {
                 className="hidden w-full items-center gap-2 rounded-md px-3 py-2.5 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-ink lg:flex"
               >
                 <Bookmark className="h-4 w-4 text-aqua" />
-                <span>Mi Watchlist</span>
+                <span>Mi lista</span>
               </button>
 
               {/* Inicio */}

@@ -58,6 +58,11 @@ const genreIconImages: Record<string, string> = {
   telerrealidad: '/genre-icons/reality-show.png',
   biografia: '/genre-icons/biografia.png',
   biography: '/genre-icons/biografia.png',
+  telenovela: '/genre-icons/telenovela.png',
+  novela: '/genre-icons/telenovela.png',
+  'novela de tv': '/genre-icons/telenovela.png',
+  'novela de television': '/genre-icons/telenovela.png',
+  soap: '/genre-icons/telenovela.png',
 };
 
 export const getGenreIconImage = (name: string) => genreIconImages[normalizeGenreName(name)] || null;

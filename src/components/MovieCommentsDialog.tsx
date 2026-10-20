@@ -53,7 +53,7 @@ export const MovieCommentsDialog = ({ movie, comments, onSaved, onClose }: {
             maxLength={5000}
             placeholder="Escribí tus notas o comentarios sobre este título"
           />
-          {error && <p className="mt-2 rounded-md bg-red-50 p-2 text-sm text-red-700">{error}</p>}
+          {error && <p className="movie-import-feedback mt-2 rounded-md bg-red-50 p-2 text-sm text-red-700">{error}</p>}
         </div>
         <footer className="flex min-h-14 shrink-0 items-center justify-end gap-2 border-t border-slate-200 bg-white px-4">
           <button type="button" onClick={onClose} className="secondary-button">{changed ? 'Cancelar' : 'Cerrar'}</button>

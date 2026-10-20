@@ -368,7 +368,7 @@ export const MovieBulkEditModal = ({
                 className={`moviebox-translucent-action inline-flex h-11 min-w-0 items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold transition-colors ${markWatchlist ? 'border-aqua bg-aqua text-white' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'}`}
               >
                 <Bookmark className={`h-4 w-4 shrink-0 ${markWatchlist ? 'fill-current' : ''}`} />
-                Watchlist
+                Mi lista
               </button>
             </div>
           </div>

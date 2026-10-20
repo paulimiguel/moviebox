@@ -32,7 +32,7 @@ const gridClassFor = (viewMode: MovieViewMode) => viewMode === 'small'
 const SECTIONS: { id: string; title: string; empty: string; matches: (movie: MovieItem) => boolean }[] = [
   { id: 'mis-favoritos', title: 'Mis títulos favoritos', empty: 'Todavía no marcaste títulos con Me encanta.', matches: (movie) => movie.favorite },
   { id: 'mis-vistos', title: 'Mis títulos vistos', empty: 'Todavía no marcaste títulos como vistos.', matches: (movie) => movie.watched },
-  { id: 'mi-watchlist', title: 'Mi Watchlist', empty: 'Tu Watchlist está vacía.', matches: (movie) => movie.watchlist },
+  { id: 'mi-watchlist', title: 'Mi lista', empty: 'Tu lista está vacía.', matches: (movie) => movie.watchlist },
 ];
 
 export const ProfilePage = () => {

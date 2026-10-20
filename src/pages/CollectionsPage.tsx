@@ -345,7 +345,7 @@ export const CollectionsPage = () => {
                 <Link to="/biblioteca" onClick={() => { try { window.sessionStorage.setItem('moviebox:collection-filter', collection.id); window.sessionStorage.removeItem('moviebox:library-filter'); } catch { /* La biblioteca sigue accesible sin almacenamiento. */ } }} className="block">
                   <div className="relative aspect-square overflow-hidden rounded-t-md bg-slate-100">
                     {collection.coverImage
-                      ? <img src={resolveMovieImageUrl(collection.coverImage)} alt={collection.name} className="h-full w-full object-cover" loading="lazy" />
+                      ? <img src={resolveMovieImageUrl(collection.coverImage)} referrerPolicy="no-referrer" alt={collection.name} className="h-full w-full object-cover" loading="lazy" />
                       : <div className="grid h-full place-items-center"><FolderOpen className="h-16 w-16 text-aqua" /></div>}
                   </div>
                   <div className="p-3">

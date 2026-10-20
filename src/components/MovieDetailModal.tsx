@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
-import { ArrowLeft, ArrowRight, Bookmark, ExternalLink, Eye, Film, Heart, MessageSquare, Pencil, Play, Star, ThumbsDown, ThumbsUp, Trash2, X, Plus } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Bookmark, ChevronLeft, ChevronRight, ExternalLink, Eye, Film, Heart, MessageSquare, Pencil, Play, Star, ThumbsDown, ThumbsUp, Trash2, X, Plus } from 'lucide-react';
 import { PlatformLogos } from '@/components/PlatformLogos';
 import { CastPhotosModal } from '@/components/CastPhotosModal';
 import { MovieCollectionSelect } from '@/components/MovieCollectionSelect';
@@ -76,6 +76,8 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
     return () => { window.dispatchEvent(new CustomEvent('moviebox:movie-modal', { detail: false })); };
   }, []);
   const [trailerOpen, setTrailerOpen] = useState(false);
+  const [imageIndex, setImageIndex] = useState(0);
+  useEffect(() => { setImageIndex(0); }, [movie.id]);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentsText, setCommentsText] = useState(movie.comments || '');
   useEffect(() => { setCommentsText(movie.comments || ''); }, [movie.id, movie.comments]);
@@ -94,7 +96,12 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
   } | null>(null);
   const title = movie.originalTitle;
   const spanishTitle = movie.spanishTitle && movie.spanishTitle !== movie.originalTitle ? movie.spanishTitle : null;
-  const image = movie.images.find((item) => item.isPrimary) || movie.images[0];
+  const primaryImage = movie.images.find((item) => item.isPrimary) || movie.images[0];
+  // Galería: la portada principal primero y después el resto de las imágenes.
+  const galleryImages = primaryImage ? [primaryImage, ...movie.images.filter((item) => item !== primaryImage)] : [];
+  const image = galleryImages[Math.min(imageIndex, Math.max(galleryImages.length - 1, 0))];
+  const hasGallery = galleryImages.length > 1;
+  const showImage = (offset: -1 | 1) => setImageIndex((current) => (current + offset + galleryImages.length) % galleryImages.length);
   const cast = movie.credits
     .filter((item) => item.creditType === 'cast')
     .sort((left, right) => left.order - right.order)
@@ -183,9 +190,16 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
         <div className="max-h-[calc(85vh-64px)] sm:max-h-[calc(92vh-64px)] flex-1 overflow-y-auto p-4 sm:p-6">
           <div className="grid gap-6 md:grid-cols-[250px_minmax(0,1fr)]">
             <div className="mx-auto w-full max-w-[250px]">
-              <div className="relative aspect-[2/3] overflow-hidden rounded-md bg-mist">
-                {image ? <img src={resolveMovieImageUrl(image.url)} alt={title} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center"><Film className="h-16 w-16 text-aqua" /></div>}
+              <div className="group relative aspect-[2/3] overflow-hidden rounded-md bg-mist">
+                {image ? <img src={resolveMovieImageUrl(image.url)} referrerPolicy="no-referrer" alt={title} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center"><Film className="h-16 w-16 text-aqua" /></div>}
                 <span className={`absolute left-2 top-2 rounded px-2 py-1 text-[10px] font-semibold uppercase text-white shadow-sm ${movie.type === 'series' ? 'bg-aqua' : 'bg-coral'}`}>{movie.type === 'movie' ? 'Película' : 'Serie'}</span>
+                {hasGallery && <>
+                  <button type="button" onClick={() => showImage(-1)} className="absolute top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-black/60 text-white opacity-0 shadow-md transition hover:bg-black/80 focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100 left-2" title="Imagen anterior" aria-label="Imagen anterior"><ChevronLeft className="h-5 w-5" /></button>
+                  <button type="button" onClick={() => showImage(1)} className="absolute top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-black/60 text-white opacity-0 shadow-md transition hover:bg-black/80 focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100 right-2" title="Imagen siguiente" aria-label="Imagen siguiente"><ChevronRight className="h-5 w-5" /></button>
+                  <div className="pointer-events-none absolute inset-x-0 bottom-2 flex justify-center gap-1.5">
+                    {galleryImages.map((item, index) => <span key={item.id || index} className={`h-1.5 rounded-full shadow transition-all ${index === Math.min(imageIndex, galleryImages.length - 1) ? 'w-4 bg-white' : 'w-1.5 bg-white/60'}`} />)}
+                  </div>
+                </>}
               </div>
               {onAdd ? (
                 <div className="mt-3">
@@ -200,9 +214,9 @@ export const MovieDetailModal = ({ movie, onClose, onEdit, onDelete, onPersonal,
                 </div>
               ) : (
                 <div className="mt-3 grid grid-cols-2 gap-2">
-                <button type="button" aria-pressed={movie.watched} onClick={() => onPersonal(movie, 'watched')} className={`movie-detail-watched moviebox-translucent-action secondary-button h-9 min-w-0 gap-2 px-2 text-xs uppercase ${movie.watched ? 'border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]' : ''}`}><Eye className="h-[18px] w-[18px]" />Vista</button>
-                <button type="button" aria-pressed={movie.favorite} onClick={() => onPersonal(movie, 'favorite')} className={`movie-detail-favorite moviebox-translucent-action secondary-button h-9 min-w-0 gap-2 px-2 text-xs uppercase ${movie.favorite ? 'border-coral bg-red-50 text-coral' : ''}`}><Heart className={`h-4 w-4 ${movie.favorite ? 'fill-current' : ''}`} />Me encanta</button>
-                <button type="button" aria-pressed={movie.watchlist} onClick={() => onPersonal(movie, 'watchlist')} className={`movie-detail-watchlist moviebox-translucent-action secondary-button h-10 min-w-0 gap-1.5 px-1.5 py-1 text-[11px] uppercase ${movie.watchlist ? 'border-aqua bg-mist text-aqua' : ''}`}><Bookmark className={`h-3.5 w-3.5 ${movie.watchlist ? 'fill-current' : ''}`} />Watchlist</button>
+                <button type="button" aria-pressed={movie.watched} onClick={() => onPersonal(movie, 'watched')} className={`movie-detail-watched moviebox-translucent-action secondary-button h-10 w-full min-w-0 gap-2 px-2 text-xs uppercase ${movie.watched ? 'border-[#2cbc63] bg-[#2cbc63]/10 text-[#218f4c]' : ''}`}><Eye className="h-4 w-4" />Vista</button>
+                <button type="button" aria-pressed={movie.watchlist} onClick={() => onPersonal(movie, 'watchlist')} className={`movie-detail-watchlist moviebox-translucent-action secondary-button h-10 w-full min-w-0 gap-2 px-2 text-xs uppercase ${movie.watchlist ? 'border-aqua bg-mist text-aqua' : ''}`}><Bookmark className={`h-4 w-4 ${movie.watchlist ? 'fill-current' : ''}`} />Mi lista</button>
+                <button type="button" aria-pressed={movie.favorite} onClick={() => onPersonal(movie, 'favorite')} className={`movie-detail-favorite moviebox-translucent-action secondary-button h-10 w-full min-w-0 gap-2 px-2 text-xs uppercase ${movie.favorite ? 'border-coral bg-red-50 text-coral' : ''}`}><Heart className={`h-4 w-4 ${movie.favorite ? 'fill-current' : ''}`} />Me encanta</button>
                 <div className="grid h-10 min-w-0 grid-cols-2 gap-2">
                   <button type="button" aria-pressed={movie.thumbsUp} onClick={() => onPersonal(movie, 'thumbsUp')} title="Me gusta" aria-label="Me gusta" className={`movie-detail-thumbs-up moviebox-translucent-action secondary-button h-10 min-w-0 px-1.5 ${movie.thumbsUp ? 'border-[#3b82f6] bg-mist text-[#3b82f6]' : ''}`}><ThumbsUp className="h-[18px] w-[18px]" /></button>
                   <button type="button" aria-pressed={movie.thumbsDown} onClick={() => onPersonal(movie, 'thumbsDown')} title="No me gusta" aria-label="No me gusta" className={`movie-detail-thumbs-down moviebox-translucent-action secondary-button h-10 min-w-0 px-1.5 ${movie.thumbsDown ? 'border-[#3b82f6] bg-mist text-[#3b82f6]' : ''}`}><ThumbsDown className="h-[18px] w-[18px]" /></button>

@@ -9,7 +9,8 @@ const TMDB_URL = 'https://api.themoviedb.org/3';
 const JUSTWATCH_URL = 'https://www.justwatch.com';
 const LOCALIZED_TMDB_GENRES: Record<string, string[]> = {
   action: ['Acción'],
-  'action & adventure': ['Acción y aventura'],
+  'action & adventure': ['Acción', 'Aventura'],
+  'accion y aventura': ['Acción', 'Aventura'],
   adventure: ['Aventura'],
   animation: ['Animación'],
   comedy: ['Comedia'],
