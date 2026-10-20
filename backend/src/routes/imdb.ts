@@ -374,6 +374,92 @@ const getLocalizedTmdbDetails = async (
 
 router.use(authenticateToken);
 
+// Convierte una URL de IMDb o de TMDB en un título candidato (mismo formato que la búsqueda).
+router.get('/resolve-url', async (req, res) => {
+  const raw = String(req.query.url || '').trim();
+  const tmdbMatch = raw.match(/themoviedb\.org\/(movie|tv)\/(\d+)/i);
+  const imdbMatch = raw.match(/imdb\.com\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?title\/(tt\d+)/i) || raw.match(/^(tt\d{6,10})$/i);
+  if (!tmdbMatch && !imdbMatch) return res.status(400).json({ error: 'La URL no es de IMDb ni de TMDB' });
+
+  try {
+    let imdbId = imdbMatch ? imdbMatch[1].toLowerCase() : '';
+    let type: 'movie' | 'series' | null = null;
+    let title: string | null = null;
+    let originalTitle: string | null = null;
+    let year: number | null = null;
+    let posterUrl: string | null = null;
+
+    if (tmdbMatch) {
+      const resource = tmdbMatch[1].toLowerCase() === 'tv' ? 'tv' : 'movie';
+      const tmdbId = tmdbMatch[2];
+      const [details, external] = await Promise.all([
+        tmdbRequest<{ title?: string; name?: string; original_title?: string; original_name?: string; release_date?: string; first_air_date?: string; poster_path?: string | null }>(`/${resource}/${tmdbId}?language=es-AR`),
+        tmdbRequest<{ imdb_id?: string | null }>(`/${resource}/${tmdbId}/external_ids`),
+      ]);
+      if (!external.imdb_id) return res.status(404).json({ error: 'Este título de TMDB no tiene ID de IMDb' });
+      imdbId = external.imdb_id;
+      type = resource === 'tv' ? 'series' : 'movie';
+      title = details.title || details.name || null;
+      originalTitle = details.original_title || details.original_name || title;
+      year = parseYear(details.release_date || details.first_air_date);
+      posterUrl = details.poster_path ? `https://image.tmdb.org/t/p/w185${details.poster_path}` : null;
+    }
+
+    // Con solo el ID de IMDb, TMDB indica si es película o serie.
+    if (!type) {
+      try {
+        const find = await tmdbRequest<{
+          movie_results?: Array<{ title?: string; original_title?: string; release_date?: string; poster_path?: string | null }>;
+          tv_results?: Array<{ name?: string; original_name?: string; first_air_date?: string; poster_path?: string | null }>;
+        }>(`/find/${imdbId}?external_source=imdb_id&language=es-AR`);
+        const movie = find.movie_results?.[0];
+        const tv = find.tv_results?.[0];
+        if (movie && !tv) {
+          type = 'movie';
+          title = movie.title || null;
+          originalTitle = movie.original_title || title;
+          year = parseYear(movie.release_date);
+          posterUrl = movie.poster_path ? `https://image.tmdb.org/t/p/w185${movie.poster_path}` : null;
+        } else if (tv) {
+          type = 'series';
+          title = tv.name || null;
+          originalTitle = tv.original_name || title;
+          year = parseYear(tv.first_air_date);
+          posterUrl = tv.poster_path ? `https://image.tmdb.org/t/p/w185${tv.poster_path}` : null;
+        }
+      } catch {
+        // Sin TMDB se confirma el tipo con Cinemeta.
+      }
+    }
+
+    // Cinemeta confirma el tipo (película o serie) y completa los datos que falten.
+    const kinds: Array<'movie' | 'series'> = type ? [type] : ['movie', 'series'];
+    let meta: any = null;
+    for (const kind of kinds) {
+      try {
+        const payload = await cinemetaRequest<{ meta?: any }>(`/meta/${kind}/${imdbId}.json`);
+        const found = payload.meta;
+        if (found && (found.imdb_id || found.id) === imdbId && (!found.type || found.type === kind)) { meta = found; type = kind; break; }
+      } catch {
+        // Se prueba con el otro tipo.
+      }
+    }
+    if (!type || (!meta && !title)) return res.status(404).json({ error: 'No se encontró el título de esa URL' });
+
+    return res.json({
+      imdbId,
+      type,
+      title: title || meta?.name || imdbId,
+      originalTitle: originalTitle || meta?.name || imdbId,
+      year: year ?? parseYear(meta?.releaseInfo || meta?.year),
+      posterUrl: posterUrl || `https://images.metahub.space/poster/small/${imdbId}/img`,
+    });
+  } catch (error) {
+    console.error('Resolve URL error:', error);
+    return res.status(502).json({ error: 'No se pudo resolver la URL. Probá de nuevo en unos minutos.' });
+  }
+});
+
 router.get('/search', async (req, res) => {
   const query = String(req.query.query || '').trim();
   if (!query) return res.json([]);

@@ -8,6 +8,7 @@ import {
   FileSpreadsheet,
   FileText,
   Film,
+  Link2,
   Loader2,
   Plus,
   Search,
@@ -26,7 +27,11 @@ interface SearchGroup {
   name: string;
   candidates: ImdbSearchCandidate[];
   error?: string;
+  fromUrl?: boolean;
 }
+
+// Una línea es una URL (o ID) de IMDb / TMDB cuando se puede resolver directo, sin buscar por título.
+const isTitleUrl = (value: string) => /^https?:\/\//i.test(value) || /^tt\d{6,10}$/i.test(value);
 
 interface BulkContinuationPrompt {
   imported: number;
@@ -132,6 +137,7 @@ export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQ
   const [searchQuery, setSearchQuery] = useState('');
   const [appliedSearch, setAppliedSearch] = useState('');
   const [bulkOptionsOpen, setBulkOptionsOpen] = useState(false);
+  const [bulkUrlMode, setBulkUrlMode] = useState(false);
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState<TmdbSuggestionCandidate | null>(null);
 
@@ -374,6 +380,7 @@ export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQ
         const batch = movieNames.slice(index, index + SEARCH_BATCH_SIZE);
         results.push(...await Promise.all(batch.map(async (name) => {
           try {
+            if (isTitleUrl(name)) return { name, candidates: [await api.imdb.resolveUrl(name)], fromUrl: true };
             return { name, candidates: await api.imdb.search(parseImportedTitle(name).title) };
           } catch (reason) {
             return {
@@ -431,7 +438,7 @@ export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQ
       }
 
       setGroups(results);
-      setSelectedIds({});
+      setSelectedIds(Object.fromEntries(results.flatMap((group, index) => group.fromUrl && group.candidates.length ? [[index, [group.candidates[0].imdbId]]] : [])));
       const failedCount = results.filter((group) => group.error).length;
       setError(failedCount ? `No se pudieron buscar ${failedCount} de ${results.length} títulos. Podés volver a intentarlo.` : '');
     },
@@ -687,7 +694,8 @@ export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQ
     requestAnimationFrame(() => searchInputRef.current?.focus());
   };
 
-  const openEmptyBulkDialog = () => {
+  const openEmptyBulkDialog = (urlMode = false) => {
+    setBulkUrlMode(urlMode === true);
     setBulkQuery('');
     setGroups(null);
     setSelectedIds({});
@@ -816,11 +824,11 @@ export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQ
                 className="rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-6"
               >
                 <label>
-                  <span className="field-label">Títulos a buscar</span>
+                  <span className="field-label">{bulkUrlMode ? 'URLs de TMDB o IMDb' : 'Títulos a buscar'}</span>
                   <textarea
                     value={bulkQuery}
                     onChange={(e) => setBulkQuery(e.target.value)}
-                    placeholder="Ingresá un título por línea (podés escribirlos o pegar texto del portapapeles)"
+                    placeholder={bulkUrlMode ? 'Pegá una URL de TMDB o IMDb por línea\nhttps://www.themoviedb.org/movie/603\nhttps://www.imdb.com/title/tt0133093/' : 'Ingresá un título por línea (podés escribirlos o pegar texto del portapapeles)'}
                     className="control min-h-32 w-full py-2"
                   />
                 </label>
@@ -987,14 +995,18 @@ export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQ
               {displayMode === 'page' && !appliedSearch && (
                 <section className="rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
                   <h3 className="font-bebas text-2xl uppercase tracking-wide text-ink">Agregar varios títulos</h3>
-                  <div className="mt-3 grid gap-3 md:grid-cols-3">
-                    <button type="button" onClick={openEmptyBulkDialog} className="flex min-h-14 items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-3 text-left font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-ink">
+                  <div className="mt-3 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+                    <button type="button" onClick={() => openEmptyBulkDialog()} className="flex min-h-14 items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-3 text-left font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-ink">
                       <Plus className="h-5 w-5 shrink-0 text-aqua" />
                       Pegar texto o escribir títulos
                     </button>
                     <button type="button" onClick={() => txtInputRef.current?.click()} className="flex min-h-14 items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-3 text-left font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-ink">
                       <FileText className="h-5 w-5 shrink-0 text-slate-400" />
                       Importar archivo de texto
+                    </button>
+                    <button type="button" onClick={() => openEmptyBulkDialog(true)} className="flex min-h-14 items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-3 text-left font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-ink">
+                      <Link2 className="h-5 w-5 shrink-0 text-coral" />
+                      Pegar URL de TMDB o IMDb
                     </button>
                     <button type="button" onClick={() => spreadsheetInputRef.current?.click()} className="flex min-h-14 items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-3 text-left font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-ink">
                       <FileSpreadsheet className="h-5 w-5 shrink-0 text-emerald-500" />
@@ -1215,7 +1227,7 @@ export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQ
           <div className="grid gap-3 p-4 sm:p-5">
             <button
               type="button"
-              onClick={openEmptyBulkDialog}
+              onClick={() => openEmptyBulkDialog()}
               className="flex w-full items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-4 text-left font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-ink"
             >
               <Plus className="h-5 w-5 shrink-0 text-aqua" />
@@ -1231,6 +1243,14 @@ export const AddMovieModal = ({ isOpen, onClose, initialQuery = '', initialBulkQ
             >
               <FileText className="h-5 w-5 shrink-0 text-slate-400" />
               Importar archivo de texto
+            </button>
+            <button
+              type="button"
+              onClick={() => openEmptyBulkDialog(true)}
+              className="flex w-full items-center gap-3 rounded-md border border-slate-200 bg-white px-4 py-4 text-left font-semibold text-slate-700 transition-colors hover:bg-slate-50 hover:text-ink"
+            >
+              <Link2 className="h-5 w-5 shrink-0 text-coral" />
+              Pegar URL de TMDB o IMDb
             </button>
             <button
               type="button"

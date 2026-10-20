@@ -99,6 +99,7 @@ export const authToken = {
 export const api = {
   imdb: {
     search: (query: string) => request<ImdbSearchCandidate[]>(`/imdb/search?query=${encodeURIComponent(query)}`),
+    resolveUrl: (url: string) => request<ImdbSearchCandidate>(`/imdb/resolve-url?url=${encodeURIComponent(url)}`),
     import: (input: ImdbImportRequest) => request<ImdbImportedMovieData>('/imdb/import', { method: 'POST', body: JSON.stringify(input) }),
   },
   auth: {
