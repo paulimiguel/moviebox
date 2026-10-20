@@ -8,7 +8,7 @@ const genreIconImages: Record<string, string> = {
   action: '/genre-icons/accion.png',
   comedia: '/genre-icons/comedia.png',
   comedy: '/genre-icons/comedia.png',
-  drama: '/genre-icons/drama.png',
+  drama: '/genre-icons/drama-mascaras.png',
   documental: '/genre-icons/documental.png',
   documentary: '/genre-icons/documental.png',
   belica: '/genre-icons/belica.png',
