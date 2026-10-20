@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bookmark, Check, ChevronLeft, ChevronRight, Eye, Film, Heart, Library, Loader2, Plus, Sparkles, Star } from 'lucide-react';
+import { Bookmark, Check, ChevronLeft, ChevronRight, Eye, Film, Heart, Library, Loader2, Plus, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { MovieDetailModal } from '@/components/MovieDetailModal';
@@ -147,7 +147,7 @@ const CinemaHomeRow = () => {
 
 const HomeSectionButton = ({ to, color, label = 'Mi biblioteca', icon: Icon = Library, wide = false, translucent = false }: { to: string; color: 'coral' | 'aqua'; label?: string; icon?: typeof Library; wide?: boolean; translucent?: boolean }) => color === 'coral' ? (
   <Link to={to} className={`home-hero-primary-button inline-flex h-9 w-40 items-center justify-center gap-2 overflow-hidden rounded-md ${translucent ? 'bg-coral/60 backdrop-blur-sm hover:bg-coral' : 'bg-coral'} px-3 text-xs font-semibold uppercase text-white transition hover:brightness-110 sm:h-10 sm:w-48 sm:px-4 sm:text-sm`}>
-    <Star className="relative z-10 h-4 w-4 fill-current" />
+    <Sparkles className="relative z-10 h-4 w-4" />
     <span className="relative z-10">Ver novedades</span>
   </Link>
 ) : (
